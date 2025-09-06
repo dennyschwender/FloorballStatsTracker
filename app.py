@@ -4,7 +4,7 @@ import json
 from flask import Flask, request, render_template, redirect, url_for
 
 
-GAMES_FILE = 'gameFiles/games.json'
+GAMES_FILE = 'gamesFiles/games.json'
 
 # Ensure games.json exists before anything else
 if not os.path.exists(GAMES_FILE):
