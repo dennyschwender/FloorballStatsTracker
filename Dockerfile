@@ -19,4 +19,4 @@ ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
 # Ensure game_list.json exists, then run the app with gunicorn for production
-CMD ["/bin/sh", "-c", "touch /app/game_list.json && gunicorn -b 0.0.0.0:5000 app:app"]
+CMD ["/bin/sh", "-c", "touch /app/game.json && gunicorn -b 0.0.0.0:5000 app:app"]
