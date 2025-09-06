@@ -1,8 +1,15 @@
+
 import os
 import json
 from flask import Flask, request, render_template, redirect, url_for
 
+
 GAMES_FILE = 'games.json'
+
+# Ensure games.json exists before anything else
+if not os.path.exists(GAMES_FILE):
+    with open(GAMES_FILE, 'w') as f:
+        json.dump([], f)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev_secret')
