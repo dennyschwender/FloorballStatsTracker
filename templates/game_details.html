@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Details</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <a href="/" class="btn btn-secondary me-2 mb-2">Back to Home</a>
+            <a href="/modify_game/{{ game_id }}" class="btn btn-warning mb-2">Modify Game</a>
+            <a href="/reset_game/{{ game_id }}" class="btn btn-danger mb-2 ms-2"
+                onclick="return confirm('Are you sure you want to reset all stats for this game?');">Reset Stats</a>
+        </div>
+        {% if games and games|length > 1 %}
+        <form method="get" action="/game/" class="mb-2">
+            <select class="form-select" id="game_id" name="game_id"
+                onchange="if(this.value) window.location.href='/game/' + this.value;">
+                {% for g in games %}
+                <option value="{{ loop.index0 }}" {% if loop.index0==game_id %}selected{% endif %}>{{ g.home_team }} vs
+                    {{ g.away_team }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% endif %}
+
+        {% if game.team %}
+        <div class="mb-2"><span class="badge bg-info text-dark fs-5">{{ game.team }}</span></div>
+        {% endif %}
+        <h2 class="mb-4">{{ game.home_team }} vs {{ game.away_team }}</h2>
+
+        <div class="table-responsive mb-4 mx-lg-5">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Line</th>
+                        <th>Player</th>
+                        <th class="text-center">+/-</th>
+                        <th class="text-center">Goals</th>
+                        <th class="text-center">Assists</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in game.lines %}
+                    {% set line_idx = loop.index0 %}
+                    {% for player in line %}
+                    <tr>
+                        {% if loop.index0 == 0 %}
+                        <td rowspan="{{ line|length }}" class="align-middle">
+                            <div class="d-flex flex-column gap-2">
+                                <span>Line {{ line_idx + 1 }}</span>
+                                <a href="/action_line/{{ game_id }}/{{ line_idx }}?action=plus"
+                                    class="btn btn-success btn-sm mb-1">+1 All</a>
+                                <a href="/action_line/{{ game_id }}/{{ line_idx }}?action=minus"
+                                    class="btn btn-danger btn-sm mb-1">-1 All</a>
+                            </div>
+                        </td>
+                        {% endif %}
+                        <td><span class="badge bg-secondary">{{ player }}</span></td>
+                        <td class="text-center"><span class="fw-bold">{{ game.plusminus[player] if game.plusminus and
+                                player in game.plusminus else 0 }}</span></td>
+                        <td class="text-center"><span class="fw-bold">{{ game.goals[player] if game.goals and player in
+                                game.goals else 0 }}</span></td>
+                        <td class="text-center"><span class="fw-bold">{{ game.assists[player] if game.assists and player
+                                in game.assists else 0 }}</span></td>
+                        <td>
+                            <div class="dropdown text-center">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <div class="dropdown-menu p-2 text-center w-100" style="min-width: 140px;">
+                                    <a href="/action/{{ game_id }}/{{ player }}?action=plus"
+                                        class="btn btn-success btn-sm my-1 w-100">+1</a>
+                                    <a href="/action/{{ game_id }}/{{ player }}?action=minus"
+                                        class="btn btn-danger btn-sm my-1 w-100">-1</a>
+                                    <hr class="dropdown-divider">
+                                    <a href="/action/{{ game_id }}/{{ player }}?action=goal"
+                                        class="btn btn-primary btn-sm my-1 w-100">Goal</a>
+                                    <a href="/action/{{ game_id }}/{{ player }}?action=goal_minus"
+                                        class="btn btn-outline-primary btn-sm my-1 w-100">-Goal</a>
+                                    <hr class="dropdown-divider">
+                                    <a href="/action/{{ game_id }}/{{ player }}?action=assist"
+                                        class="btn btn-info btn-sm my-1 w-100">Assist</a>
+                                    <a href="/action/{{ game_id }}/{{ player }}?action=assist_minus"
+                                        class="btn btn-outline-info btn-sm my-1 w-100">-Assist</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="mb-3">Goalies</h3>
+        <div class="table-responsive mx-lg-5">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Goalie</th>
+                        <th class="text-center">+/-</th>
+                        <th class="text-center">Saves</th>
+                        <th class="text-center">Goals Conceded</th>
+                        <th colspan="8">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for goalie in game.goalies %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ goalie }}</span></td>
+                        <td class="text-center"><span class="fw-bold">{{ game.goalie_plusminus[goalie] if
+                                game.goalie_plusminus and goalie in game.goalie_plusminus else 0 }}</span></td>
+                        <td class="text-center"><span class="fw-bold">{{ game.saves[goalie] if game.saves and goalie in
+                                game.saves else 0 }}</span></td>
+                        <td class="text-center"><span class="fw-bold">{{ game.goals_conceded[goalie] if
+                                game.goals_conceded and goalie in game.goals_conceded else 0 }}</span></td>
+                        <td colspan="8">
+                            <div class="dropdown text-center">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <div class="dropdown-menu p-2 text-center w-100" style="min-width: 140px;">
+                                    <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=plus"
+                                        class="btn btn-success btn-sm my-1 w-100">+1</a>
+                                    <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=minus"
+                                        class="btn btn-danger btn-sm my-1 w-100">-1</a>
+                                    <hr class="dropdown-divider">
+                                    <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save"
+                                        class="btn btn-primary btn-sm my-1 w-100">Save</a>
+                                    <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save_minus"
+                                        class="btn btn-outline-primary btn-sm my-1 w-100">-Save</a>
+                                    <hr class="dropdown-divider">
+                                    <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded"
+                                        class="btn btn-danger btn-sm my-1 w-100">Goal Conceded</a>
+                                    <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded_minus"
+                                        class="btn btn-outline-danger btn-sm my-1 w-100">-Goal Conceded</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

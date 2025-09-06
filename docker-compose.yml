@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  floorball:
+    build: .
+    container_name: floorball-stats-tracker
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./games.json:.files/app/games.json
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_RUN_HOST=0.0.0.0
+    restart: unless-stopped
