@@ -119,6 +119,9 @@ def player_action(game_id, player):
             game['assists'][player] -= 1
     games[game_id] = game
     save_games(games)
+    # Preserve edit mode if present
+    if request.args.get('edit') == '1':
+        return redirect(url_for('game_details', game_id=game_id, edit=1))
     return redirect(url_for('game_details', game_id=game_id))
 
 # Game creation form
@@ -184,6 +187,8 @@ def line_action(game_id, line_idx):
             game['assists'][player] += 1
     games[game_id] = game
     save_games(games)
+    if request.args.get('edit') == '1':
+        return redirect(url_for('game_details', game_id=game_id, edit=1))
     return redirect(url_for('game_details', game_id=game_id))
 
 # Goalie stat actions: plus, minus, save, goal_conceded
@@ -201,12 +206,16 @@ def goalie_action(game_id, goalie):
         game['saves'] = {}
     if 'goals_conceded' not in game:
         game['goals_conceded'] = {}
+    if 'assists' not in game:
+        game['assists'] = {}
     if goalie not in game['goalie_plusminus']:
         game['goalie_plusminus'][goalie] = 0
     if goalie not in game['saves']:
         game['saves'][goalie] = 0
     if goalie not in game['goals_conceded']:
         game['goals_conceded'][goalie] = 0
+    if goalie not in game['assists']:
+        game['assists'][goalie] = 0
     if action == 'plus':
         game['goalie_plusminus'][goalie] += 1
     elif action == 'minus':
@@ -221,8 +230,15 @@ def goalie_action(game_id, goalie):
     elif action == 'goal_conceded_minus':
         if game['goals_conceded'][goalie] > 0:
             game['goals_conceded'][goalie] -= 1
+    elif action == 'assist':
+        game['assists'][goalie] += 1
+    elif action == 'assist_minus':
+        if game['assists'][goalie] > 0:
+            game['assists'][goalie] -= 1
     games[game_id] = game
     save_games(games)
+    if request.args.get('edit') == '1':
+        return redirect(url_for('game_details', game_id=game_id, edit=1))
     return redirect(url_for('game_details', game_id=game_id))
 
 # Route to reset all stats for a game
@@ -247,6 +263,8 @@ def reset_game(game_id):
             game[stat][goalie] = 0
     games[game_id] = game
     save_games(games)
+    if request.args.get('edit') == '1':
+        return redirect(url_for('game_details', game_id=game_id, edit=1))
     return redirect(url_for('game_details', game_id=game_id))
 
 # Delete game route
