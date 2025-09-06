@@ -18,5 +18,5 @@ EXPOSE 5000
 ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
-# Run the app
-CMD ["flask", "run"]
+# Ensure game_list.json exists, then run the app
+CMD ["/bin/sh", "-c", "touch /app/game_list.json && flask run"]
