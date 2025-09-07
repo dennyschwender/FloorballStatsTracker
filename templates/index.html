@@ -28,6 +28,7 @@
             {% if latest_game_id is not none %}
             <a href="/game/{{ latest_game_id }}" class="btn btn-success btn-lg">Go to Latest Game</a>
             {% endif %}
+            <a href="/stats" class="btn btn-outline-dark btn-lg">Stats</a>
         </div>
         {% if games %}
         <h2 class="mb-3">All Games{% if selected_team %} for {{ selected_team }}{% endif %}</h2>

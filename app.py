@@ -1,6 +1,8 @@
 import os
 import json
 from flask import Flask, request, render_template, redirect, url_for, session
+from collections import defaultdict
+from datetime import datetime
 REQUIRED_PIN = os.environ.get('FLOORBALL_PIN', '1717')
 
 
@@ -306,6 +308,39 @@ def delete_game(game_id):
     games.pop(game_id)
     save_games(games)
     return redirect(url_for('index'))
+
+# Stats page: filter by category, collect all players, order games by date, compute per-game and total stats
+@app.route('/stats')
+def stats():
+    games = load_games()
+    # Sort games by date (newest first)
+    def game_sort_key(g):
+        date_str = g.get('date')
+        try:
+            date_val = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.min
+        except Exception:
+            date_val = datetime.min
+        return (date_val, -games.index(g))
+    games_sorted = sorted(games, key=game_sort_key, reverse=True)
+    # Filter by team/category
+    teams = sorted(set(g.get('team', '') for g in games if g.get('team')))
+    selected_team = request.args.get('team')
+    if selected_team:
+        games_sorted = [g for g in games_sorted if g.get('team') == selected_team]
+    # Collect all players
+    player_set = set()
+    for g in games_sorted:
+        for line in g.get('lines', []):
+            player_set.update(line)
+    players = sorted(player_set)
+    # Prepare per-player totals
+    player_totals = {p: {'plusminus': 0, 'goals': 0, 'assists': 0} for p in players}
+    for g in games_sorted:
+        for p in players:
+            player_totals[p]['plusminus'] += g.get('plusminus', {}).get(p, 0)
+            player_totals[p]['goals'] += g.get('goals', {}).get(p, 0)
+            player_totals[p]['assists'] += g.get('assists', {}).get(p, 0)
+    return render_template('stats.html', games=games_sorted, players=players, player_totals=player_totals, teams=teams, selected_team=selected_team)
 
 if __name__ == '__main__':
     app.run(debug=True)
