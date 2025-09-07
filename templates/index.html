@@ -43,7 +43,7 @@
                     <span class="text-muted small">{{ g.date if g.date else '' }}</span>
                     {{ g.home_team }} vs {{ g.away_team }}
                 </span>
-                <a href="/game/{{ loop.index0 }}" class="btn btn-outline-secondary btn-sm">View</a>
+                <a href="/game/{{ g.id }}" class="btn btn-outline-secondary btn-sm">View</a>
             </li>
             {% endif %}
             {% endfor %}

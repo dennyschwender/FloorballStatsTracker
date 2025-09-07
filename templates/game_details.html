@@ -23,21 +23,64 @@
                 onclick="return confirm('Are you sure you want to reset all stats for this game?');">Reset Stats</a>
         </div>
         {% if games and games|length > 1 %}
+        {% set filtered_games = games | selectattr('team', 'equalto', game.team) | list %}
+        {% if filtered_games|length > 1 %}
         <form method="get" action="/game/" class="mb-2">
             <select class="form-select" id="game_id" name="game_id"
                 onchange="if(this.value) window.location.href='/game/' + this.value;">
-                {% for g in games %}
-                <option value="{{ loop.index0 }}" {% if loop.index0==game_id %}selected{% endif %}>{{ g.home_team }} vs
+                {% for g in filtered_games %}
+                <option value="{{ loop.index0 }}" {% if games.index(g)==game_id %}selected{% endif %}>{{ g.home_team }}
+                    vs
                     {{ g.away_team }}</option>
                 {% endfor %}
             </select>
         </form>
         {% endif %}
+        {% endif %}
 
         {% if game.team %}
         <div class="mb-2"><span class="badge bg-info text-dark fs-6">{{ game.team }}</span></div>
         {% endif %}
-        <h1 class="mb-4" style="font-size:1.2rem;">{{ game.home_team }} vs {{ game.away_team }}</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0" style="font-size:1.2rem;">{{ game.home_team }} vs {{ game.away_team }}</h1>
+            <div class="result-summary bg-light border rounded px-3 py-2 ms-3" style="min-width: 320px;">
+                {% set periods = ['1', '2', '3', 'OT'] %}
+                {% set home_total = namespace(val=0) %}
+                {% set away_total = namespace(val=0) %}
+                {% set period_results = [] %}
+                {% for p in periods %}
+                {% set h = game.result[p]['home'] %}
+                {% set a = game.result[p]['away'] %}
+                {% set _ = period_results.append((('P' ~ p) if p != 'OT' else 'OT') ~ ':' ~ h ~ '-' ~ a) %}
+                {% set home_total.val = home_total.val + h %}
+                {% set away_total.val = away_total.val + a %}
+                {% endfor %}
+                <div class="fs-5 fw-bold text-center mb-1">
+                    <span class="text-primary">{{ home_total.val }}</span>
+                    <span class="mx-1">:</span>
+                    <span class="text-danger">{{ away_total.val }}</span>
+                </div>
+                <div class="text-center small text-muted">
+                    ({{ period_results | join(' | ') }})
+                </div>
+            </div>
+        </div>
+        {% if request.args.get('edit') == '1' %}
+        <div class="mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-bold">Period:</span>
+                {% for p in ['1', '2', '3', 'OT'] %}
+                {% if game.current_period == p %}
+                <span class="btn btn-primary btn-sm">{{ 'OT' if p == 'OT' else 'Period ' ~ p }}</span>
+                {% else %}
+                <a href="/set_period/{{ game_id }}/{{ p }}{% if request.args.get('edit') == '1' %}?edit=1{% endif %}"
+                    class="btn btn-outline-primary btn-sm">{{ 'OT' if p == 'OT' else 'Period ' ~ p }}</a>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="table-responsive mb-4 mx-lg-5">
             <table class="table table-bordered align-middle">
                 <thead class="table-light">

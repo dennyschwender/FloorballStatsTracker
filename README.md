@@ -1,90 +1,66 @@
-# Floorball Stats Tracker (Python/Flask)
+# Floorball Stats Tracker
 
-## Features
+A web app for tracking floorball game statistics, including player and goalie stats, period-based results, and team management. Built with Flask and Bootstrap.
 
-- Track floorball game stats: plus/minus, goals, assists, saves, goals conceded
-- Manage multiple games, teams, and categories
-- Responsive web UI for mobile and desktop
-- Grouped action dropdowns for players and goalies
-- Local JSON file storage (no cloud required)
+## Features & Actions
 
-## Setup
+### Game Management
 
-1. Clone the repo.
-2. Install dependencies:
+- **Create Game**: Add a new game with teams, date, lines, and goalies.
+- **Modify Game**: Edit teams, date, lines, and goalies for an existing game.
+- **Delete Game**: Remove a game from the database (irreversible).
+- **Reset Stats**: Reset all player, goalie, and period stats for a game to zero.
+- **Switch Between Games**: Filter and switch between games by team/category.
 
-   ```sh
-   pip install -r requirements.txt
-   ```
+### Player Actions (per game)
 
-3. Run the app locally:
+- **Plus/Minus**: Increment or decrement a player's plus/minus stat.
+- **Goals**: Add or remove a goal for a player (affects period result).
+- **Assists**: Add or remove an assist for a player.
+- **Line Actions**: Apply plus/minus, goal, or assist to all players in a line at once.
 
-   ```sh
-   python app.py
-   ```
+### Goalie Actions (per game)
 
-## Docker
+- **Goalie Plus/Minus**: Increment or decrement a goalie's plus/minus stat.
+- **Saves**: Add or remove a save for a goalie.
+- **Goals Conceded**: Add or remove a goal conceded for a goalie (affects period result).
+- **Assists**: Add or remove an assist for a goalie.
 
-### Run with Docker
+### Period & Result Tracking
 
-1. Build the image:
+- **Set Period**: Switch the current period (1, 2, 3, OT) for stat entry.
+- **Period Results**: Track home/away goals for each period; summary and breakdown shown in game details.
+- **Reset Results**: Reset all period results to zero with the reset action.
 
-   ```sh
-   docker build -t floorball-stats-tracker .
-   ```
+### Stats & Overview
 
-2. Run the container:
+- **Stats Page**: View all games, filter by team/category, and see per-player plus/minus, goals, assists, and total points.
+- **Totals**: See per-player totals and per-game breakdowns for all tracked stats.
 
-   ```sh
-   docker run -p 5000:5000 -v $(pwd)/games.json:/app/games.json floorball-stats-tracker
-   ```
+### Security & Access
 
----
+- **PIN Login**: Access to the app is protected by a PIN code (set via environment variable `FLOORBALL_PIN`).
 
-## Website Usage Guide
+### UI/UX
 
-### Access & Security
+- **Mobile Friendly**: Responsive Bootstrap UI for desktop and mobile.
+- **Edit Mode**: Toggle edit mode for in-game stat entry and period switching.
+- **Dropdown Actions**: Use dropdowns for quick stat entry and line/goalie actions.
 
-- On first access, you must enter the PIN (default: 1234, or set via `FLOORBALL_PIN` environment variable).
+## Running the App
 
-### Homepage (`/`)
+1. Install requirements: `pip install -r requirements.txt`
+2. Run: `python app.py`
+3. Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.
 
-- **Create New Game**: Start a new game by entering teams, date, lines, and goalies.
-- **Category Filter**: Filter games by team/category using the dropdown.
-- **Go to Latest Game**: Jump to the most recent game for the selected category.
-- **Stats**: Go to the stats overview page.
-- **Game List**: See all games, with date and teams. Click "View" to see details.
+## Docker Support
 
-### Game Details (`/game/<id>`)
-
-- **Game Info**: See date, teams, and category.
-- **Edit/Modify Game**: Change teams, date, lines, or goalies.
-- **Reset Stats**: Reset all stats for this game.
-- **Dropdown Actions**: For each player and goalie, use dropdowns to add/remove plus/minus, goals, assists, saves, and goals conceded.
-- **Persistent Edit Mode**: If you enter edit mode, it stays active until you leave the page.
-
-### Create/Modify Game (`/create_game`, `/modify_game/<id>`)
-
-- Enter or update all game info: category, teams, date, lines, and goalies.
-- Save or cancel changes. You can also delete a game from the modify page.
-
-### Stats Page (`/stats`)
-
-- **Category Filter**: Filter stats by team/category.
-- **Plus/Minus Table**: Each row is a player, each column is a game (ordered by date), with a total at the end.
-- **Goals/Assists Table**: Each row is a player, each column is a game (goals/assists in one cell), with totals at the end.
-- **Compact Layout**: Tables are compact and responsive, with game headers in the format `dd.mm.yyyy - HOME vs AWAY`.
-
-### PIN Page (`/` on first access)
-
-- Enter the PIN to access the site. PIN can be changed via environment variable.
-
----
+- Use the provided `Dockerfile` and `docker-compose.yml` for containerized deployment.
 
 ## Data Storage
 
-- All data is stored in `gamesFiles/games.json` by default. You can mount a volume in Docker to persist data.
+- All game data is stored in `gamesFiles/games.json`.
 
-## Support
+---
 
-- For issues or feature requests, open an issue on GitHub.
+For any issues or feature requests, please open an issue or contact the maintainer.
