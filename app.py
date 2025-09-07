@@ -1,7 +1,8 @@
 
 import os
 import json
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, session
+REQUIRED_PIN = os.environ.get('FLOORBALL_PIN', '1717')
 
 
 GAMES_FILE = 'gamesFiles/games.json'
@@ -27,8 +28,18 @@ def save_games(games):
 
 
 # Home page: show latest game and create/switch options
-@app.route('/')
+# Home page: show latest game and create/switch options
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    if not session.get('authenticated'):
+        if request.method == 'POST':
+            pin = request.form.get('pin')
+            if pin == REQUIRED_PIN:
+                session['authenticated'] = True
+                return redirect(url_for('index'))
+            else:
+                return render_template('pin.html', error='Incorrect PIN')
+        return render_template('pin.html')
     games = load_games()
     selected_team = request.args.get('team')
     if selected_team:
@@ -40,6 +51,12 @@ def index():
         # Find the latest game for the selected team (or all games)
         latest_game_id = games.index(filtered_games[-1])
     return render_template('index.html', games=games, latest_game_id=latest_game_id, selected_team=selected_team)
+# Add a before_request to protect all routes except static and pin
+@app.before_request
+def require_login():
+    allowed_routes = ['index', 'static']
+    if request.endpoint not in allowed_routes and not session.get('authenticated'):
+        return redirect(url_for('index'))
 
 
 # Game details with plus/minus, goal, assist actions
