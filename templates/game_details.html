@@ -37,6 +37,9 @@
         {% if game.team %}
         <div class="mb-2"><span class="badge bg-info text-dark fs-5">{{ game.team }}</span></div>
         {% endif %}
+        {% if game.date %}
+        <div class="mb-2"><span class="badge bg-secondary fs-6">{{ game.date }}</span></div>
+        {% endif %}
         <h2 class="mb-4">{{ game.home_team }} vs {{ game.away_team }}</h2>
         <div class="table-responsive mb-4 mx-lg-5">
             <table class="table table-bordered align-middle">

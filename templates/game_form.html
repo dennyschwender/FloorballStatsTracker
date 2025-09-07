@@ -27,6 +27,11 @@
                 <input type="text" class="form-control" id="away_team" name="away_team" required
                     value="{{ game.away_team if modify else '' }}">
             </div>
+            <div class="mb-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" class="form-control" id="date" name="date" required
+                    value="{{ game.date if modify and game.date is defined else '' }}">
+            </div>
             {% for line in range(1, 5) %}
             <div class="mb-3">
                 <label class="form-label">Line {{ line }} Players (comma separated)</label>

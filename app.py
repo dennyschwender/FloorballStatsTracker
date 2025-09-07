@@ -1,4 +1,3 @@
-
 import os
 import json
 from flask import Flask, request, render_template, redirect, url_for, session
@@ -41,16 +40,26 @@ def index():
                 return render_template('pin.html', error='Incorrect PIN')
         return render_template('pin.html')
     games = load_games()
+    # Sort games by date (descending, newest first), then by creation order (id)
+    def game_sort_key(g):
+        from datetime import datetime
+        date_str = g.get('date')
+        try:
+            date_val = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.min
+        except Exception:
+            date_val = datetime.min
+        return (date_val, -games.index(g))
+    games_sorted = sorted(games, key=game_sort_key, reverse=True)
     selected_team = request.args.get('team')
     if selected_team:
-        filtered_games = [g for g in games if g.get('team') == selected_team]
+        filtered_games = [g for g in games_sorted if g.get('team') == selected_team]
     else:
-        filtered_games = games
+        filtered_games = games_sorted
     latest_game_id = None
     if filtered_games:
         # Find the latest game for the selected team (or all games)
-        latest_game_id = games.index(filtered_games[-1])
-    return render_template('index.html', games=games, latest_game_id=latest_game_id, selected_team=selected_team)
+        latest_game_id = games.index(filtered_games[0])
+    return render_template('index.html', games=games_sorted, latest_game_id=latest_game_id, selected_team=selected_team)
 # Add a before_request to protect all routes except static and pin
 @app.before_request
 def require_login():
@@ -79,6 +88,7 @@ def modify_game(game_id):
         team = request.form.get('team')
         home_team = request.form.get('home_team')
         away_team = request.form.get('away_team')
+        date = request.form.get('date')
         lines = []
         for i in range(1, 5):
             line_players = request.form.get(f'line{i}', '')
@@ -91,6 +101,7 @@ def modify_game(game_id):
         game['team'] = team
         game['home_team'] = home_team
         game['away_team'] = away_team
+        game['date'] = date
         game['lines'] = lines
         game['goalies'] = goalies
         games[game_id] = game
@@ -148,6 +159,7 @@ def create_game():
         team = request.form.get('team')
         home_team = request.form.get('home_team')
         away_team = request.form.get('away_team')
+        date = request.form.get('date')
         lines = []
         for i in range(1, 5):
             line_players = request.form.get(f'line{i}', '')
@@ -161,6 +173,7 @@ def create_game():
             'team': team,
             'home_team': home_team,
             'away_team': away_team,
+            'date': date,
             'lines': lines,
             'goalies': goalies
         }

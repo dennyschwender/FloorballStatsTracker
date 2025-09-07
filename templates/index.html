@@ -39,6 +39,7 @@
                     {% if not selected_team and g.team %}
                     <span class="badge bg-info text-dark me-2">{{ g.team }}</span>
                     {% endif %}
+                    <span class="text-muted small">{{ g.date if g.date else '' }}</span>
                     {{ g.home_team }} vs {{ g.away_team }}
                 </span>
                 <a href="/game/{{ loop.index0 }}" class="btn btn-outline-secondary btn-sm">View</a>
