@@ -10,12 +10,12 @@
 
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">Floorball Stats Tracker</h1>
         <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
-            <a href="/create_game" class="btn btn-primary btn-lg">Create New Game</a>
+            <a href="/create_game" class="btn btn-primary btn-sm">Create New Game</a>
             {% if games %}
             <form method="get" action="/" class="d-inline-block">
-                <select class="form-select d-inline-block w-auto" name="team" onchange="this.form.submit()">
+                <select class="form-select form-select-sm d-inline-block w-auto" name="team"
+                    onchange="this.form.submit()">
                     <option value="">All Teams</option>
                     {% set teams = games | map(attribute='team') | list | unique | sort %}
                     {% for team in teams %}
@@ -23,13 +23,13 @@
                     {% endfor %}
                 </select>
             </form>
-            </form>
             {% endif %}
             {% if latest_game_id is not none %}
-            <a href="/game/{{ latest_game_id }}" class="btn btn-success btn-lg">Go to Latest Game</a>
+            <a href="/game/{{ latest_game_id }}" class="btn btn-success btn-sm">Go to Latest Game</a>
             {% endif %}
-            <a href="/stats" class="btn btn-outline-dark btn-lg">Stats</a>
+            <a href="/stats" class="btn btn-outline-dark btn-sm">Stats</a>
         </div>
+        <h1 class="mb-3" style="font-size:1.2rem;">Floorball Stats Tracker</h1>
         {% if games %}
         <h2 class="mb-3">All Games{% if selected_team %} for {{ selected_team }}{% endif %}</h2>
         <ul class="list-group">
