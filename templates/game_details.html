@@ -169,7 +169,7 @@
                 <tbody>
                     {% for goalie in game.goalies %}
                     <tr>
-                        <td><span class="badge bg-secondary">{{ goalie }}</span></td>
+                        <td>{{ goalie }}</td>
                         <td class="text-center"><span class="fw-bold">{{ game.assists[goalie] if game.assists and goalie
                                 in game.assists else 0 }}</span></td>
                         <td class="text-center"><span class="fw-bold">{{ game.saves[goalie] if game.saves and goalie in
