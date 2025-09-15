@@ -154,6 +154,50 @@
                 </tbody>
             </table>
         </div>
+        
+        {% if goalies %}
+        <h3>Goalie Save Percentages</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle text-center" style="table-layout: auto;">
+                <thead>
+                    <tr>
+                        <th>Goalie</th>
+                        {% for g in games %}
+                        <th class="rotate">
+                            <div>{{ format_date(g.date) }} - {{ g.home_team }} vs {{ g.away_team }}</div>
+                        </th>
+                        {% endfor %}
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for goalie in goalies %}
+                    <tr>
+                        <td class="text-start">{{ goalie }}</td>
+                        {% for g in games %}
+                        <td>
+                            {% set save_pct = g.save_percentages.get(goalie) %}
+                            {% if save_pct is not none %}
+                                {{ "%.1f"|format(save_pct) }}%
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="fw-bold">
+                            {% set avg_pct = goalie_data[goalie]['average_save_percentage'] %}
+                            {% if avg_pct is not none %}
+                                {{ "%.1f"|format(avg_pct) }}%
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
     </div>
 </body>
 

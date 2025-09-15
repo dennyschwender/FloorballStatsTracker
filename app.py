@@ -411,12 +411,15 @@ def stats():
     # Data checking and defaulting for missing fields
     changed = False
     for g in games:
-        for stat in ['plusminus', 'goals', 'assists']:
+        for stat in ['plusminus', 'goals', 'assists', 'saves', 'goals_conceded']:
             if stat not in g or not isinstance(g[stat], dict):
                 g[stat] = {}
                 changed = True
         if 'lines' not in g or not isinstance(g['lines'], list):
             g['lines'] = []
+            changed = True
+        if 'goalies' not in g or not isinstance(g['goalies'], list):
+            g['goalies'] = []
             changed = True
     if changed:
         save_games(games)
@@ -447,7 +450,54 @@ def stats():
             player_totals[p]['plusminus'] += g.get('plusminus', {}).get(p, 0)
             player_totals[p]['goals'] += g.get('goals', {}).get(p, 0)
             player_totals[p]['assists'] += g.get('assists', {}).get(p, 0)
-    return render_template('stats.html', games=games_sorted, players=players, player_totals=player_totals, teams=teams, selected_team=selected_team)
+    
+    # Collect all goalies
+    goalie_set = set()
+    for g in games_sorted:
+        goalie_set.update(g.get('goalies', []))
+    goalies = sorted(goalie_set)
+    
+    # Prepare goalie save percentages with per-game data
+    goalie_data = {}
+    for goalie in goalies:
+        goalie_data[goalie] = {
+            'games': [],
+            'total_saves': 0,
+            'total_goals_conceded': 0,
+            'average_save_percentage': 0
+        }
+    
+    # Calculate save percentages for each game
+    for g in games_sorted:
+        # Add save percentage calculation for each goalie in this game
+        g['save_percentages'] = {}
+        for goalie in goalies:
+            saves = g.get('saves', {}).get(goalie, 0)
+            goals_conceded = g.get('goals_conceded', {}).get(goalie, 0)
+            total_shots = saves + goals_conceded
+            
+            if total_shots > 0:
+                save_percentage = (saves / total_shots) * 100
+                g['save_percentages'][goalie] = save_percentage
+                goalie_data[goalie]['games'].append(save_percentage)
+                goalie_data[goalie]['total_saves'] += saves
+                goalie_data[goalie]['total_goals_conceded'] += goals_conceded
+            else:
+                g['save_percentages'][goalie] = None
+    
+    # Calculate average save percentages
+    for goalie in goalies:
+        total_saves = goalie_data[goalie]['total_saves']
+        total_goals_conceded = goalie_data[goalie]['total_goals_conceded']
+        total_shots = total_saves + total_goals_conceded
+        
+        if total_shots > 0:
+            goalie_data[goalie]['average_save_percentage'] = (total_saves / total_shots) * 100
+        else:
+            goalie_data[goalie]['average_save_percentage'] = None
+    
+    return render_template('stats.html', games=games_sorted, players=players, player_totals=player_totals, 
+                         goalies=goalies, goalie_data=goalie_data, teams=teams, selected_team=selected_team)
 
 # Set period route
 @app.route('/set_period/<int:game_id>/<period>')
