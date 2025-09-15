@@ -70,3 +70,6 @@ games.json
 
 # Ignore service account and credentials
 *service-account*.json
+
+# Ignore screenshots and test images
+*.png
