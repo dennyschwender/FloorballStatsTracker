@@ -551,6 +551,14 @@ def stats():
             'average_save_percentage': 0
         }
     
+    # Collect opponent goalies from games where opponent goalie tracking is enabled
+    opponent_goalie_data = {
+        'games': [],
+        'total_saves': 0,
+        'total_goals_conceded': 0,
+        'average_save_percentage': 0
+    }
+    
     # Calculate save percentages for each game
     for g in games_sorted:
         # Add save percentage calculation for each goalie in this game
@@ -568,6 +576,23 @@ def stats():
                 goalie_data[goalie]['total_goals_conceded'] += goals_conceded
             else:
                 g['save_percentages'][goalie] = None
+                
+        # Handle opponent goalie stats if tracking is enabled for this game
+        if g.get('opponent_goalie_enabled', False):
+            opponent_saves = g.get('opponent_goalie_saves', {}).get('Opponent Goalie', 0)
+            opponent_goals_conceded = g.get('opponent_goalie_goals_conceded', {}).get('Opponent Goalie', 0)
+            opponent_total_shots = opponent_saves + opponent_goals_conceded
+            
+            if opponent_total_shots > 0:
+                opponent_save_percentage = (opponent_saves / opponent_total_shots) * 100
+                g['opponent_save_percentage'] = opponent_save_percentage
+                opponent_goalie_data['games'].append(opponent_save_percentage)
+                opponent_goalie_data['total_saves'] += opponent_saves
+                opponent_goalie_data['total_goals_conceded'] += opponent_goals_conceded
+            else:
+                g['opponent_save_percentage'] = None
+        else:
+            g['opponent_save_percentage'] = None
     
     # Calculate average save percentages
     for goalie in goalies:
@@ -579,9 +604,20 @@ def stats():
             goalie_data[goalie]['average_save_percentage'] = (total_saves / total_shots) * 100
         else:
             goalie_data[goalie]['average_save_percentage'] = None
+            
+    # Calculate average save percentage for opponent goalie
+    opponent_total_saves = opponent_goalie_data['total_saves']
+    opponent_total_goals_conceded = opponent_goalie_data['total_goals_conceded']
+    opponent_total_shots = opponent_total_saves + opponent_total_goals_conceded
+    
+    if opponent_total_shots > 0:
+        opponent_goalie_data['average_save_percentage'] = (opponent_total_saves / opponent_total_shots) * 100
+    else:
+        opponent_goalie_data['average_save_percentage'] = None
     
     return render_template('stats.html', games=games_sorted, players=players, player_totals=player_totals, 
-                         goalies=goalies, goalie_data=goalie_data, teams=teams, selected_team=selected_team)
+                         goalies=goalies, goalie_data=goalie_data, opponent_goalie_data=opponent_goalie_data, 
+                         teams=teams, selected_team=selected_team)
 
 # Set period route
 @app.route('/set_period/<int:game_id>/<period>')

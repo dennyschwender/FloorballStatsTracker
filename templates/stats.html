@@ -155,7 +155,7 @@
             </table>
         </div>
         
-        {% if goalies %}
+        {% if goalies or (opponent_goalie_data.total_saves > 0 or opponent_goalie_data.total_goals_conceded > 0) %}
         <h3>Goalie Save Percentages</h3>
         <div class="table-responsive">
             <table class="table table-bordered align-middle text-center" style="table-layout: auto;">
@@ -194,6 +194,33 @@
                         </td>
                     </tr>
                     {% endfor %}
+                    {% if opponent_goalie_data.total_saves > 0 or opponent_goalie_data.total_goals_conceded > 0 %}
+                    <tr>
+                        <td class="text-start">Opponent Goalie</td>
+                        {% for g in games %}
+                        <td>
+                            {% if g.get('opponent_goalie_enabled', false) %}
+                                {% set opponent_save_pct = g.opponent_save_percentage %}
+                                {% if opponent_save_pct is not none %}
+                                    {{ "%.1f"|format(opponent_save_pct) }}%
+                                {% else %}
+                                    -
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="fw-bold">
+                            {% set opponent_avg_pct = opponent_goalie_data['average_save_percentage'] %}
+                            {% if opponent_avg_pct is not none %}
+                                {{ "%.1f"|format(opponent_avg_pct) }}%
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
