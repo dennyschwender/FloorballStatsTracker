@@ -1,0 +1,30 @@
+[
+  {
+    "id": 0,
+    "team": "Old Team",
+    "home_team": "Home Team",
+    "away_team": "Away Team", 
+    "date": "2024-01-10",
+    "lines": [
+      [
+        "Player1",
+        "Player2"
+      ]
+    ],
+    "goalies": [
+      "Old Goalie"
+    ],
+    "result": {
+      "1": {"home": 1, "away": 0},
+      "2": {"home": 0, "away": 1},
+      "3": {"home": 0, "away": 0},
+      "OT": {"home": 0, "away": 0}
+    },
+    "current_period": "1",
+    "plusminus": {"Player1": 1, "Player2": 0},
+    "goals": {"Player1": 1, "Player2": 0},
+    "assists": {"Player1": 0, "Player2": 1},
+    "saves": {"Old Goalie": 3},
+    "goals_conceded": {"Old Goalie": 1}
+  }
+]
