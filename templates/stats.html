@@ -198,6 +198,52 @@
             </table>
         </div>
         {% endif %}
+        
+        {% if opponent_goalie_data.total_saves > 0 or opponent_goalie_data.total_goals_conceded > 0 %}
+        <h3>Opponent Goalie Save Percentages</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle text-center" style="table-layout: auto;">
+                <thead>
+                    <tr>
+                        <th>Goalie</th>
+                        {% for g in games %}
+                        {% if g.get('opponent_goalie_enabled', false) %}
+                        <th class="rotate">
+                            <div>{{ format_date(g.date) }} - {{ g.home_team }} vs {{ g.away_team }}</div>
+                        </th>
+                        {% endif %}
+                        {% endfor %}
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-start">Opponent Goalie</td>
+                        {% for g in games %}
+                        {% if g.get('opponent_goalie_enabled', false) %}
+                        <td>
+                            {% set opponent_save_pct = g.opponent_save_percentage %}
+                            {% if opponent_save_pct is not none %}
+                                {{ "%.1f"|format(opponent_save_pct) }}%
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        {% endfor %}
+                        <td class="fw-bold">
+                            {% set opponent_avg_pct = opponent_goalie_data['average_save_percentage'] %}
+                            {% if opponent_avg_pct is not none %}
+                                {{ "%.1f"|format(opponent_avg_pct) }}%
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
     </div>
 </body>
 
