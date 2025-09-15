@@ -128,8 +128,12 @@ def game_details(game_id):
     if 'goalies' not in game or not isinstance(game['goalies'], list):
         game['goalies'] = []
         changed = True
+    # Ensure 'opponent_goalies' exists
+    if 'opponent_goalies' not in game or not isinstance(game['opponent_goalies'], list):
+        game['opponent_goalies'] = []
+        changed = True
     # Ensure stat dicts exist
-    for stat in ['plusminus', 'goals', 'assists', 'goalie_plusminus', 'saves', 'goals_conceded']:
+    for stat in ['plusminus', 'goals', 'assists', 'goalie_plusminus', 'saves', 'goals_conceded', 'opponent_goalie_saves', 'opponent_goalie_goals_conceded']:
         if stat not in game or not isinstance(game[stat], dict):
             game[stat] = {}
             changed = True
@@ -160,12 +164,18 @@ def modify_game(game_id):
             goalie = request.form.get(f'goalie{i}', '')
             if goalie.strip():
                 goalies.append(goalie.strip())
+        opponent_goalies = []
+        for i in range(1, 3):
+            opponent_goalie = request.form.get(f'opponent_goalie{i}', '')
+            if opponent_goalie.strip():
+                opponent_goalies.append(opponent_goalie.strip())
         game['team'] = team
         game['home_team'] = home_team
         game['away_team'] = away_team
         game['date'] = date
         game['lines'] = lines
         game['goalies'] = goalies
+        game['opponent_goalies'] = opponent_goalies
         if 'result' not in game:
             game['result'] = {p: {"home": 0, "away": 0} for p in PERIODS}
         if 'current_period' not in game:
@@ -208,11 +218,28 @@ def player_action(game_id, player):
         game['goals'][player] += 1
         # Home team goal in current period
         game['result'][period]['home'] += 1
+        # Auto-increment opponent goalie goals conceded (if opponent goalies exist)
+        if 'opponent_goalies' in game and game['opponent_goalies']:
+            if 'opponent_goalie_goals_conceded' not in game:
+                game['opponent_goalie_goals_conceded'] = {}
+            # Assign goal to first opponent goalie (assuming they're playing)
+            first_opponent_goalie = game['opponent_goalies'][0]
+            if first_opponent_goalie not in game['opponent_goalie_goals_conceded']:
+                game['opponent_goalie_goals_conceded'][first_opponent_goalie] = 0
+            game['opponent_goalie_goals_conceded'][first_opponent_goalie] += 1
     elif action == 'goal_minus':
         if game['goals'][player] > 0:
             game['goals'][player] -= 1
             if game['result'][period]['home'] > 0:
                 game['result'][period]['home'] -= 1
+            # Auto-decrement opponent goalie goals conceded (if opponent goalies exist)
+            if 'opponent_goalies' in game and game['opponent_goalies']:
+                if 'opponent_goalie_goals_conceded' not in game:
+                    game['opponent_goalie_goals_conceded'] = {}
+                # Decrement from first opponent goalie
+                first_opponent_goalie = game['opponent_goalies'][0]
+                if first_opponent_goalie in game['opponent_goalie_goals_conceded'] and game['opponent_goalie_goals_conceded'][first_opponent_goalie] > 0:
+                    game['opponent_goalie_goals_conceded'][first_opponent_goalie] -= 1
     elif action == 'assist':
         game['assists'][player] += 1
     elif action == 'assist_minus':
@@ -279,6 +306,11 @@ def create_game():
             goalie = request.form.get(f'goalie{i}', '')
             if goalie.strip():
                 goalies.append(goalie.strip())
+        opponent_goalies = []
+        for i in range(1, 3):
+            opponent_goalie = request.form.get(f'opponent_goalie{i}', '')
+            if opponent_goalie.strip():
+                opponent_goalies.append(opponent_goalie.strip())
         # Initialize period results
         result = {p: {"home": 0, "away": 0} for p in PERIODS}
         games = load_games()
@@ -296,6 +328,7 @@ def create_game():
             'date': date,
             'lines': lines,
             'goalies': goalies,
+            'opponent_goalies': opponent_goalies,
             'result': result,
             'current_period': '1',
         }
@@ -362,6 +395,48 @@ def goalie_action(game_id, goalie):
         return redirect(url_for('game_details', game_id=game_id, edit=1))
     return redirect(url_for('game_details', game_id=game_id))
 
+# Opponent Goalie stat actions: save, goal_conceded
+@app.route('/action_opponent_goalie/<int:game_id>/<opponent_goalie>')
+def opponent_goalie_action(game_id, opponent_goalie):
+    action = request.args.get('action')
+    games = load_games()
+    if game_id < 0 or game_id >= len(games):
+        return "Game not found", 404
+    game = games[game_id]
+    # Initialize opponent goalie stats if not present
+    if 'opponent_goalie_saves' not in game:
+        game['opponent_goalie_saves'] = {}
+    if 'opponent_goalie_goals_conceded' not in game:
+        game['opponent_goalie_goals_conceded'] = {}
+    if opponent_goalie not in game['opponent_goalie_saves']:
+        game['opponent_goalie_saves'][opponent_goalie] = 0
+    if opponent_goalie not in game['opponent_goalie_goals_conceded']:
+        game['opponent_goalie_goals_conceded'][opponent_goalie] = 0
+    # Period result tracking
+    period = game.get('current_period', '1')
+    if 'result' not in game:
+        game['result'] = {p: {"home": 0, "away": 0} for p in PERIODS}
+    
+    if action == 'save':
+        game['opponent_goalie_saves'][opponent_goalie] += 1
+    elif action == 'save_minus':
+        if game['opponent_goalie_saves'][opponent_goalie] > 0:
+            game['opponent_goalie_saves'][opponent_goalie] -= 1
+    elif action == 'goal_conceded':
+        game['opponent_goalie_goals_conceded'][opponent_goalie] += 1
+        # Home team goal in current period (our goal = opponent goalie goal conceded)
+        game['result'][period]['home'] += 1
+    elif action == 'goal_conceded_minus':
+        if game['opponent_goalie_goals_conceded'][opponent_goalie] > 0:
+            game['opponent_goalie_goals_conceded'][opponent_goalie] -= 1
+            if game['result'][period]['home'] > 0:
+                game['result'][period]['home'] -= 1
+    games[game_id] = game
+    save_games(games)
+    if request.args.get('edit') == '1':
+        return redirect(url_for('game_details', game_id=game_id, edit=1))
+    return redirect(url_for('game_details', game_id=game_id))
+
 # Route to reset all stats for a game
 @app.route('/reset_game/<int:game_id>')
 def reset_game(game_id):
@@ -382,6 +457,12 @@ def reset_game(game_id):
             game[stat] = {}
         for goalie in game.get('goalies', []):
             game[stat][goalie] = 0
+    # Reset opponent goalie stats
+    for stat in ['opponent_goalie_saves', 'opponent_goalie_goals_conceded']:
+        if stat not in game:
+            game[stat] = {}
+        for opponent_goalie in game.get('opponent_goalies', []):
+            game[stat][opponent_goalie] = 0
     # Reset period results
     if 'result' not in game or not isinstance(game['result'], dict):
         game['result'] = {p: {"home": 0, "away": 0} for p in PERIODS}

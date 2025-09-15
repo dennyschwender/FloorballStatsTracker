@@ -217,6 +217,60 @@
                 </tbody>
             </table>
         </div>
+
+        <h3 class="mb-3">Opponent Goalies</h3>
+        <div class="table-responsive mx-lg-5">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Opponent Goalie</th>
+                        <th class="text-center">Saves</th>
+                        <th class="text-center">Goals Conceded</th>
+                        <th class="text-center">Save %</th>
+                        <th colspan="4" class="actions-col d-none">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for opponent_goalie in game.opponent_goalies %}
+                    <tr>
+                        <td>{{ opponent_goalie }}</td>
+                        <td class="text-center"><span class="fw-bold">{{ game.opponent_goalie_saves[opponent_goalie] if game.opponent_goalie_saves and opponent_goalie in game.opponent_goalie_saves else 0 }}</span></td>
+                        <td class="text-center"><span class="fw-bold">{{ game.opponent_goalie_goals_conceded[opponent_goalie] if game.opponent_goalie_goals_conceded and opponent_goalie in game.opponent_goalie_goals_conceded else 0 }}</span></td>
+                        <td class="text-center">
+                            {% set saves = game.opponent_goalie_saves[opponent_goalie] if game.opponent_goalie_saves and opponent_goalie in game.opponent_goalie_saves else 0 %}
+                            {% set gc = game.opponent_goalie_goals_conceded[opponent_goalie] if game.opponent_goalie_goals_conceded and opponent_goalie in game.opponent_goalie_goals_conceded else 0 %}
+                            {% set total = saves + gc %}
+                            {% if total > 0 %}
+                            <span class="fw-bold">{{ ((saves / total) * 100) | round(1) }}%</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td colspan="4" class="actions-col d-none">
+                            <div class="dropdown text-center opponent-goalie-action-dropdown d-none">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <div class="dropdown-menu p-2 text-center w-100"
+                                    style="min-width: 140px; overflow: visible; max-height: none;">
+                                    <a href="/action_opponent_goalie/{{ game_id }}/{{ opponent_goalie }}?action=save{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                        class="btn btn-primary btn-sm my-1 w-100">Save</a>
+                                    <a href="/action_opponent_goalie/{{ game_id }}/{{ opponent_goalie }}?action=save_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                        class="btn btn-outline-primary btn-sm my-1 w-100">-Save</a>
+                                    <hr class="dropdown-divider">
+                                    <a href="/action_opponent_goalie/{{ game_id }}/{{ opponent_goalie }}?action=goal_conceded{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                        class="btn btn-danger btn-sm my-1 w-100">Goal Conceded</a>
+                                    <a href="/action_opponent_goalie/{{ game_id }}/{{ opponent_goalie }}?action=goal_conceded_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                        class="btn btn-outline-danger btn-sm my-1 w-100">-Goal Conceded</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     <script>
         // On page load, check for ?edit=1 and show edit mode if present
@@ -229,6 +283,7 @@
             document.querySelectorAll('.action-dropdown').forEach(el => el.classList.toggle('d-none', !on));
             document.querySelectorAll('.line-action').forEach(el => el.classList.toggle('d-none', !on));
             document.querySelectorAll('.goalie-action-dropdown').forEach(el => el.classList.toggle('d-none', !on));
+            document.querySelectorAll('.opponent-goalie-action-dropdown').forEach(el => el.classList.toggle('d-none', !on));
             document.querySelectorAll('.actions-col').forEach(el => el.classList.toggle('d-none', !on));
         }
         function toggleModify(e) {
