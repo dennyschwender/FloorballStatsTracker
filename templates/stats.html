@@ -155,6 +155,34 @@
             </table>
         </div>
         
+        <h3>Unforced Errors</h3>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered align-middle text-center" style="table-layout: auto;">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        {% for g in games %}
+                        <th class="rotate">
+                            <div>{{ format_date(g.date) }} - {{ g.home_team }} vs {{ g.away_team }}</div>
+                        </th>
+                        {% endfor %}
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in players %}
+                    <tr>
+                        <td class="text-start">{{ player }}</td>
+                        {% for g in games %}
+                        <td>{{ g.unforced_errors.get(player, 0) }}</td>
+                        {% endfor %}
+                        <td class="fw-bold">{{ player_totals[player]['unforced_errors'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
         {% if goalies or (opponent_goalie_data.total_saves > 0 or opponent_goalie_data.total_goals_conceded > 0) %}
         <h3>Goalie Save Percentages</h3>
         <div class="table-responsive">

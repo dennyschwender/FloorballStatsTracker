@@ -133,7 +133,7 @@ def game_details(game_id):
         game['opponent_goalie_enabled'] = False
         changed = True
     # Ensure stat dicts exist
-    for stat in ['plusminus', 'goals', 'assists', 'goalie_plusminus', 'saves', 'goals_conceded', 'opponent_goalie_saves', 'opponent_goalie_goals_conceded']:
+    for stat in ['plusminus', 'goals', 'assists', 'unforced_errors', 'goalie_plusminus', 'saves', 'goals_conceded', 'opponent_goalie_saves', 'opponent_goalie_goals_conceded']:
         if stat not in game or not isinstance(game[stat], dict):
             game[stat] = {}
             changed = True
@@ -202,12 +202,16 @@ def player_action(game_id, player):
         game['goals'] = {}
     if 'assists' not in game:
         game['assists'] = {}
+    if 'unforced_errors' not in game:
+        game['unforced_errors'] = {}
     if player not in game['plusminus']:
         game['plusminus'][player] = 0
     if player not in game['goals']:
         game['goals'][player] = 0
     if player not in game['assists']:
         game['assists'][player] = 0
+    if player not in game['unforced_errors']:
+        game['unforced_errors'][player] = 0
     # Period result tracking
     period = game.get('current_period', '1')
     if 'result' not in game:
@@ -245,6 +249,11 @@ def player_action(game_id, player):
     elif action == 'assist_minus':
         if game['assists'][player] > 0:
             game['assists'][player] -= 1
+    elif action == 'unforced_error':
+        game['unforced_errors'][player] += 1
+    elif action == 'unforced_error_minus':
+        if game['unforced_errors'][player] > 0:
+            game['unforced_errors'][player] -= 1
     games[game_id] = game
     save_games(games)
     # Preserve edit mode if present
@@ -268,6 +277,8 @@ def line_action(game_id, line_idx):
         game['goals'] = {}
     if 'assists' not in game:
         game['assists'] = {}
+    if 'unforced_errors' not in game:
+        game['unforced_errors'] = {}
     for player in game['lines'][line_idx]:
         if player not in game['plusminus']:
             game['plusminus'][player] = 0
@@ -275,6 +286,8 @@ def line_action(game_id, line_idx):
             game['goals'][player] = 0
         if player not in game['assists']:
             game['assists'][player] = 0
+        if player not in game['unforced_errors']:
+            game['unforced_errors'][player] = 0
         if action == 'plus':
             game['plusminus'][player] += 1
         elif action == 'minus':
@@ -283,6 +296,8 @@ def line_action(game_id, line_idx):
             game['goals'][player] += 1
         elif action == 'assist':
             game['assists'][player] += 1
+        elif action == 'unforced_error':
+            game['unforced_errors'][player] += 1
     games[game_id] = game
     save_games(games)
     if request.args.get('edit') == '1':
@@ -448,7 +463,7 @@ def reset_game(game_id):
         return "Game not found", 404
     game = games[game_id]
     # Reset player stats
-    for stat in ['plusminus', 'goals', 'assists']:
+    for stat in ['plusminus', 'goals', 'assists', 'unforced_errors']:
         if stat not in game:
             game[stat] = {}
         for line in game.get('lines', []):
@@ -495,7 +510,7 @@ def stats():
     # Data checking and defaulting for missing fields
     changed = False
     for g in games:
-        for stat in ['plusminus', 'goals', 'assists', 'saves', 'goals_conceded']:
+        for stat in ['plusminus', 'goals', 'assists', 'unforced_errors', 'saves', 'goals_conceded']:
             if stat not in g or not isinstance(g[stat], dict):
                 g[stat] = {}
                 changed = True
@@ -528,12 +543,13 @@ def stats():
             player_set.update(line)
     players = sorted(player_set)
     # Prepare per-player totals
-    player_totals = {p: {'plusminus': 0, 'goals': 0, 'assists': 0} for p in players}
+    player_totals = {p: {'plusminus': 0, 'goals': 0, 'assists': 0, 'unforced_errors': 0} for p in players}
     for g in games_sorted:
         for p in players:
             player_totals[p]['plusminus'] += g.get('plusminus', {}).get(p, 0)
             player_totals[p]['goals'] += g.get('goals', {}).get(p, 0)
             player_totals[p]['assists'] += g.get('assists', {}).get(p, 0)
+            player_totals[p]['unforced_errors'] += g.get('unforced_errors', {}).get(p, 0)
     
     # Collect all goalies
     goalie_set = set()
