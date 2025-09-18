@@ -112,8 +112,6 @@
                                     class="btn btn-success btn-sm mb-1 line-action d-none">+1 All</a>
                                 <a href="/action_line/{{ game_id }}/{{ line_idx }}?action=minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
                                     class="btn btn-danger btn-sm mb-1 line-action d-none">-1 All</a>
-                                <a href="/action_line/{{ game_id }}/{{ line_idx }}?action=unforced_error{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-warning btn-sm mb-1 line-action d-none">Error All</a>
                             </div>
                         </td>
                         {% endif %}

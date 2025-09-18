@@ -277,8 +277,6 @@ def line_action(game_id, line_idx):
         game['goals'] = {}
     if 'assists' not in game:
         game['assists'] = {}
-    if 'unforced_errors' not in game:
-        game['unforced_errors'] = {}
     for player in game['lines'][line_idx]:
         if player not in game['plusminus']:
             game['plusminus'][player] = 0
@@ -286,8 +284,6 @@ def line_action(game_id, line_idx):
             game['goals'][player] = 0
         if player not in game['assists']:
             game['assists'][player] = 0
-        if player not in game['unforced_errors']:
-            game['unforced_errors'][player] = 0
         if action == 'plus':
             game['plusminus'][player] += 1
         elif action == 'minus':
@@ -296,8 +292,6 @@ def line_action(game_id, line_idx):
             game['goals'][player] += 1
         elif action == 'assist':
             game['assists'][player] += 1
-        elif action == 'unforced_error':
-            game['unforced_errors'][player] += 1
     games[game_id] = game
     save_games(games)
     if request.args.get('edit') == '1':
