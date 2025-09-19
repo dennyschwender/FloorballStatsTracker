@@ -516,7 +516,7 @@ def stats():
             changed = True
     if changed:
         save_games(games)
-    # Sort games by date (newest first)
+    # Sort games by date (oldest first)
     def game_sort_key(g):
         date_str = g.get('date')
         try:
@@ -524,7 +524,7 @@ def stats():
         except Exception:
             date_val = datetime.min
         return (date_val, -games.index(g))
-    games_sorted = sorted(games, key=game_sort_key, reverse=True)
+    games_sorted = sorted(games, key=game_sort_key, reverse=False)
     # Filter by team/category
     teams = sorted(set(g.get('team', '') for g in games if g.get('team')))
     selected_team = request.args.get('team')
