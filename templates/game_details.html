@@ -95,6 +95,7 @@
                         <th class="text-center">+/-</th>
                         <th class="text-center">Goals</th>
                         <th class="text-center">Assists</th>
+                        <th class="text-center">Errors</th>
                         <th class="actions-col d-none">Actions</th>
                     </tr>
                 </thead>
@@ -121,6 +122,8 @@
                                 game.goals else 0 }}</span></td>
                         <td class="text-center"><span class="fw-bold">{{ game.assists[player] if game.assists and player
                                 in game.assists else 0 }}</span></td>
+                        <td class="text-center"><span class="fw-bold">{{ game.unforced_errors[player] if game.unforced_errors and player
+                                in game.unforced_errors else 0 }}</span></td>
                         <td class="actions-col d-none">
                             <div class="dropdown text-center action-dropdown d-none">
                                 <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
@@ -143,6 +146,11 @@
                                         class="btn btn-info btn-sm my-1 w-100">Assist</a>
                                     <a href="/action/{{ game_id }}/{{ player }}?action=assist_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
                                         class="btn btn-outline-info btn-sm my-1 w-100">-Assist</a>
+                                    <hr class="dropdown-divider">
+                                    <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                        class="btn btn-warning btn-sm my-1 w-100">Error</a>
+                                    <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                        class="btn btn-outline-warning btn-sm my-1 w-100">-Error</a>
                                 </div>
                             </div>
                         </td>
