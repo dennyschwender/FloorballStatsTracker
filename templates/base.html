@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="{{ g.get('lang', 'en') if g is defined else 'en' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ g.t['title'] }}{% endblock %}</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="manifest" href="/static/site.webmanifest">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        /* Navbar dropdown and select responsive tweaks */
+        .navbar .dropdown-toggle.btn-sm {
+            padding: .25rem .5rem;
+        }
+
+        .navbar .dropdown-menu {
+            min-width: 180px;
+        }
+
+        @media (max-width: 991px) {
+            .navbar .dropdown-menu {
+                min-width: 140px;
+            }
+
+            #navbar-game-switch-mobile {
+                width: 100%;
+                margin-top: .4rem;
+            }
+
+            .navbar .nav-link.p-0 {
+                display: inline-block;
+                margin-right: .5rem;
+            }
+
+            /* Make actions button large and full-width on mobile */
+            .nav-action-btn {
+                display: block !important;
+                width: 100% !important;
+                padding: .5rem .75rem !important;
+                font-size: 1rem !important;
+                text-align: left;
+            }
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4" aria-label="Main navigation">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">{{ g.t['brand'] }}</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/create_game">{{ g.t['create_game'] }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/stats">{{ g.t['stats'] }}</a></li>
+                </ul>
+                <form class="d-flex order-2 order-lg-1" method="post" action="/set_language">
+                    <select name="lang" class="form-select me-2" aria-label="Change language"
+                        onchange="this.form.submit()">
+                        <option value="en" {% if g.get('lang', 'en' )=='en' %}selected{% endif %}>{{ g.t['lang_en'] }}
+                        </option>
+                        <option value="it" {% if g.get('lang', 'en' )=='it' %}selected{% endif %}>{{ g.t['lang_it'] }}
+                        </option>
+                    </select>
+                    <noscript><button class="btn btn-outline-primary" type="submit">{{ g.t['change']
+                            }}</button></noscript>
+                </form>
+
+                {# Desktop: show an All Games link and a game-switch select when there are multiple games #}
+                <div class="ms-3 d-none d-lg-block order-lg-2" style="min-width:160px;">
+                    {% if games is defined and games|length > 1 %}
+                    <select id="navbar-game-switch" class="form-select form-select-sm mt-1" aria-label="Switch game">
+                        <option value="">{{ g.t['all'] }}</option>
+                        {% for gg in games %}
+                        <option value="{{ loop.index0 }}" {% if g.get('current_game_id') is not none and
+                            loop.index0==g.current_game_id %}selected{% endif %}>{{ gg.home_team }} vs {{ gg.away_team
+                            }}</option>
+                        {% endfor %}
+                    </select>
+                    {% endif %}
+                </div>
+
+                {# Actions dropdown: compact and consistent across screen sizes #}
+                <div class="dropdown ms-3 order-3 order-lg-3">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle nav-action-btn" type="button"
+                        id="gameActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+                        {{ g.t['actions'] }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="gameActionsDropdown"
+                        style="min-width:180px;">
+                        <li><a class="dropdown-item" href="/create_game">{{ g.t['create_new_game'] }}</a></li>
+                        <li><a class="dropdown-item" href="/stats">{{ g.t['stats'] }}</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {% if g.get('current_game_id') is not none %}
+                        <li><a class="dropdown-item" href="/modify_game/{{ g.current_game_id }}">{{ g.t['modify_game']
+                                }}</a></li>
+                        <li><a class="dropdown-item reset-game-link" href="#"
+                                data-reset-url="/reset_game/{{ g.current_game_id }}">{{ g.t['reset_stats'] }}</a></li>
+                        <li><a class="dropdown-item" href="/game/{{ g.current_game_id }}?edit=1"
+                                id="navbar-edit-mode-link">{{ g.t['edit_mode'] }}</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% if games is defined and games|length > 1 %}
+                <div class="w-100 d-lg-none mt-2 order-1">
+                    <select id="navbar-game-switch-mobile" class="form-select form-select-sm" aria-label="Switch game">
+                        <option value="">{{ g.t['all'] }}</option>
+                        {% for gg in games %}
+                        <option value="{{ loop.index0 }}" {% if g.get('current_game_id') is not none and
+                            loop.index0==g.current_game_id %}selected{% endif %}>{{ gg.home_team }} vs {{ gg.away_team
+                            }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    <main tabindex="-1">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Confirm Reset Modal (used by Reset action in navbar) -->
+    <div class="modal fade" id="confirmResetModal" tabindex="-1" aria-labelledby="confirmResetModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmResetModalLabel">{{ g.t['confirm_reset_title'] }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">{{ g.t['confirm_reset_body'] }}</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{
+                        g.t['confirm_reset_cancel'] }}</button>
+                    <button id="confirmResetBtn" type="button" class="btn btn-danger">{{ g.t['confirm_reset_confirm']
+                        }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Navbar helpers: reset confirmation and switch games
+        document.addEventListener('DOMContentLoaded', function () {
+            // Reset modal handling
+            document.querySelectorAll('.reset-game-link').forEach(function (el) {
+                el.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var url = el.getAttribute('data-reset-url');
+                    var confirmBtn = document.getElementById('confirmResetBtn');
+                    confirmBtn.setAttribute('data-reset-url', url);
+                    // Show modal
+                    var modalEl = document.getElementById('confirmResetModal');
+                    var modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                });
+            });
+            var confirmBtn = document.getElementById('confirmResetBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function (e) {
+                    var url = confirmBtn.getAttribute('data-reset-url');
+                    if (url && url !== '#') {
+                        window.location.href = url;
+                    }
+                });
+            }
+
+            // Game switch handler (desktop)
+            var switchEl = document.getElementById('navbar-game-switch');
+            if (switchEl) {
+                switchEl.addEventListener('change', function () {
+                    if (this.value) {
+                        window.location.href = '/game/' + this.value;
+                    }
+                });
+            }
+            // Game switch handler (mobile collapsed navbar)
+            var switchMobile = document.getElementById('navbar-game-switch-mobile');
+            if (switchMobile) {
+                switchMobile.addEventListener('change', function () {
+                    if (this.value) {
+                        window.location.href = '/game/' + this.value;
+                    }
+                });
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

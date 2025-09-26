@@ -1,0 +1,15 @@
+templates/base.html:
+  Confirm Reset Modal (used by Reset action in navbar)
+  html
+templates/stats.html:
+  %
+                        
+                        -
+  %
+                        
+                        -
+                        
+                        
+                        -
+  +  =
+  -  vs

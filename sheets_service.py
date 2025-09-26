@@ -10,11 +10,13 @@ SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 RANGE = 'Sheet1!A1:E'  # Adjust as needed
 
+
 def get_service():
     creds = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     service = build('sheets', 'v4', credentials=creds)
     return service
+
 
 def fetch_data():
     service = get_service()
@@ -24,6 +26,7 @@ def fetch_data():
         range=RANGE
     ).execute()
     return result.get('values', [])
+
 
 def update_data(values):
     service = get_service()

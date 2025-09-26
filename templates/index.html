@@ -1,59 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Floorball Stats Tracker</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    <link rel="manifest" href="/static/site.webmanifest">
-</head>
-
-<body>
-    <div class="container mt-5">
-        <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
-            <a href="/create_game" class="btn btn-primary btn-sm">Create New Game</a>
-            {% if games %}
-            <form method="get" action="/" class="d-inline-block">
-                <select class="form-select form-select-sm d-inline-block w-auto" name="team"
-                    onchange="this.form.submit()">
-                    <option value="">All Teams</option>
-                    {% set teams = games | map(attribute='team') | list | unique | sort %}
-                    {% for team in teams %}
-                    <option value="{{ team }}" {% if team==selected_team %}selected{% endif %}>{{ team }}</option>
-                    {% endfor %}
-                </select>
-            </form>
-            {% endif %}
-            {% if latest_game_id is not none %}
-            <a href="/game/{{ latest_game_id }}" class="btn btn-success btn-sm">Go to Latest Game</a>
-            {% endif %}
-            <a href="/stats" class="btn btn-outline-dark btn-sm">Stats</a>
-        </div>
-        <h1 class="mb-3" style="font-size:1.2rem;">Floorball Stats Tracker</h1>
+{% extends "base.html" %}
+{% block title %}{{ g.t['title'] if g.t is defined else 'Floorball Stats Tracker' }}{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
         {% if games %}
-        <h2 class="mb-3">All Games{% if selected_team %} for {{ selected_team }}{% endif %}</h2>
-        <ul class="list-group">
-            {% for g in games %}
-            {% if not selected_team or g.team == selected_team %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                    {% if not selected_team and g.team %}
-                    <span class="badge bg-info text-dark me-2">{{ g.team }}</span>
-                    {% endif %}
-                    <span class="text-muted small">{{ g.date if g.date else '' }}</span>
-                    {{ g.home_team }} vs {{ g.away_team }}
-                </span>
-                <a href="/game/{{ g.id }}" class="btn btn-outline-secondary btn-sm">View</a>
-            </li>
-            {% endif %}
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No games found. Create a new game to get started!</p>
+        <form method="get" action="/" class="d-inline-block">
+            <select class="form-select form-select-sm d-inline-block w-auto" name="team" onchange="this.form.submit()">
+                <option value="">{{ g.t['all_teams'] if g.t is defined else 'All Teams' }}</option>
+                {% set teams = games | map(attribute='team') | list | unique | sort %}
+                {% for team in teams %}
+                <option value="{{ team }}" {% if team==selected_team %}selected{% endif %}>{{ team }}</option>
+                {% endfor %}
+            </select>
+        </form>
         {% endif %}
-
-</html>
+        {% if latest_game_id is not none %}
+        <a href="/game/{{ latest_game_id }}" class="btn btn-success btn-sm">{{ g.t['go_to_latest_game'] if g.t is
+            defined else 'Go to Latest Game' }}</a>
+        {% endif %}
+    </div>
+    <h1 class="mb-3" style="font-size:1.2rem;">{{ g.t['title'] if g.t is defined else 'Floorball Stats Tracker' }}</h1>
+    {% if games %}
+    <h2 class="mb-3">{{ g.t['all_games'] if not selected_team else g.t['all_games_for'] ~ ' ' ~ selected_team }}</h2>
+    <ul class="list-group">
+        {% for game in games %}
+        {% if not selected_team or game.team == selected_team %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+                {% if not selected_team and game.team %}
+                <span class="badge bg-info text-dark me-2">{{ game.team }}</span>
+                {% endif %}
+                <span class="text-muted small">{{ game.date if game.date else '' }}</span>
+                {{ game.home_team }} vs {{ game.away_team }}
+            </span>
+            <a href="/game/{{ game.id }}" class="btn btn-outline-secondary btn-sm">{{ g.t['view'] }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>{{ g.t['no_games'] }}</p>
+    {% endif %}
+</div>
+{% endblock %}
