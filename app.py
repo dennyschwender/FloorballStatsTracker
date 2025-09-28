@@ -763,6 +763,9 @@ def reset_game(game_id):
         return redirect(url_for('game_details', game_id=game_id, edit=1))
     return redirect(url_for('game_details', game_id=game_id))
 
+
+# (debug route removed)
+
 # Delete game route
 
 
