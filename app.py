@@ -1,6 +1,7 @@
 import os
 import json
 from flask import Flask, request, render_template, redirect, url_for, session, g
+from urllib.parse import urlparse
 from datetime import datetime
 REQUIRED_PIN = os.environ.get('FLOORBALL_PIN', '1717')
 
@@ -199,10 +200,14 @@ def set_language_route():
     if lang not in LANGUAGES:
         lang = default
     session['lang'] = lang
-    # Redirect back to previous page or home
+    # Redirect back to previous page or home safely
     ref = request.referrer or url_for('index')
-    return redirect(ref)
-
+    # Remove backslashes which some browsers accept
+    safe_ref = ref.replace('\\', '')
+    parsed = urlparse(safe_ref)
+    if not parsed.netloc and not parsed.scheme:
+        return redirect(safe_ref)
+    return redirect(url_for('index'))
 
 PERIODS = ["1", "2", "3", "OT"]
 
