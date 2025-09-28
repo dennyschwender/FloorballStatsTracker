@@ -88,7 +88,7 @@
         </div>
     </form>
     <h3>{{ g.t['plus_minus'] }}</h3>
-    <div class="table-responsive mb-4">
+    <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" style="table-layout: auto;">
             <thead>
                 <tr>
@@ -115,7 +115,7 @@
         </table>
     </div>
     <h3>{{ g.t['goals_assists'] }}</h3>
-    <div class="table-responsive">
+    <div class="table-responsive-sm">
         <table class="table table-bordered align-middle text-center" style="table-layout: auto;">
             <thead>
                 <tr>
@@ -146,7 +146,7 @@
     </div>
 
     <h3>{{ g.t['unforced_errors'] }}</h3>
-    <div class="table-responsive mb-4">
+    <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" style="table-layout: auto;">
             <thead>
                 <tr>
@@ -175,7 +175,7 @@
 
     {% if goalies or (opponent_goalie_data.total_saves > 0 or opponent_goalie_data.total_goals_conceded > 0) %}
     <h3>{{ g.t['goalie_save_percent'] }}</h3>
-    <div class="table-responsive">
+    <div class="table-responsive-sm">
         <table class="table table-bordered align-middle text-center" style="table-layout: auto;">
             <thead>
                 <tr>

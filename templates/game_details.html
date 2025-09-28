@@ -54,7 +54,7 @@
     </div>
     {% endif %}
 
-    <div class="table-responsive mb-4 mx-lg-5">
+    <div class="table-responsive-sm mb-4 mx-lg-5">
         <table class="table table-bordered align-middle">
             <thead class="table-light">
                 <tr>
@@ -96,27 +96,27 @@
                         <div class="dropdown text-center action-dropdown d-none">
                             <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">{{ g.t['actions'] }}</button>
-                            <div class="dropdown-menu p-2 text-center w-100"
+                            <div class="dropdown-menu p-2 text-center"
                                 style="min-width: 140px; overflow: visible; max-height: none;">
                                 <a href="/action/{{ game_id }}/{{ player }}?action=plus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-success btn-sm my-1 w-100">+1</a>
+                                    class="btn btn-success btn-sm my-1">+1</a>
                                 <a href="/action/{{ game_id }}/{{ player }}?action=minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-danger btn-sm my-1 w-100">-1</a>
+                                    class="btn btn-danger btn-sm my-1">-1</a>
                                 <hr class="dropdown-divider">
                                 <a href="/action/{{ game_id }}/{{ player }}?action=goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-primary btn-sm my-1 w-100">{{ g.t['goal'] }}</a>
+                                    class="btn btn-primary btn-sm my-1">{{ g.t['goal'] }}</a>
                                 <a href="/action/{{ game_id }}/{{ player }}?action=goal_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-primary btn-sm my-1 w-100">-{{ g.t['goal'] }}</a>
+                                    class="btn btn-outline-primary btn-sm my-1">-{{ g.t['goal'] }}</a>
                                 <hr class="dropdown-divider">
                                 <a href="/action/{{ game_id }}/{{ player }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-info btn-sm my-1 w-100">{{ g.t['assists'] }}</a>
+                                    class="btn btn_info btn-sm my-1">{{ g.t['assists'] }}</a>
                                 <a href="/action/{{ game_id }}/{{ player }}?action=assist_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-info btn-sm my-1 w-100">-{{ g.t['assists'] }}</a>
+                                    class="btn btn-outline-info btn-sm my-1">-{{ g.t['assists'] }}</a>
                                 <hr class="dropdown-divider">
                                 <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-warning btn-sm my-1 w-100">{{ g.t['errors'] }}</a>
+                                    class="btn btn-warning btn-sm my-1">{{ g.t['errors'] }}</a>
                                 <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-warning btn-sm my-1 w-100">-{{ g.t['errors'] }}</a>
+                                    class="btn btn-outline-warning btn-sm my-1">-{{ g.t['errors'] }}</a>
                             </div>
                         </div>
                     </td>
@@ -128,7 +128,7 @@
     </div>
 
     <h3 class="mb-3">{{ g.t['goalies'] }}</h3>
-    <div class="table-responsive mx-lg-5">
+    <div class="table-responsive-sm mx-lg-5">
         <table class="table table-bordered align-middle">
             <thead class="table-light">
                 <tr>
@@ -168,19 +168,19 @@
                             <div class="dropdown-menu dropdown-menu-end p-2 text-center"
                                 style="min-width: 140px; overflow: visible; max-height: none;">
                                 <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-info btn-sm my-1 w-100">{{ '+' ~ g.t['assists'] }}</a>
+                                    class="btn btn-info btn-sm my-1">{{ '+' ~ g.t['assists'] }}</a>
                                 <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=assist_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-info btn-sm my-1 w-100">{{ '-' ~ g.t['assists'] }}</a>
+                                    class="btn btn-outline-info btn-sm my-1">{{ '-' ~ g.t['assists'] }}</a>
                                 <hr class="dropdown-divider">
                                 <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-primary btn-sm my-1 w-100">{{ g.t['save'] }}</a>
+                                    class="btn btn-primary btn-sm my-1">{{ g.t['save'] }}</a>
                                 <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-primary btn-sm my-1 w-100">{{ '-' ~ g.t['save'] }}</a>
+                                    class="btn btn-outline-primary btn-sm my-1">{{ '-' ~ g.t['save'] }}</a>
                                 <hr class="dropdown-divider">
                                 <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-danger btn-sm my-1 w-100">{{ g.t['goals_conceded'] }}</a>
+                                    class="btn btn-danger btn-sm my-1">{{ g.t['goals_conceded'] }}</a>
                                 <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-danger btn-sm my-1 w-100">{{ '-' ~ g.t['goals_conceded']
+                                    class="btn btn-outline-danger btn-sm my-1">{{ '-' ~ g.t['goals_conceded']
                                     }}</a>
                             </div>
                         </div>
@@ -192,7 +192,7 @@
     </div>
 
     <h3 class="mb-3">{{ g.t['opponent_goalie'] }}</h3>
-    <div class="table-responsive mx-lg-5">
+    <div class="table-responsive-sm mx-lg-5">
         <table class="table table-bordered align-middle">
             <thead class="table-light">
                 <tr>
@@ -210,8 +210,10 @@
                     <td class="text-center"><span class="fw-bold">{{ game.opponent_goalie_saves["Opponent Goalie"] if
                             game.opponent_goalie_saves and "Opponent Goalie" in game.opponent_goalie_saves else 0
                             }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.opponent_goalie_goals_conceded["Opponent Goalie"] if
-                            game.opponent_goalie_goals_conceded and "Opponent Goalie" in game.opponent_goalie_goals_conceded else 0 }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ game.opponent_goalie_goals_conceded["Opponent
+                            Goalie"] if
+                            game.opponent_goalie_goals_conceded and "Opponent Goalie" in
+                            game.opponent_goalie_goals_conceded else 0 }}</span></td>
                     <td class="text-center">
                         {% set saves = game.opponent_goalie_saves["Opponent Goalie"] if game.opponent_goalie_saves and
                         "Opponent Goalie" in game.opponent_goalie_saves else 0 %}
@@ -232,14 +234,14 @@
                             <div class="dropdown-menu dropdown-menu-end p-2 text-center"
                                 style="min-width: 140px; overflow: visible; max-height: none;">
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=save{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-primary btn-sm my-1 w-100">{{ g.t['save'] }}</a>
+                                    class="btn btn-primary btn-sm my-1">{{ g.t['save'] }}</a>
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=save_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-primary btn-sm my-1 w-100">-{{ g.t['save'] }}</a>
+                                    class="btn btn-outline-primary btn-sm my-1">-{{ g.t['save'] }}</a>
                                 <hr class="dropdown-divider">
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=goal_conceded{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-danger btn-sm my-1 w-100">{{ g.t['goals_conceded'] }}</a>
+                                    class="btn btn-danger btn-sm my-1">{{ g.t['goals_conceded'] }}</a>
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=goal_conceded_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-danger btn-sm my-1 w-100">-{{ g.t['goals_conceded'] }}</a>
+                                    class="btn btn-outline-danger btn-sm my-1">-{{ g.t['goals_conceded'] }}</a>
                             </div>
                         </div>
                     </td>
@@ -290,5 +292,66 @@
         // Preserve hash/other params by setting search only
         window.location.search = params.toString();
     }
+
+    // Prevent dropdowns inside horizontally-scrollable tables from being clipped
+    function initTableDropdownPopper() {
+        // For dropdowns inside a scrollable table, move the menu into document.body
+        // when opening so it won't be clipped by ancestor overflow rules, and
+        // restore it when closed. Also ensure Popper prevents overflow against body.
+        document.querySelectorAll('.table-responsive-sm .dropdown').forEach(function (dd) {
+            var toggle = dd.querySelector('.dropdown-toggle');
+            var menu = dd.querySelector('.dropdown-menu');
+            if (!toggle || !menu) return;
+
+            // Re-initialize the dropdown with popper modifiers that reference body
+            try {
+                new bootstrap.Dropdown(toggle, {
+                    popperConfig: function (defaultBsPopperConfig) {
+                        var cfg = defaultBsPopperConfig || {};
+                        cfg.modifiers = (cfg.modifiers || []).concat([
+                            { name: 'computeStyles', options: { adaptive: false } },
+                            { name: 'preventOverflow', options: { boundary: document.body, altAxis: true } },
+                            { name: 'flip', options: { fallbackPlacements: ['top', 'bottom'] } }
+                        ]);
+                        return cfg;
+                    }
+                });
+            } catch (err) {
+                console && console.warn && console.warn('Dropdown popper init failed', err);
+            }
+
+            // Move menu to body on show so it's not clipped by overflow parents
+            dd.addEventListener('show.bs.dropdown', function () {
+                try {
+                    if (!menu.__origParent) {
+                        menu.__origParent = menu.parentNode;
+                        menu.__nextSibling = menu.nextSibling;
+                        document.body.appendChild(menu);
+                    }
+                } catch (e) {
+                    console && console.warn && console.warn('move menu to body failed', e);
+                }
+            });
+
+            // Restore menu to original location on hide
+            dd.addEventListener('hidden.bs.dropdown', function () {
+                try {
+                    if (menu.__origParent) {
+                        if (menu.__nextSibling) menu.__origParent.insertBefore(menu, menu.__nextSibling);
+                        else menu.__origParent.appendChild(menu);
+                        delete menu.__origParent;
+                        delete menu.__nextSibling;
+                    }
+                } catch (e) {
+                    console && console.warn && console.warn('restore menu failed', e);
+                }
+            });
+        });
+    }
+
+    // Also initialize on DOM ready (and when toggling edit mode we keep behavior)
+    document.addEventListener('DOMContentLoaded', function () {
+        initTableDropdownPopper();
+    });
 </script>
 {% endblock %}
