@@ -162,10 +162,10 @@
                         {% endif %}
                     </td>
                     <td colspan="8" class="actions-col d-none">
-                        <div class="dropdown text-center goalie-action-dropdown d-none">
+                        <div class="dropdown dropup text-center goalie-action-dropdown d-none">
                             <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">{{ g.t['actions'] }}</button>
-                            <div class="dropdown-menu p-2 text-center w-100"
+                            <div class="dropdown-menu dropdown-menu-end p-2 text-center"
                                 style="min-width: 140px; overflow: visible; max-height: none;">
                                 <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
                                     class="btn btn-info btn-sm my-1 w-100">{{ '+' ~ g.t['assists'] }}</a>
@@ -227,10 +227,10 @@
                         {% endif %}
                     </td>
                     <td colspan="4" class="actions-col d-none">
-                        <div class="dropdown text-center opponent-goalie-action-dropdown d-none">
+                        <div class="dropdown dropup text-center opponent-goalie-action-dropdown d-none">
                             <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">{{ g.t['actions'] }}</button>
-                            <div class="dropdown-menu p-2 text-center w-100"
+                            <div class="dropdown-menu dropdown-menu-end p-2 text-center"
                                 style="min-width: 140px; overflow: visible; max-height: none;">
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=save{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
                                     class="btn btn-primary btn-sm my-1 w-100">{{ g.t['save'] }}</a>
