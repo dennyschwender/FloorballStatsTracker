@@ -8,6 +8,28 @@ if ROOT not in sys.path:
 
 import pytest  # noqa: E402
 from app import app  # noqa: E402
+import os
+
+
+# Preserve games.json across tests by backing it up and restoring after each test session
+@pytest.fixture(autouse=True)
+def preserve_games_file():
+    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    games_path = os.path.join(ROOT, 'gamesFiles', 'games.json')
+    orig = None
+    if os.path.exists(games_path):
+        with open(games_path, 'r') as f:
+            orig = f.read()
+    yield
+    # restore
+    if orig is None:
+        try:
+            os.remove(games_path)
+        except OSError:
+            pass
+    else:
+        with open(games_path, 'w') as f:
+            f.write(orig)
 
 
 @pytest.fixture

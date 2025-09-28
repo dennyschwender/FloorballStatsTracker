@@ -20,23 +20,7 @@ def _write_games(games):
         json.dump(games, f, indent=2)
 
 
-@pytest.fixture(autouse=True)
-def preserve_games_file(tmp_path):
-    """Backup the games file before each test and restore it after."""
-    orig = None
-    if os.path.exists(GAMES_FILE):
-        with open(GAMES_FILE, 'r') as f:
-            orig = f.read()
-    yield
-    # restore
-    if orig is None:
-        try:
-            os.remove(GAMES_FILE)
-        except OSError:
-            pass
-    else:
-        with open(GAMES_FILE, 'w') as f:
-            f.write(orig)
+# games file preservation handled in tests/conftest.py
 
 
 def make_sample_game(opponent_goalie_enabled=False):
@@ -208,3 +192,34 @@ def test_stats_page_contains_players_and_goalies(client):
     data = rv.data.decode('utf-8')
     assert 'P1' in data
     assert 'G1' in data
+
+
+def test_invalid_game_and_period(client):
+    # no games -> invalid game id
+    with open(GAMES_FILE, 'w') as f:
+        f.write('[]')
+    rv = client.get('/game/99')
+    assert rv.status_code == 404
+
+    rv = client.get('/action/99/P1?action=plus')
+    assert rv.status_code == 404
+
+    # create a game and request invalid period
+    games = [make_sample_game()]
+    _write_games(games)
+    rv = client.get('/set_period/0/FOO')
+    assert rv.status_code == 400
+
+
+def test_unauthenticated_redirect(client):
+    # Clear authentication from session via a fresh test client
+    from app import app as _app
+    _app.config['TESTING'] = True
+    with _app.test_client() as anon:
+        # no authenticated session -> index shows pin page
+        rv = anon.get('/')
+        assert rv.status_code == 200
+        assert b'PIN' in rv.data or b'Enter Access PIN' in rv.data
+        # protected route should redirect to index
+        rv2 = anon.get('/stats', follow_redirects=False)
+        assert rv2.status_code in (302, 301)
