@@ -518,6 +518,25 @@ def line_action(game_id, line_idx):
         game['goals'] = {}
     if 'assists' not in game:
         game['assists'] = {}
+    
+    # Period result tracking - done once per line action
+    period = game.get('current_period', '1')
+    if 'result' not in game:
+        game['result'] = {p: {"home": 0, "away": 0} for p in PERIODS}
+    
+    # Handle line-level actions that affect score and opponent goalie stats
+    if action == 'goal':
+        # Home team goal in current period - increment ONCE for the line
+        game['result'][period]['home'] += 1
+        # Auto-increment opponent goalie goals conceded ONCE for the line
+        if game.get('opponent_goalie_enabled', False):
+            if 'opponent_goalie_goals_conceded' not in game:
+                game['opponent_goalie_goals_conceded'] = {}
+            # Always use "Opponent Goalie" as the key
+            if "Opponent Goalie" not in game['opponent_goalie_goals_conceded']:
+                game['opponent_goalie_goals_conceded']["Opponent Goalie"] = 0
+            game['opponent_goalie_goals_conceded']["Opponent Goalie"] += 1
+    
     for player in game['lines'][line_idx]:
         if player not in game['plusminus']:
             game['plusminus'][player] = 0
