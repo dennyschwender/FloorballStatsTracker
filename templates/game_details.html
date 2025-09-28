@@ -210,9 +210,8 @@
                     <td class="text-center"><span class="fw-bold">{{ game.opponent_goalie_saves["Opponent Goalie"] if
                             game.opponent_goalie_saves and "Opponent Goalie" in game.opponent_goalie_saves else 0
                             }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.opponent_goalie_goals_conceded["Opponent
-                            Goalie"] if game.opponent_goalie_goals_conceded and "Opponent Goalie" in
-                            game.opponent_goalie_goals_conceded else 0 }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ game.opponent_goalie_goals_conceded["Opponent Goalie"] if
+                            game.opponent_goalie_goals_conceded and "Opponent Goalie" in game.opponent_goalie_goals_conceded else 0 }}</span></td>
                     <td class="text-center">
                         {% set saves = game.opponent_goalie_saves["Opponent Goalie"] if game.opponent_goalie_saves and
                         "Opponent Goalie" in game.opponent_goalie_saves else 0 %}
