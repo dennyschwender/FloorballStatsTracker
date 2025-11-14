@@ -6,6 +6,7 @@ services:
       - "5000:5000"
     volumes:
       - ./.gamesFiles/:/app/gamesFiles/
+      - ./rosters/:/app/rosters/
     environment:
       - FLASK_APP=app.py
       - FLASK_RUN_HOST=0.0.0.0
