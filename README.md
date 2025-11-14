@@ -37,6 +37,26 @@ A web app for tracking floorball game statistics, including player and goalie st
 - **Stats Page**: View all games, filter by team/category, and see per-player plus/minus, goals, assists, and total points.
 - **Totals**: See per-player totals and per-game breakdowns for all tracked stats.
 
+### Team Roster Management
+
+- **Roster Page**: Manage your team roster with player details including number, surname, name, nickname, position (Attacker/Center/Defender/Goalie), and category (U18/U21/U21 DP/U16).
+- **Add Player**: Add new players to your team roster.
+- **Edit Player**: Modify existing player details.
+- **Delete Player**: Remove players from the roster.
+
+### Gameday Paper Management
+
+- **Gameday Papers**: Create and manage gameday lineup papers for matches.
+- **Player Convocation**: Mark which players are called up for each game.
+- **Formations**: Define special formations including:
+  - **PP1, PP2**: Power play formations
+  - **BP1, BP2**: Box play formations
+  - **6vs5**: 6 vs 5 formation
+  - **Stress Line**: High-pressure lineup
+- **Lines**: Set up your 4 regular game lines (L1-L4).
+- **Summaries**: View automatic summaries by position (A/C/D/P) and category (U18/U21/U21 DP/U16).
+- **Print View**: Generate a formatted view of your gameday paper for printing or reference during games.
+
 ### Security & Access
 
 - **PIN Login**: Access to the app is protected by a PIN code (set via environment variable `FLOORBALL_PIN`).
@@ -60,6 +80,8 @@ A web app for tracking floorball game statistics, including player and goalie st
 ## Data Storage
 
 - All game data is stored in `gamesFiles/games.json`.
+- Team roster data is stored in `team_roster.json`.
+- Gameday paper data is stored in `gameday_papers.json`.
 
 ---
 

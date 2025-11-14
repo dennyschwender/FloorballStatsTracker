@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ g.t['bulk_import'] }}{% endblock %}
+
+{% block head %}
+<style>
+    .format-info {
+        background-color: #e7f3ff;
+        border-left: 4px solid #0d6efd;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .example-box {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        font-family: monospace;
+        margin: 10px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ g.t['bulk_import_title'] }}</h1>
+
+    <!-- Category Selection -->
+    <div class="mb-4">
+        <label for="categoryInput" class="form-label"><strong>{{ g.t['select_roster'] }}</strong></label>
+        <input type="text" class="form-control" id="categoryInput" list="categoryList"
+            placeholder="-- {{ g.t['select_category'] }} --" value="{{ category if category else '' }}"
+            oninput="updateCategoryInForm(this.value)">
+        <datalist id="categoryList">
+            {% for cat in categories %}
+            <option value="{{ cat }}">
+                {% endfor %}
+        </datalist>
+        <small class="form-text text-muted">{{ g.t['select_or_create_roster'] }}</small>
+    </div>
+
+    <script>
+        function updateCategoryInForm(value) {
+            document.getElementById('categoryField').value = value;
+        }
+        // Initialize on load
+        if (document.getElementById('categoryInput').value) {
+            updateCategoryInForm(document.getElementById('categoryInput').value);
+        }
+    </script>
+
+    <div class="format-info">
+        <h5>{{ g.t['bulk_import_instructions'] }}</h5>
+        <p><strong>{{ g.t['bulk_import_format'] }}</strong></p>
+        <div class="example-box">
+            {{ g.t['bulk_import_example'] }}<br>
+            7, Johnson, Mike, C, U21, Mikey<br>
+            15, Williams, Sarah, D, U18<br>
+            1, Brown, Alex, P, U21 DP, Brownie
+        </div>
+        <p class="mb-0"><strong>Format:</strong> Number, Surname, Name, Position (A/C/D/P), Category (U18/U21/U21
+            DP/U16), Nickname (optional)</p>
+    </div>
+
+    <form method="post">
+        <input type="hidden" name="category" id="categoryField" value="{{ category if category else '' }}">
+
+        <div class="mb-3">
+            <label for="bulk_data" class="form-label">{{ g.t['bulk_data'] }}</label>
+            <textarea class="form-control" id="bulk_data" name="bulk_data" rows="15"
+                placeholder="10, Smith, John, A, U18, Johnny&#10;7, Johnson, Mike, C, U21, Mikey&#10;15, Williams, Sarah, D, U18&#10;1, Brown, Alex, P, U21 DP, Brownie"
+                required></textarea>
+            <small class="form-text text-muted">Paste data from Excel/Google Sheets (tab-separated) or enter
+                comma-separated values. One player per line.</small>
+        </div>
+
+        <button type="submit" class="btn btn-success">{{ g.t['import_players'] }}</button>
+        <a href="{{ url_for('roster_list') }}" class="btn btn-secondary">{{ g.t['cancel'] }}</a>
+    </form>
+</div>
+{% endblock %}

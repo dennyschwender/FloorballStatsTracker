@@ -60,6 +60,7 @@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link" href="/create_game">{{ g.t['create_game'] }}</a></li>
                     <li class="nav-item"><a class="nav-link" href="/stats">{{ g.t['stats'] }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/roster">{{ g.t['roster'] }}</a></li>
                 </ul>
                 <form class="d-flex order-2 order-lg-1" method="post" action="/set_language">
                     <select name="lang" class="form-select me-2" aria-label="Change language"
@@ -204,6 +205,16 @@
                     }
                 });
             }
+
+            // Handle delete confirmations
+            document.querySelectorAll('a[data-confirm]').forEach(function (link) {
+                link.addEventListener('click', function (e) {
+                    var message = this.getAttribute('data-confirm');
+                    if (!confirm(message)) {
+                        e.preventDefault();
+                    }
+                });
+            });
         });
     </script>
     {% block scripts %}{% endblock %}

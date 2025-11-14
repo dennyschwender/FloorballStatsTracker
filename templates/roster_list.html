@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}{{ g.t['roster'] }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ g.t['roster_management'] }}</h1>
+
+    {% if not selected_category %}
+    <!-- Show existing rosters as clickable cards -->
+    <div class="mb-4">
+        <h4>{{ g.t['select_roster'] }}</h4>
+        <div class="row">
+            {% for roster_cat in existing_rosters %}
+            <div class="col-md-3 mb-3">
+                <a href="{{ url_for('roster_list', category=roster_cat) }}" class="btn btn-outline-primary w-100 p-3"
+                    style="font-size: 1.2rem;">
+                    {{ roster_cat }}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% if not existing_rosters %}
+        <div class="alert alert-info">{{ g.t['no_players'] }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Create New Roster Button -->
+    <div class="mb-4">
+        <h4>Create New Roster</h4>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newRosterModal">
+            + Create New Roster
+        </button>
+    </div>
+
+    <!-- Modal for creating new roster -->
+    <div class="modal fade" id="newRosterModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Roster</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newRosterForm">
+                        <div class="mb-3">
+                            <label for="newCategoryName" class="form-label">Roster Name/Category</label>
+                            <input type="text" class="form-control" id="newCategoryName"
+                                placeholder="e.g., U18, Senior, NLA" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ g.t['cancel'] }}</button>
+                    <button type="button" class="btn btn-primary" onclick="createNewRoster()">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function createNewRoster() {
+            const categoryName = document.getElementById('newCategoryName').value.trim();
+            if (categoryName) {
+                window.location.href = '{{ url_for("roster_list") }}?category=' + encodeURIComponent(categoryName);
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('newCategoryName')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                createNewRoster();
+            }
+        });
+    </script>
+
+    {% else %}
+    <!-- Viewing a specific roster -->
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <h3 class="mb-0">{{ g.t['roster'] }}: {{ selected_category }}</h3>
+        <div>
+            <button type="button" class="btn btn-outline-danger me-2" onclick="deleteEntireRoster()">
+                🗑️ Delete Roster
+            </button>
+            <a href="{{ url_for('roster_list') }}" class="btn btn-secondary">← Back to Rosters</a>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <a href="{{ url_for('roster_add', category=selected_category) }}" class="btn btn-primary">{{ g.t['add_player']
+            }}</a>
+        <a href="{{ url_for('roster_bulk_import', category=selected_category) }}" class="btn btn-success">{{
+            g.t['bulk_import'] }}</a>
+        <button type="button" class="btn btn-danger" id="bulkDeleteBtn" style="display:none;"
+            onclick="bulkDeletePlayers()">
+            Delete Selected
+        </button>
+    </div>
+
+    {% if roster %}
+    <form id="bulkDeleteForm">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+                        <th>{{ g.t['number'] }}</th>
+                        <th>{{ g.t['surname'] }}</th>
+                        <th>{{ g.t['name'] }}</th>
+                        <th>{{ g.t['nickname'] }}</th>
+                        <th>{{ g.t['position'] }}</th>
+                        <th>{{ g.t['tesser'] }}</th>
+                        <th>{{ g.t['actions'] }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in roster %}
+                    <tr>
+                        <td><input type="checkbox" name="player_ids" value="{{ player.id }}" class="player-checkbox"
+                                onchange="updateBulkDeleteBtn()"></td>
+                        <td>{{ player.number }}</td>
+                        <td>{{ player.surname }}</td>
+                        <td>{{ player.name }}</td>
+                        <td>{{ player.nickname }}</td>
+                        <td>
+                            {% if player.position == 'A' %}{{ g.t['position_a'] }}
+                            {% elif player.position == 'C' %}{{ g.t['position_c'] }}
+                            {% elif player.position == 'D' %}{{ g.t['position_d'] }}
+                            {% elif player.position == 'P' %}{{ g.t['position_p'] }}
+                            {% endif %}
+                        </td>
+                        <td>{{ player.tesser }}</td>
+                        <td>
+                            <a href="{{ url_for('roster_edit', player_id=player.id, category=selected_category) }}"
+                                class="btn btn-sm btn-warning">{{
+                                g.t['edit_player'] }}</a>
+                            <a href="{{ url_for('roster_delete', player_id=player.id, category=selected_category) }}"
+                                class="btn btn-sm btn-danger" data-confirm="{{ g.t['delete_confirm'] }}">{{
+                                g.t['delete_player'] }}</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+
+    <script>
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.player-checkbox');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            updateBulkDeleteBtn();
+        }
+
+        function updateBulkDeleteBtn() {
+            const checkedBoxes = document.querySelectorAll('.player-checkbox:checked');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            if (checkedBoxes.length > 0) {
+                bulkDeleteBtn.style.display = 'inline-block';
+                bulkDeleteBtn.textContent = `Delete Selected (${checkedBoxes.length})`;
+            } else {
+                bulkDeleteBtn.style.display = 'none';
+            }
+        }
+
+        function bulkDeletePlayers() {
+            const checkedBoxes = document.querySelectorAll('.player-checkbox:checked');
+            if (checkedBoxes.length === 0) return;
+
+            if (!confirm(`Are you sure you want to delete ${checkedBoxes.length} player(s)?`)) {
+                return;
+            }
+
+            const playerIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+            // Send delete request
+            fetch('{{ url_for("roster_bulk_delete") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    category: '{{ selected_category }}',
+                    player_ids: playerIds
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Error deleting players: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error);
+                });
+        }
+    </script>
+
+    {% else %}
+    <div class="alert alert-info">{{ g.t['no_players'] }}</div>
+    {% endif %}
+
+    <script>
+        function deleteEntireRoster() {
+            const category = '{{ selected_category }}';
+
+            if (!confirm(`Are you sure you want to delete the entire "${category}" roster?\n\nThis will permanently delete all players in this roster.`)) {
+                return;
+            }
+
+            // First attempt - check for warnings
+            fetch('{{ url_for("delete_roster") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    category: category,
+                    force: false
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Successfully deleted
+                        alert('Roster deleted successfully');
+                        window.location.href = '{{ url_for("roster_list") }}';
+                    } else if (data.warning) {
+                        // Warning about existing games
+                        if (confirm(data.message + '\n\nDo you want to proceed with deletion?')) {
+                            // User confirmed, delete with force
+                            fetch('{{ url_for("delete_roster") }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    category: category,
+                                    force: true
+                                })
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        alert('Roster deleted successfully');
+                                        window.location.href = '{{ url_for("roster_list") }}';
+                                    } else {
+                                        alert('Error: ' + data.error);
+                                    }
+                                })
+                                .catch(error => alert('Error: ' + error));
+                        }
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error);
+                });
+        }
+    </script>
+    {% endif %}
+
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">{{ g.t['back_to_home'] }}</a>
+</div>
+{% endblock %}

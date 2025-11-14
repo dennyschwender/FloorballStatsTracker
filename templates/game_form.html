@@ -1,14 +1,151 @@
 {% extends "base.html" %}
 {% block title %}{{ g.t['modify_game'] if modify else g.t['create_new_game'] }}{% endblock %}
 
+{% block head %}
+<style>
+    .manual-entry-section {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .lineup-section {
+        background-color: #e7f3ff;
+        border: 2px solid #0d6efd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .position-columns {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .position-column {
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: white;
+    }
+
+    .position-column h6 {
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+
+    .formation-section {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: white;
+    }
+
+    .formation-section h5 {
+        font-size: 1rem;
+        color: #0d6efd;
+        margin-bottom: 10px;
+    }
+
+    .category-counter {
+        background-color: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        position: sticky;
+        top: 10px;
+        z-index: 100;
+    }
+
+    .counter-item {
+        display: inline-block;
+        margin-right: 15px;
+        font-weight: bold;
+    }
+
+    .player-selected-elsewhere {
+        opacity: 0.4;
+        color: #6c757d;
+    }
+
+    .player-selected-elsewhere .player-position-input {
+        opacity: 0.5;
+    }
+
+    .player-selected-elsewhere label {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+
+    .player-position-input {
+        width: 50px;
+        text-align: center;
+        display: inline-block;
+        margin-right: 10px;
+    }
+
+    /* Hide number input spinner controls */
+    .player-position-input::-webkit-outer-spin-button,
+    .player-position-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .player-position-input {
+        -moz-appearance: textfield;
+    }
+
+    .player-with-position {
+        display: flex;
+        align-items: center;
+        margin: 5px 0;
+        padding: 3px 5px;
+        border-radius: 3px;
+        transition: background-color 0.2s;
+    }
+
+    .player-with-position.has-position {
+        background-color: #fffde7;
+    }
+
+    .player-checkbox.checked {
+        background-color: #fffde7;
+        border-radius: 3px;
+        margin: 2px 0;
+    }
+
+    .player-with-position label {
+        margin: 0;
+        flex-grow: 1;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
     <h1 class="mb-4" style="font-size:1.2rem;">{{ g.t['modify_game'] if modify else g.t['create_new_game'] }}</h1>
-    <form method="post" action="{{ url_for('modify_game', game_id=game_id) if modify else '/create_game' }}">
+    <form method="post" action="{{ url_for('modify_game', game_id=game_id) if modify else '/create_game' }}"
+        id="gameForm">
         <div class="mb-3">
             <label for="team" class="form-label">{{ g.t['category'] }}</label>
+            {% if modify %}
             <input type="text" class="form-control" id="team" name="team" required
-                value="{{ game.team if modify and game.team is defined else '' }}">
+                value="{{ game.team if game.team is defined else '' }}" readonly>
+            {% else %}
+            <select class="form-select" id="team" name="team" required>
+                <option value="">{{ g.t['select_category'] }}</option>
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
         </div>
         <div class="mb-3">
             <label for="home_team" class="form-label">{{ g.t['home_team'] }}</label>
@@ -25,21 +162,148 @@
             <input type="date" class="form-control" id="date" name="date" required
                 value="{{ game.date if modify and game.date is defined else '' }}">
         </div>
-        {% for line in range(1, 5) %}
-        <div class="mb-3">
-            <label class="form-label">{{ g.t['line_players'].replace('{n}', line|string) }}</label>
-            <input type="text" class="form-control" name="line{{ line }}"
-                placeholder="Player1, Player2, Player3, Player4, ..."
-                value="{{ game.lines[line-1]|join(', ') if modify and game.lines|length >= line else '' }}">
+
+        <!-- Complete Lineup Section -->
+        <div class="lineup-section" id="lineupSection" style="display: {% if modify %}block{% else %}none{% endif %};">
+            <h4>{{ g.t['lineup'] }}</h4>
+
+            <!-- Convocato Section -->
+            <div class="mb-4">
+                <h5>{{ g.t['convocato'] }}</h5>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="hideInactivePlayers" checked>
+                        <label class="form-check-label" for="hideInactivePlayers">
+                            {{ g.t['hide_inactive_players'] }}
+                        </label>
+                    </div>
+                </div>
+                <div id="categoryCounter" class="category-counter" style="display: none;">
+                    <span class="counter-item">U18: <span id="count-U18">0</span></span>
+                    <span class="counter-item">U21: <span id="count-U21">0</span></span>
+                    <span class="counter-item">U21 DP: <span id="count-U21 DP">0</span></span>
+                    <span class="counter-item">U16: <span id="count-U16">0</span></span>
+                    <span class="counter-item"
+                        style="margin-left: 20px; border-left: 2px solid #000; padding-left: 15px;">
+                        <strong>{{ g.t['total'] }}: <span id="count-total">0</span></strong>
+                    </span>
+                </div>
+                <div class="position-columns">
+                    {% for position in ['A', 'C', 'D', 'P'] %}
+                    <div class="position-column">
+                        <h6>
+                            {% if position == 'A' %}{{ g.t['position_a'] }}
+                            {% elif position == 'C' %}{{ g.t['position_c'] }}
+                            {% elif position == 'D' %}{{ g.t['position_d'] }}
+                            {% elif position == 'P' %}{{ g.t['position_p'] }}
+                            {% endif %}
+                            <span class="position-count" id="position-count-{{ position }}">(0)</span>
+                        </h6>
+                        {% for player in roster %}
+                        {% if player.position == position %}
+                        <div class="form-check player-checkbox" data-player-number="{{ player.number }}">
+                            <input class="form-check-input convocato-checkbox" type="checkbox" name="convocato"
+                                value="{{ player.id }}" id="convocato_{{ player.id }}"
+                                data-category="{{ player.tesser }}" data-position="{{ player.position }}"
+                                data-number="{{ player.number }}">
+                            <label class="form-check-label" for="convocato_{{ player.id }}">
+                                #{{ player.number }} {{ player.surname }} {{ player.name }} ({{ player.tesser }})
+                            </label>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Starting Goalies Section -->
+            <div class="formation-section mb-4">
+                <h5>{{ g.t['starting_goalies'] }}</h5>
+                <p class="text-muted small">{{ g.t['select_starting_goalie_instruction'] }}</p>
+                <div id="goalieSelection" style="display: none;">
+                    <!-- Goalie radio buttons will be populated here by JavaScript -->
+                </div>
+                <input type="hidden" id="goalie1" name="goalie1">
+                <input type="hidden" id="goalie2" name="goalie2">
+            </div>
+
+            <!-- Lines Section -->
+            {% for line_num in range(1, 5) %}
+            <div class="formation-section" id="lineSection{{ line_num }}">
+                <h5>{{ g.t['line'] }} {{ line_num }}</h5>
+                <div class="position-columns" style="grid-template-columns: repeat(3, 1fr);"
+                    data-line-section="l{{ line_num }}">
+                    {% for position in ['A', 'C', 'D'] %}
+                    <div class="position-column">
+                        <h6>
+                            {% if position == 'A' %}{{ g.t['position_a'] }}
+                            {% elif position == 'C' %}{{ g.t['position_c'] }}
+                            {% elif position == 'D' %}{{ g.t['position_d'] }}
+                            {% endif %}
+                        </h6>
+                        {% for player in roster %}
+                        {% if player.position == position %}
+                        <div class="player-with-position player-option" data-player-id="{{ player.id }}"
+                            data-position="{{ player.position }}">
+                            <input class="form-control form-control-sm player-position-input" type="number"
+                                name="l{{ line_num }}_{{ player.id }}" id="l{{ line_num }}_{{ player.id }}" min="1"
+                                max="5" placeholder="#" data-line="l{{ line_num }}" data-player-id="{{ player.id }}">
+                            <label for="l{{ line_num }}_{{ player.id }}">
+                                #{{ player.number }} {{ player.surname }} {{ player.name }}
+                            </label>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Formations Section -->
+            {% set formations = [
+            ('pp1', g.t['pp1']),
+            ('pp2', g.t['pp2']),
+            ('bp1', g.t['bp1']),
+            ('bp2', g.t['bp2']),
+            ('6vs5', g.t['6vs5']),
+            ('stress_line', g.t['stress_line'])
+            ] %}
+            {% for formation_key, formation_name in formations %}
+            <div class="formation-section" id="formation{{ formation_key }}">
+                <h5>{{ formation_name }}</h5>
+                <div class="position-columns" style="grid-template-columns: repeat(3, 1fr);"
+                    data-formation-section="{{ formation_key }}">
+                    {% for position in ['A', 'C', 'D'] %}
+                    <div class="position-column">
+                        <h6>
+                            {% if position == 'A' %}{{ g.t['position_a'] }}
+                            {% elif position == 'C' %}{{ g.t['position_c'] }}
+                            {% elif position == 'D' %}{{ g.t['position_d'] }}
+                            {% endif %}
+                        </h6>
+                        {% for player in roster %}
+                        {% if player.position == position %}
+                        <div class="player-with-position player-option" data-player-id="{{ player.id }}"
+                            data-position="{{ player.position }}">
+                            <input class="form-control form-control-sm player-position-input" type="number"
+                                name="{{ formation_key }}_{{ player.id }}" id="{{ formation_key }}_{{ player.id }}"
+                                min="1" max="5" placeholder="#" data-formation="{{ formation_key }}"
+                                data-player-id="{{ player.id }}">
+                            <label for="{{ formation_key }}_{{ player.id }}">
+                                #{{ player.number }} {{ player.surname }} {{ player.name }}
+                            </label>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-        {% for goalie in range(1, 3) %}
-        <div class="mb-3">
-            <label class="form-label">{{ g.t['goalie_name'].replace('{n}', goalie|string) }}</label>
-            <input type="text" class="form-control" name="goalie{{ goalie }}" placeholder="Goalie Name"
-                value="{{ game.goalies[goalie-1] if modify and game.goalies|length >= goalie else '' }}">
-        </div>
-        {% endfor %}
+
         <div class="mb-3">
             <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="enable_opponent_goalie"
@@ -66,6 +330,9 @@
 
 {% block scripts %}
 <script>
+    // Store roster globally
+    var currentRoster = [];
+
     document.addEventListener('DOMContentLoaded', function () {
         var delForm = document.getElementById('delete-game-form');
         if (delForm) {
@@ -75,6 +342,731 @@
                 }
             });
         }
+
+        // Handle category selection to load roster
+        var teamSelect = document.getElementById('team');
+        var lineupSection = document.getElementById('lineupSection');
+
+        console.log('Team select element:', teamSelect);
+        console.log('Lineup section element:', lineupSection);
+
+        if (teamSelect) {
+            console.log('Adding change listener to team select');
+            // Handle category change (works for both select and input elements)
+            teamSelect.addEventListener('change', function () {
+                var category = this.value.trim();
+                console.log('Category changed to:', category);
+                if (category) {
+                    // Load roster for selected category
+                    console.log('Fetching roster for category:', category);
+                    fetch('/api/roster/' + encodeURIComponent(category))
+                        .then(response => {
+                            console.log('Roster fetch response:', response);
+                            if (!response.ok) {
+                                // Category doesn't exist yet, show empty roster
+                                return [];
+                            }
+                            return response.json();
+                        })
+                        .then(roster => {
+                            console.log('Roster loaded:', roster);
+                            currentRoster = roster;
+                            populateRosterUI(roster);
+                            if (lineupSection) {
+                                lineupSection.style.display = 'block';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading roster:', error);
+                            // For new categories, just show empty lineup
+                            currentRoster = [];
+                            populateRosterUI([]);
+                            if (lineupSection) {
+                                lineupSection.style.display = 'block';
+                            }
+                        });
+                } else {
+                    if (lineupSection) {
+                        lineupSection.style.display = 'none';
+                    }
+                }
+            });
+
+            // For modify mode or if category is already selected, load roster immediately
+            if (teamSelect.value && teamSelect.value.trim()) {
+                console.log('Initial category value detected:', teamSelect.value);
+                var category = teamSelect.value.trim();
+                // Directly fetch roster for modify mode (readonly input won't trigger change event)
+                fetch('/api/roster/' + encodeURIComponent(category))
+                    .then(response => {
+                        console.log('Roster fetch response:', response);
+                        if (!response.ok) {
+                            return [];
+                        }
+                        return response.json();
+                    })
+                    .then(roster => {
+                        console.log('Roster loaded:', roster);
+                        currentRoster = roster;
+                        populateRosterUI(roster);
+                        if (lineupSection) {
+                            lineupSection.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading roster:', error);
+                        currentRoster = [];
+                        populateRosterUI([]);
+                        if (lineupSection) {
+                            lineupSection.style.display = 'block';
+                        }
+                    });
+            } else if (lineupSection) {
+                lineupSection.style.display = 'none';
+            }
+        }
+
+        function populateRosterUI(roster) {
+            console.log('populateRosterUI called with roster:', roster);
+            // Rebuild convocato section and line/formation sections
+            rebuildConvocatoSection(roster);
+            rebuildLineAndFormationSections(roster);
+
+            // Initially hide all formation players until some are checked
+            filterFormationPlayers();
+
+            // Update all counters
+            updateCategoryCounter();
+            updatePositionCounters();
+            updateGoalieDropdowns();
+        }
+
+        function rebuildConvocatoSection(roster) {
+            var positionColumns = document.querySelector('.position-columns');
+            if (!positionColumns) return;
+
+            var positions = ['A', 'C', 'D', 'P'];
+            var positionLabels = {
+                'A': '{{ g.t["position_a"] }}',
+                'C': '{{ g.t["position_c"] }}',
+                'D': '{{ g.t["position_d"] }}',
+                'P': '{{ g.t["position_p"] }}'
+            };
+
+            positionColumns.innerHTML = '';
+
+            positions.forEach(function (position) {
+                var positionPlayers = roster.filter(p => p.position === position);
+
+                var columnDiv = document.createElement('div');
+                columnDiv.className = 'position-column';
+
+                var heading = document.createElement('h6');
+                heading.innerHTML = positionLabels[position] + ' <span class="position-count" id="position-count-' + position + '">(0)</span>';
+                columnDiv.appendChild(heading);
+
+                positionPlayers.forEach(function (player) {
+                    var checkDiv = document.createElement('div');
+                    checkDiv.className = 'form-check player-checkbox';
+                    checkDiv.setAttribute('data-player-number', player.number || '');
+
+                    var checkbox = document.createElement('input');
+                    checkbox.className = 'form-check-input convocato-checkbox';
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'convocato';
+                    checkbox.value = player.id;
+                    checkbox.id = 'convocato_' + player.id;
+                    checkbox.setAttribute('data-category', player.tesser || '');
+                    checkbox.setAttribute('data-position', player.position);
+                    checkbox.setAttribute('data-number', player.number || '');
+
+                    var label = document.createElement('label');
+                    label.className = 'form-check-label';
+                    label.htmlFor = 'convocato_' + player.id;
+                    label.textContent = '#' + player.number + ' ' + player.surname + ' ' + player.name + ' (' + player.tesser + ')';
+
+                    checkDiv.appendChild(checkbox);
+                    checkDiv.appendChild(label);
+                    columnDiv.appendChild(checkDiv);
+                });
+
+                positionColumns.appendChild(columnDiv);
+            });
+
+            // Reinitialize event listeners
+            initializeConvocatoListeners();
+            filterInactivePlayers();
+        }
+
+        function rebuildLineAndFormationSections(roster) {
+            console.log('Rebuilding line and formation sections with roster:', roster);
+
+            // Rebuild line sections (L1-L4)
+            for (var lineNum = 1; lineNum <= 4; lineNum++) {
+                var positionColumns = document.querySelector('[data-line-section="l' + lineNum + '"]');
+                if (positionColumns) {
+                    console.log('Rebuilding line', lineNum);
+                    rebuildFormationSection(positionColumns, roster, 'l' + lineNum, ['A', 'C', 'D']);
+                }
+            }
+
+            // Rebuild formation sections
+            var formations = ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line'];
+            formations.forEach(function (formationKey) {
+                var positionColumns = document.querySelector('[data-formation-section="' + formationKey + '"]');
+                if (positionColumns) {
+                    console.log('Rebuilding formation', formationKey);
+                    rebuildFormationSection(positionColumns, roster, formationKey, ['A', 'C', 'D']);
+                }
+            });
+
+            // Reinitialize all event listeners
+            initializeLineListeners();
+        }
+
+        function rebuildFormationSection(container, roster, formationKey, positions) {
+            container.innerHTML = '';
+            var positionLabels = {
+                'A': '{{ g.t["position_a"] }}',
+                'C': '{{ g.t["position_c"] }}',
+                'D': '{{ g.t["position_d"] }}'
+            };
+
+            var isLine = formationKey.startsWith('l');
+
+            positions.forEach(function (position) {
+                var positionPlayers = roster.filter(p => p.position === position);
+
+                var columnDiv = document.createElement('div');
+                columnDiv.className = 'position-column';
+
+                var heading = document.createElement('h6');
+                heading.textContent = positionLabels[position];
+                columnDiv.appendChild(heading);
+
+                positionPlayers.forEach(function (player) {
+                    var playerDiv = document.createElement('div');
+                    playerDiv.className = 'player-with-position player-option';
+                    playerDiv.setAttribute('data-player-id', player.id);
+                    playerDiv.setAttribute('data-position', player.position);
+
+                    var input = document.createElement('input');
+                    input.className = 'form-control form-control-sm player-position-input';
+                    input.type = 'number';
+                    input.name = formationKey + '_' + player.id;
+                    input.id = formationKey + '_' + player.id;
+                    input.min = 1;
+                    input.max = 5;
+                    input.placeholder = '#';
+
+                    // Set correct data attribute based on type
+                    if (isLine) {
+                        input.setAttribute('data-line', formationKey);
+                    } else {
+                        input.setAttribute('data-formation', formationKey);
+                    }
+                    input.setAttribute('data-player-id', player.id);
+
+                    var label = document.createElement('label');
+                    label.htmlFor = formationKey + '_' + player.id;
+                    label.textContent = '#' + player.number + ' ' + player.surname + ' ' + player.name;
+
+                    playerDiv.appendChild(input);
+                    playerDiv.appendChild(label);
+                    columnDiv.appendChild(playerDiv);
+                });
+
+                container.appendChild(columnDiv);
+            });
+        }
+
+        function initializeConvocatoListeners() {
+            var convocatoCheckboxes = document.querySelectorAll('.convocato-checkbox');
+            convocatoCheckboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    updateCategoryCounter();
+                    updatePositionCounters();
+                    updateGoalieDropdowns();
+                    filterFormationPlayers();
+                    highlightConvocatoPlayers();
+                });
+            });
+            // Initial highlight
+            highlightConvocatoPlayers();
+        }
+
+        function highlightConvocatoPlayers() {
+            var convocatoCheckboxes = document.querySelectorAll('.convocato-checkbox');
+            convocatoCheckboxes.forEach(function (checkbox) {
+                var parentDiv = checkbox.closest('.player-checkbox');
+                if (parentDiv) {
+                    if (checkbox.checked) {
+                        parentDiv.classList.add('checked');
+                    } else {
+                        parentDiv.classList.remove('checked');
+                    }
+                }
+            });
+        }
+
+        function initializeLineListeners() {
+            for (var lineNum = 1; lineNum <= 4; lineNum++) {
+                var lineInputs = document.querySelectorAll('input[data-line="l' + lineNum + '"]');
+                lineInputs.forEach(function (input) {
+                    input.addEventListener('input', highlightSelectedPlayers);
+                });
+            }
+        }
+
+        // Category counter functionality
+        function updateCategoryCounter() {
+            var convocatoCheckboxes = document.querySelectorAll('.convocato-checkbox');
+            var categoryCounter = document.getElementById('categoryCounter');
+
+            if (!categoryCounter) return;
+
+            // Collect all unique categories from the roster
+            var counts = {};
+            var anyChecked = false;
+
+            convocatoCheckboxes.forEach(function (checkbox) {
+                var category = checkbox.getAttribute('data-category');
+                if (category && !counts.hasOwnProperty(category)) {
+                    counts[category] = 0;
+                }
+            });
+
+            // Count checked players by category
+            convocatoCheckboxes.forEach(function (checkbox) {
+                if (checkbox.checked) {
+                    anyChecked = true;
+                    var category = checkbox.getAttribute('data-category');
+                    if (category && counts.hasOwnProperty(category)) {
+                        counts[category]++;
+                    }
+                }
+            });
+
+            // Rebuild counter display dynamically
+            var totalCount = 0;
+            var counterHTML = '';
+
+            for (var cat in counts) {
+                totalCount += counts[cat];
+                counterHTML += '<span class="counter-item">' + cat + ': <span id="count-' + cat + '">' + counts[cat] + '</span></span> ';
+            }
+
+            counterHTML += '<span class="counter-item" style="margin-left: 20px; border-left: 2px solid #000; padding-left: 15px;">' +
+                '<strong>{{ g.t["total"] }}: <span id="count-total">' + totalCount + '</span></strong></span>';
+
+            categoryCounter.innerHTML = counterHTML;
+
+            // Show/hide counter
+            categoryCounter.style.display = anyChecked ? 'block' : 'none';
+        }
+
+        function updatePositionCounters() {
+            var convocatoCheckboxes = document.querySelectorAll('.convocato-checkbox');
+            var positions = ['A', 'C', 'D', 'P'];
+            positions.forEach(function (pos) {
+                var count = 0;
+                convocatoCheckboxes.forEach(function (checkbox) {
+                    if (checkbox.checked && checkbox.getAttribute('data-position') === pos) {
+                        count++;
+                    }
+                });
+                var counterElement = document.getElementById('position-count-' + pos);
+                if (counterElement) {
+                    counterElement.textContent = '(' + count + ')';
+                }
+            });
+        }
+
+        function updateGoalieDropdowns() {
+            var convocatoCheckboxes = document.querySelectorAll('.convocato-checkbox');
+            var goalieSelection = document.getElementById('goalieSelection');
+            var goalie1Input = document.getElementById('goalie1');
+            var goalie2Input = document.getElementById('goalie2');
+
+            if (!goalieSelection || !goalie1Input || !goalie2Input) return;
+
+            // Collect all checked goalies
+            var checkedGoalies = [];
+            convocatoCheckboxes.forEach(function (checkbox) {
+                if (checkbox.checked && checkbox.getAttribute('data-position') === 'P') {
+                    var label = checkbox.nextElementSibling.textContent.trim();
+                    checkedGoalies.push({
+                        id: checkbox.value,
+                        label: label
+                    });
+                }
+            });
+
+            // Clear existing content
+            goalieSelection.innerHTML = '';
+
+            if (checkedGoalies.length === 0) {
+                goalieSelection.style.display = 'none';
+                goalie1Input.value = '';
+                goalie2Input.value = '';
+            } else if (checkedGoalies.length === 1) {
+                // Only one goalie - automatically set as starting goalie
+                goalieSelection.style.display = 'block';
+                goalieSelection.innerHTML = '<div class="alert alert-info">' +
+                    '<strong>{{ g.t["first_goalie"] }}:</strong> ' + checkedGoalies[0].label +
+                    '</div>';
+                goalie1Input.value = checkedGoalies[0].id;
+                goalie2Input.value = '';
+            } else {
+                // Multiple goalies - show radio buttons to select starting goalie
+                goalieSelection.style.display = 'block';
+                var html = '<div class="mb-2"><strong>{{ g.t["select_starting_goalie"] }}:</strong></div>';
+
+                checkedGoalies.forEach(function (goalie, index) {
+                    var isChecked = goalie.id === goalie1Input.value ? 'checked' : '';
+                    if (!goalie1Input.value && index === 0) isChecked = 'checked'; // Default to first
+
+                    html += '<div class="form-check">' +
+                        '<input class="form-check-input goalie-radio" type="radio" name="starting_goalie_radio" ' +
+                        'value="' + goalie.id + '" id="goalie_radio_' + goalie.id + '" ' + isChecked + '>' +
+                        '<label class="form-check-label" for="goalie_radio_' + goalie.id + '">' +
+                        goalie.label +
+                        '</label>' +
+                        '</div>';
+                });
+
+                goalieSelection.innerHTML = html;
+
+                // Update hidden inputs based on radio selection
+                updateGoalieInputs();
+
+                // Add listeners to radio buttons
+                var radioButtons = document.querySelectorAll('.goalie-radio');
+                radioButtons.forEach(function (radio) {
+                    radio.addEventListener('change', updateGoalieInputs);
+                });
+            }
+        }
+
+        function updateGoalieInputs() {
+            var convocatoCheckboxes = document.querySelectorAll('.convocato-checkbox');
+            var goalie1Input = document.getElementById('goalie1');
+            var goalie2Input = document.getElementById('goalie2');
+            var selectedRadio = document.querySelector('.goalie-radio:checked');
+
+            if (!selectedRadio) return;
+
+            var startingGoalieId = selectedRadio.value;
+
+            // Collect all checked goalies
+            var allGoalieIds = [];
+            convocatoCheckboxes.forEach(function (checkbox) {
+                if (checkbox.checked && checkbox.getAttribute('data-position') === 'P') {
+                    allGoalieIds.push(checkbox.value);
+                }
+            });
+
+            // Set starting goalie
+            goalie1Input.value = startingGoalieId;
+
+            // Set backup goalie (the other one)
+            var backupGoalieId = allGoalieIds.find(function (id) {
+                return id !== startingGoalieId;
+            });
+            goalie2Input.value = backupGoalieId || '';
+        }
+
+        function filterFormationPlayers() {
+            var convocatoCheckboxes = document.querySelectorAll('.convocato-checkbox');
+            var checkedPlayers = new Set();
+            convocatoCheckboxes.forEach(function (checkbox) {
+                if (checkbox.checked) {
+                    checkedPlayers.add(checkbox.value);
+                }
+            });
+
+            // Show/hide formation players based on convocato
+            var formationPlayers = document.querySelectorAll('.player-option');
+            formationPlayers.forEach(function (playerDiv) {
+                var playerId = playerDiv.getAttribute('data-player-id');
+                var position = playerDiv.getAttribute('data-position');
+
+                // Hide goalies from formation sections, show only if in convocato
+                if (position === 'P' || !checkedPlayers.has(playerId)) {
+                    playerDiv.style.display = 'none';
+                } else {
+                    playerDiv.style.display = 'block';
+                }
+            });
+        }
+
+        function highlightSelectedPlayers() {
+            // Collect all selected players in lines (l1, l2, l3, l4)
+            var selectedInLines = {};
+
+            for (var lineNum = 1; lineNum <= 4; lineNum++) {
+                var lineInputs = document.querySelectorAll('input[data-line="l' + lineNum + '"]');
+                lineInputs.forEach(function (input) {
+                    if (input.value && input.value.trim() !== '') {
+                        var playerId = input.getAttribute('data-player-id');
+                        if (!selectedInLines[playerId]) {
+                            selectedInLines[playerId] = [];
+                        }
+                        selectedInLines[playerId].push(lineNum);
+                    }
+                });
+            }
+
+            // Update visual state for all line inputs
+            for (var lineNum = 1; lineNum <= 4; lineNum++) {
+                var allLineInputs = document.querySelectorAll('input[data-line="l' + lineNum + '"]');
+                allLineInputs.forEach(function (input) {
+                    var playerId = input.getAttribute('data-player-id');
+                    var parentDiv = input.closest('.player-option');
+
+                    if (parentDiv) {
+                        // If player is selected in another line (not this one)
+                        var hasValue = input.value && input.value.trim() !== '';
+                        if (selectedInLines[playerId] && selectedInLines[playerId].length > 0 && !hasValue) {
+                            parentDiv.classList.add('player-selected-elsewhere');
+                        } else {
+                            parentDiv.classList.remove('player-selected-elsewhere');
+                        }
+                        
+                        // Add light background if player has a position value
+                        if (hasValue) {
+                            parentDiv.classList.add('has-position');
+                        } else {
+                            parentDiv.classList.remove('has-position');
+                        }
+                    }
+                });
+            }
+            
+            // Highlight formation players with positions (PP, BP, 6vs5, stress_line)
+            var formationInputs = document.querySelectorAll('input[data-formation]');
+            formationInputs.forEach(function (input) {
+                var parentDiv = input.closest('.player-option');
+                if (parentDiv) {
+                    var hasValue = input.value && input.value.trim() !== '';
+                    if (hasValue) {
+                        parentDiv.classList.add('has-position');
+                    } else {
+                        parentDiv.classList.remove('has-position');
+                    }
+                }
+            });
+        }
+
+        // Add listeners to line number inputs
+        for (var lineNum = 1; lineNum <= 4; lineNum++) {
+            var lineInputs = document.querySelectorAll('input[data-line="l' + lineNum + '"]');
+            lineInputs.forEach(function (input) {
+                input.addEventListener('input', highlightSelectedPlayers);
+            });
+        }
+
+        // Add listeners to formation inputs
+        var formationInputs = document.querySelectorAll('input[data-formation]');
+        formationInputs.forEach(function (input) {
+            input.addEventListener('input', highlightSelectedPlayers);
+        });
+
+        // Initialize convocato checkbox listeners on page load
+        initializeConvocatoListeners();
+
+        // Toggle inactive players visibility
+        var hideInactiveCheckbox = document.getElementById('hideInactivePlayers');
+        if (hideInactiveCheckbox) {
+            hideInactiveCheckbox.addEventListener('change', function () {
+                filterInactivePlayers();
+            });
+        }
+
+        function filterInactivePlayers() {
+            var hideInactive = document.getElementById('hideInactivePlayers').checked;
+            var playerCheckboxDivs = document.querySelectorAll('.player-checkbox');
+
+            playerCheckboxDivs.forEach(function (div) {
+                var playerNumber = div.getAttribute('data-player-number');
+                // Hide if checkbox is checked and player has no number or number is 0
+                if (hideInactive && (!playerNumber || playerNumber === '0' || playerNumber === '')) {
+                    div.style.display = 'none';
+                } else {
+                    div.style.display = 'block';
+                }
+            });
+        }
+
+        // Function to populate existing game data into the form
+        function populateExistingGameData() {
+            console.log('Populating existing game data...');
+            {% if modify and game is defined %}
+            var gameData = {{ game | tojson | safe }};
+            {% else %}
+            var gameData = null;
+            {% endif %}
+            console.log('Game data:', gameData);
+
+            if (!gameData) return;
+
+    // Wait for roster to be loaded
+    var checkRoster = setInterval(function () {
+        if (currentRoster && currentRoster.length > 0) {
+            clearInterval(checkRoster);
+
+            // Create a map of player name to player ID
+            var nameToIdMap = {};
+            currentRoster.forEach(function (player) {
+                var fullName = player.number + ' - ' + player.surname + ' ' + player.name;
+                nameToIdMap[fullName] = player.id;
+            });
+
+            console.log('Name to ID map:', nameToIdMap);
+
+            // STEP 1: First, check all convocato checkboxes for players in the game
+            if (gameData.lines) {
+                gameData.lines.forEach(function (linePlayers, lineIndex) {
+                    linePlayers.forEach(function (playerName, position) {
+                        var playerId = nameToIdMap[playerName];
+                        if (playerId) {
+                            var convocatoCheckbox = document.getElementById('convocato_' + playerId);
+                            if (convocatoCheckbox) {
+                                convocatoCheckbox.checked = true;
+                            }
+                        }
+                    });
+                });
+            }
+
+            if (gameData.goalies) {
+                gameData.goalies.forEach(function (goalieName, index) {
+                    var playerId = nameToIdMap[goalieName];
+                    if (playerId) {
+                        var convocatoCheckbox = document.getElementById('convocato_' + playerId);
+                        if (convocatoCheckbox) {
+                            convocatoCheckbox.checked = true;
+                        }
+                    }
+                });
+            }
+
+            var formations = ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line'];
+            formations.forEach(function (formationKey) {
+                if (gameData[formationKey]) {
+                    gameData[formationKey].forEach(function (playerName, position) {
+                        var playerId = nameToIdMap[playerName];
+                        if (playerId) {
+                            var convocatoCheckbox = document.getElementById('convocato_' + playerId);
+                            if (convocatoCheckbox) {
+                                convocatoCheckbox.checked = true;
+                            }
+                        }
+                    });
+                }
+            });
+
+            // STEP 2: Update UI to show formation players (now that checkboxes are checked)
+            console.log('Updating UI to show selected players...');
+            filterFormationPlayers(); // This will show the position input fields
+
+            // STEP 3: Wait a moment for DOM to update, then populate the position values
+            setTimeout(function () {
+                console.log('Populating position values...');
+
+                if (gameData.lines) {
+                    gameData.lines.forEach(function (linePlayers, lineIndex) {
+                        var lineNum = lineIndex + 1;
+                        console.log('Processing line ' + lineNum + ':', linePlayers);
+
+                        linePlayers.forEach(function (playerName, position) {
+                            var playerId = nameToIdMap[playerName];
+                            if (playerId) {
+                                var input = document.querySelector('input[name="l' + lineNum + '_' + playerId + '"]');
+                                if (input) {
+                                    input.value = (position + 1).toString();
+                                    console.log('Set line ' + lineNum + ' position for player ' + playerId + ': ' + (position + 1));
+                                } else {
+                                    console.log('Input not found for l' + lineNum + '_' + playerId);
+                                }
+                            }
+                        });
+                    });
+                }
+
+                if (gameData.goalies) {
+                    gameData.goalies.forEach(function (goalieName, index) {
+                        var goalieNum = index + 1;
+                        var playerId = nameToIdMap[goalieName];
+                        if (playerId) {
+                            var hiddenInput = document.getElementById('goalie' + goalieNum);
+                            if (hiddenInput) {
+                                hiddenInput.value = playerId;
+                                console.log('Set goalie ' + goalieNum + ': ' + playerId);
+                            }
+                            var radio = document.querySelector('input[name="goalie' + goalieNum + '"][value="' + playerId + '"]');
+                            if (radio) {
+                                radio.checked = true;
+                            }
+                        }
+                    });
+                }
+
+                formations.forEach(function (formationKey) {
+                    if (gameData[formationKey]) {
+                        console.log('Processing formation ' + formationKey + ':', gameData[formationKey]);
+
+                        gameData[formationKey].forEach(function (playerName, position) {
+                            var playerId = nameToIdMap[playerName];
+                            if (playerId) {
+                                var input = document.querySelector('input[name="' + formationKey + '_' + playerId + '"]');
+                                if (input) {
+                                    input.value = (position + 1).toString();
+                                    console.log('Set ' + formationKey + ' position for player ' + playerId + ': ' + (position + 1));
+                                } else {
+                                    console.log('Input not found for ' + formationKey + '_' + playerId);
+                                }
+                            }
+                        });
+                    }
+                });
+
+                // STEP 4: Final UI updates - trigger change events to update counters
+                console.log('Final UI updates...');
+
+                // Trigger change event on first convocato checkbox to update all counters
+                var firstCheckbox = document.querySelector('.convocato-checkbox:checked');
+                if (firstCheckbox) {
+                    var changeEvent = new Event('change', { bubbles: true });
+                    firstCheckbox.dispatchEvent(changeEvent);
+                }
+
+                // Highlight players selected in multiple lines
+                highlightSelectedPlayers();
+
+                console.log('Finished populating existing game data');
+            }, 50); // Small delay to let DOM update
+        }
+    }, 100);
+
+    // Timeout after 5 seconds
+    setTimeout(function () {
+        clearInterval(checkRoster);
+    }, 5000);
+        }
+
+    // Initialize
+    updateCategoryCounter();
+    updatePositionCounters();
+    updateGoalieDropdowns();
+    filterFormationPlayers();
+    highlightSelectedPlayers();
+    filterInactivePlayers();
+
+    // Populate existing game data if in modify mode
+    {% if modify and game %}
+    populateExistingGameData();
+    {% endif %}
     });
 </script>
 {% endblock %}

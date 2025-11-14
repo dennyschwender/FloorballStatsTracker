@@ -126,29 +126,49 @@ def test_goalie_and_opponent_goalie_actions(client):
 
 def test_reset_and_delete_game(client):
     games = [make_sample_game(opponent_goalie_enabled=True), make_sample_game()]
+    # Ensure unique IDs
+    from app import ensure_game_ids, save_games
+    ensure_game_ids(games)
     _write_games(games)
+
+    # Get actual game IDs
+    saved_games = _read_games()
+    game_id_1 = saved_games[0]['id']
+    game_id_2 = saved_games[1]['id']
 
     # set some stats
-    g = _read_games()[0]
+    g = saved_games[0]
     g.setdefault('goals', {})['P1'] = 2
     g.setdefault('saves', {})['G1'] = 3
-    games[0] = g
-    _write_games(games)
+    saved_games[0] = g
+    _write_games(saved_games)
 
-    rv = client.get('/reset_game/0', follow_redirects=True)
+    rv = client.get(f'/reset_game/{game_id_1}', follow_redirects=True)
     assert rv.status_code == 200
     g = _read_games()[0]
     assert g['goals']['P1'] == 0
     assert g['saves']['G1'] == 0
 
-    # delete second game (index 1)
-    rv = client.post('/delete_game/1', follow_redirects=True)
+    # delete second game using its ID
+    rv = client.post(f'/delete_game/{game_id_2}', follow_redirects=True)
     assert rv.status_code == 200
     gs = _read_games()
     assert len(gs) == 1
 
 
 def test_set_period_and_modify_game(client):
+    # Create a roster for the teams
+    import os
+    roster_data = [
+        {"id": "1", "number": "10", "surname": "Player", "name": "One", "position": "A", "tesser": "U21", "nickname": "P1"},
+        {"id": "2", "number": "20", "surname": "Player", "name": "Two", "position": "A", "tesser": "U21", "nickname": "P2"},
+        {"id": "3", "number": "1", "surname": "Goalie", "name": "Two", "position": "P", "tesser": "U21", "nickname": "G2"}
+    ]
+    from app import ROSTERS_DIR
+    roster_path = os.path.join(ROSTERS_DIR, 'roster_NewTeam.json')
+    with open(roster_path, 'w') as f:
+        json.dump(roster_data, f)
+    
     games = [make_sample_game()]
     _write_games(games)
 
@@ -157,17 +177,15 @@ def test_set_period_and_modify_game(client):
     g = _read_games()[0]
     assert g['current_period'] == '2'
 
-    # modify game POST
+    # modify game POST using roster-based format
     data = {
         'team': 'NewTeam',
         'home_team': 'H2',
         'away_team': 'A2',
         'date': '2025-09-10',
-        'line1': 'X1,X2',
-        'line2': '',
-        'line3': '',
-        'line4': '',
-        'goalie1': 'G2',
+        'l1_1': '1',  # Player One at position 1
+        'l1_2': '2',  # Player Two at position 2
+        'goalie1': '3',  # Goalie Two
         'goalie2': '',
         'enable_opponent_goalie': 'on'
     }
@@ -176,8 +194,13 @@ def test_set_period_and_modify_game(client):
     g = _read_games()[0]
     assert g['team'] == 'NewTeam'
     assert g['home_team'] == 'H2'
-    assert g['goalies'] == ['G2']
+    assert len(g['goalies']) == 1
+    assert '1 - Goalie Two' in g['goalies'][0]
     assert g['opponent_goalie_enabled'] is True
+    
+    # Cleanup
+    if os.path.exists(roster_path):
+        os.remove(roster_path)
 
 
 def test_stats_page_contains_players_and_goalies(client):

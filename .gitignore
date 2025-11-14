@@ -1,3 +1,9 @@
+# Data files
+games.json
+team_roster.json
+games_backup*.json
+migration_report*.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -65,11 +71,17 @@ docker-compose.override.yml
 *.sqlite3
 games.json
 
+# JSON data files
+gamesFiles/*.json
+rosters/*.json
+*games_backup*.json
+
 # Logs
 *.log
 
 # Ignore service account and credentials
 *service-account*.json
+*gameday_papers*.json
 
 # Ignore screenshots and test images
 *.png

@@ -1,16 +1,24 @@
 import os
 import json
-from flask import Flask, request, render_template, redirect, url_for, session, g
+from flask import Flask, request, render_template, redirect, url_for, session, g, jsonify
 from urllib.parse import urlparse
 from datetime import datetime
 REQUIRED_PIN = os.environ.get('FLOORBALL_PIN', '1717')
 
 GAMES_FILE = 'gamesFiles/games.json'
+ROSTERS_DIR = 'rosters'
+
+# Ensure rosters directory exists
+if not os.path.exists(ROSTERS_DIR):
+    os.makedirs(ROSTERS_DIR)
 
 # Ensure games.json exists before anything else
 if not os.path.exists(GAMES_FILE):
     with open(GAMES_FILE, 'w') as f:
         json.dump([], f)
+
+# Define available categories
+CATEGORIES = ['U18', 'U21', 'U16', 'Senior']
 
 
 app = Flask(__name__)
@@ -104,6 +112,58 @@ TRANSLATIONS = {
         'total': 'Total',
         'average': 'Average',
         'delete_confirm': 'Are you sure you want to delete this game?',
+        'roster': 'Team Roster',
+        'roster_management': 'Roster Management',
+        'add_player': 'Add Player',
+        'bulk_import': 'Bulk Import',
+        'edit_player': 'Edit Player',
+        'delete_player': 'Delete Player',
+        'number': 'Number',
+        'surname': 'Surname',
+        'name': 'Name',
+        'nickname': 'Nickname',
+        'position': 'Position',
+        'position_a': 'Attacker',
+        'position_c': 'Center',
+        'position_d': 'Defender',
+        'position_p': 'Goalie',
+        'tesser': 'Category',
+        'select_roster': 'Roster',
+        'select_category': 'Select Category',
+        'u18': 'U18',
+        'u21': 'U21',
+        'u21_dp': 'U21 DP',
+        'u16': 'U16',
+        'no_players': 'No players in roster. Add players to get started!',
+        'formations': 'Formations',
+        'pp1': 'PP1',
+        'pp2': 'PP2',
+        'bp1': 'BP1',
+        'bp2': 'BP2',
+        '6vs5': '6vs5',
+        'stress_line': 'Stress Line',
+        'convocato': 'Called Up',
+        'summary': 'Summary',
+        'by_position': 'By Position',
+        'by_category': 'By Category',
+        'use_for_game': 'Use for Game',
+        'bulk_import_title': 'Bulk Import Players',
+        'bulk_import_instructions': 'Paste player data below (one player per line). Format: Number, Surname, Name, Position, Category, Nickname',
+        'bulk_import_example': 'Example: 10, Smith, John, A, U18, Johnny',
+        'bulk_import_format': 'Supported formats: Tab-separated (from Excel/Sheets) or Comma-separated',
+        'bulk_data': 'Player Data',
+        'import_players': 'Import Players',
+        'or_manual': 'Or enter manually',
+        'starting_goalies': 'Starting Goalies',
+        'first_goalie': 'Starting Goalie',
+        'second_goalie': 'Backup Goalie',
+        'lineup': 'Complete Lineup',
+        'select_goalie': 'Select Goalie',
+        'select_starting_goalie': 'Select Starting Goalie',
+        'select_starting_goalie_instruction': 'Check goalies in the roster above, then select which one starts',
+        'hide_inactive_players': 'Hide players without number',
+        'select_category': 'Select Category',
+        'error_loading_roster': 'Error loading roster for this category',
     },
     'it': {
         'brand': 'Floorball Stats',
@@ -170,6 +230,58 @@ TRANSLATIONS = {
         'total': 'Totale',
         'average': 'Media',
         'delete_confirm': 'Sei sicuro di voler eliminare questa partita?',
+        'roster': 'Rosa della Squadra',
+        'roster_management': 'Gestione Rosa',
+        'add_player': 'Aggiungi Giocatore',
+        'bulk_import': 'Importazione Massiva',
+        'edit_player': 'Modifica Giocatore',
+        'delete_player': 'Elimina Giocatore',
+        'number': 'Numero',
+        'surname': 'Cognome',
+        'name': 'Nome',
+        'nickname': 'Soprannome',
+        'position': 'Posizione',
+        'position_a': 'Attaccante',
+        'position_c': 'Centro',
+        'position_d': 'Difensore',
+        'position_p': 'Portiere',
+        'tesser': 'Tesser',
+        'select_roster': 'Rosa',
+        'select_category': 'Seleziona Categoria',
+        'u18': 'U18',
+        'u21': 'U21',
+        'u21_dp': 'U21 DP',
+        'u16': 'U16',
+        'no_players': 'Nessun giocatore nella rosa. Aggiungi giocatori per iniziare!',
+        'formations': 'Formazioni',
+        'pp1': 'PP1',
+        'pp2': 'PP2',
+        'bp1': 'BP1',
+        'bp2': 'BP2',
+        '6vs5': '6vs5',
+        'stress_line': 'Linea Stress',
+        'convocato': 'Convocato',
+        'summary': 'Riepilogo',
+        'by_position': 'Per Posizione',
+        'by_category': 'Per Categoria',
+        'use_for_game': 'Usa per Partita',
+        'bulk_import_title': 'Importazione Massiva Giocatori',
+        'bulk_import_instructions': 'Incolla i dati dei giocatori qui sotto (un giocatore per riga). Formato: Numero, Cognome, Nome, Posizione, Tesser, Soprannome',
+        'bulk_import_example': 'Esempio: 10, Rossi, Mario, A, U18, Marietto',
+        'bulk_import_format': 'Formati supportati: Separati da tabulazione (da Excel/Sheets) o separati da virgola',
+        'bulk_data': 'Dati Giocatori',
+        'import_players': 'Importa Giocatori',
+        'or_manual': 'Oppure inserisci manualmente',
+        'starting_goalies': 'Portieri Titolari',
+        'first_goalie': 'Portiere Titolare',
+        'second_goalie': 'Portiere di Riserva',
+        'lineup': 'Formazione Completa',
+        'select_goalie': 'Seleziona Portiere',
+        'select_starting_goalie': 'Seleziona Portiere Titolare',
+        'select_starting_goalie_instruction': 'Seleziona i portieri nel roster sopra, poi scegli chi parte titolare',
+        'hide_inactive_players': 'Nascondi giocatori senza numero',
+        'select_category': 'Seleziona Categoria',
+        'error_loading_roster': 'Errore nel caricamento del roster per questa categoria',
     }
 }
 
@@ -225,23 +337,97 @@ def save_games(games):
         json.dump(games, f, indent=2)
 
 
+def get_roster_file(category):
+    """Get the roster file path for a specific category"""
+    return os.path.join(ROSTERS_DIR, f'roster_{category}.json')
+
+
+def load_roster(category=None):
+    """Load roster for a specific category. If no category, return empty list."""
+    if not category:
+        return []
+    
+    roster_file = get_roster_file(category)
+    try:
+        if os.path.exists(roster_file):
+            with open(roster_file, 'r') as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return []
+
+
+def save_roster(roster, category):
+    """Save roster for a specific category"""
+    roster_file = get_roster_file(category)
+    with open(roster_file, 'w') as f:
+        json.dump(roster, f, indent=2)
+
+
+def find_game_by_id(games, game_id):
+    """Find a game by its ID field (not array index)"""
+    for game in games:
+        if game.get('id') == game_id:
+            return game
+    return None
+
+
+def get_all_categories_with_rosters():
+    """Get list of all categories that have roster files by scanning the rosters directory"""
+    categories = []
+    
+    # Ensure rosters directory exists
+    if not os.path.exists(ROSTERS_DIR):
+        return categories
+    
+    # Scan for all roster_*.json files
+    for filename in os.listdir(ROSTERS_DIR):
+        if filename.startswith('roster_') and filename.endswith('.json'):
+            # Extract category name from filename: roster_CATEGORY.json
+            category = filename[7:-5]  # Remove 'roster_' prefix and '.json' suffix
+            categories.append(category)
+    
+    # Sort alphabetically
+    return sorted(categories)
+
+
+def get_all_tesser_values():
+    """Get list of all unique tesser/category values from all rosters"""
+    tesser_values = set()
+    # Scan all roster files
+    all_categories = get_all_categories_with_rosters()
+    for category in all_categories:
+        roster = load_roster(category)
+        for player in roster:
+            if 'tesser' in player and player['tesser']:
+                tesser_values.add(player['tesser'])
+    # Return sorted list
+    return sorted(tesser_values)
+
+
 def ensure_game_ids(games):
     changed = False
+    seen_ids = set()
     # Find current max id
     max_id = -1
     for i, game in enumerate(games):
         if 'id' in game:
             try:
-                max_id = max(max_id, int(game['id']))
+                game_id = int(game['id'])
+                max_id = max(max_id, game_id)
             except Exception:
                 pass
         else:
             max_id = max(max_id, i)
+    
+    # Assign IDs to games without one and fix duplicates
     for i, game in enumerate(games):
-        if 'id' not in game:
+        if 'id' not in game or game['id'] in seen_ids:
+            # Missing ID or duplicate ID
             max_id += 1
             game['id'] = max_id
             changed = True
+        seen_ids.add(game['id'])
     return changed
 
 # Home page: show latest game and create/switch options
@@ -308,9 +494,9 @@ def game_details(game_id):
     games = load_games()
     if ensure_game_ids(games):
         save_games(games)
-    if game_id < 0 or game_id >= len(games):
+    game = find_game_by_id(games, game_id)
+    if not game:
         return "Game not found", 404
-    game = games[game_id]
     # ensure current game id is available to templates (fallback)
     g.current_game_id = game_id
     # --- Error management: ensure all required fields exist and set defaults if missing ---
@@ -363,7 +549,11 @@ def game_details(game_id):
             game[stat] = {}
             changed = True
     if changed:
-        games[game_id] = game
+        # Find and update game by ID
+        for i, game_item in enumerate(games):
+            if game_item.get('id') == game_id:
+                games[i] = game
+                break
         save_games(games)
     # --- End error management ---
     return render_template(
@@ -378,24 +568,51 @@ def game_details(game_id):
 @app.route('/modify_game/<int:game_id>', methods=['GET', 'POST'])
 def modify_game(game_id):
     games = load_games()
-    if game_id < 0 or game_id >= len(games):
+    game = find_game_by_id(games, game_id)
+    if not game:
         return "Game not found", 404
-    game = games[game_id]
     if request.method == 'POST':
         team = request.form.get('team')
         home_team = request.form.get('home_team')
         away_team = request.form.get('away_team')
         date = request.form.get('date')
+        
+        # Load roster for player lookup
+        roster = load_roster(team) if team else load_roster()
+        player_map = {p['id']: p for p in roster}
+        
+        # Build lines from form number inputs (position 1-5)
         lines = []
         for i in range(1, 5):
-            line_players = request.form.get(f'line{i}', '')
-            lines.append([p.strip()
-                         for p in line_players.split(',') if p.strip()])
+            line_players_with_position = []
+            # Collect all form fields for this line
+            for player_id in player_map.keys():
+                position_value = request.form.get(f'l{i}_{player_id}', '').strip()
+                if position_value:
+                    player = player_map.get(player_id)
+                    if player:
+                        try:
+                            pos_num = int(position_value)
+                            line_players_with_position.append({
+                                'position': pos_num,
+                                'name': f"{player['number']} - {player['surname']} {player['name']}"
+                            })
+                        except ValueError:
+                            pass
+            
+            # Sort by position number and extract names
+            line_players_with_position.sort(key=lambda x: x['position'])
+            line_players = [p['name'] for p in line_players_with_position]
+            lines.append(line_players)
+        
+        # Get goalies from dropdown selections
         goalies = []
         for i in range(1, 3):
-            goalie = request.form.get(f'goalie{i}', '')
-            if goalie.strip():
-                goalies.append(goalie.strip())
+            goalie_id = request.form.get(f'goalie{i}', '')
+            if goalie_id:
+                player = player_map.get(goalie_id)
+                if player:
+                    goalies.append(f"{player['number']} - {player['surname']} {player['name']}")
 
         # Check if opponent goalie tracking should be enabled (backward compatibility)
         # For existing games, enable if they had opponent stats or if
@@ -413,18 +630,50 @@ def modify_game(game_id):
         game['lines'] = lines
         game['goalies'] = goalies
         game['opponent_goalie_enabled'] = enable_opponent_goalie
+        
+        # Store formations from direct form entry with position numbers
+        for formation_key in ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line']:
+            formation_players_with_position = []
+            # Collect all form fields for this formation
+            for player_id in player_map.keys():
+                position_value = request.form.get(f'{formation_key}_{player_id}', '').strip()
+                if position_value:
+                    player = player_map.get(player_id)
+                    if player:
+                        try:
+                            pos_num = int(position_value)
+                            formation_players_with_position.append({
+                                'position': pos_num,
+                                'name': f"{player['number']} - {player['surname']} {player['name']}"
+                            })
+                        except ValueError:
+                            pass
+            
+            # Sort by position number and extract names
+            formation_players_with_position.sort(key=lambda x: x['position'])
+            formation_players = [p['name'] for p in formation_players_with_position]
+            game[formation_key] = formation_players
+        
         if 'result' not in game:
             game['result'] = {p: {"home": 0, "away": 0} for p in PERIODS}
         if 'current_period' not in game:
             game['current_period'] = '1'
-        games[game_id] = game
+        # Find and update game by ID
+        for i, game_item in enumerate(games):
+            if game_item.get('id') == game_id:
+                games[i] = game
+                break
         save_games(games)
         return redirect(url_for('game_details', game_id=game_id))
+    
+    # GET request - load categories for the form
+    categories = get_all_categories_with_rosters()
     return render_template(
         'game_form.html',
         game=game,
         modify=True,
-        game_id=game_id)
+        game_id=game_id,
+        categories=categories)
 
 # Plus/minus, goal, assist action for a player
 
@@ -433,9 +682,9 @@ def modify_game(game_id):
 def player_action(game_id, player):
     action = request.args.get('action')
     games = load_games()
-    if game_id < 0 or game_id >= len(games):
+    game = find_game_by_id(games, game_id)
+    if not game:
         return "Game not found", 404
-    game = games[game_id]
     # Track stats in dicts on the game object
     if 'plusminus' not in game:
         game['plusminus'] = {}
@@ -498,7 +747,11 @@ def player_action(game_id, player):
     elif action == 'unforced_error_minus':
         if game['unforced_errors'][player] > 0:
             game['unforced_errors'][player] -= 1
-    games[game_id] = game
+    # Find and update game by ID
+    for i, game_item in enumerate(games):
+        if game_item.get('id') == game_id:
+            games[i] = game
+            break
     save_games(games)
     # Preserve edit mode if present
     if request.args.get('edit') == '1':
@@ -512,9 +765,9 @@ def player_action(game_id, player):
 def line_action(game_id, line_idx):
     action = request.args.get('action')
     games = load_games()
-    if game_id < 0 or game_id >= len(games):
+    game = find_game_by_id(games, game_id)
+    if not game:
         return "Game not found", 404
-    game = games[game_id]
     if line_idx < 0 or line_idx >= len(game['lines']):
         return "Line not found", 404
     if 'plusminus' not in game:
@@ -557,11 +810,36 @@ def line_action(game_id, line_idx):
             game['goals'][player] += 1
         elif action == 'assist':
             game['assists'][player] += 1
-    games[game_id] = game
+    # Find and update game by ID
+    for i, game_item in enumerate(games):
+        if game_item.get('id') == game_id:
+            games[i] = game
+            break
     save_games(games)
     if request.args.get('edit') == '1':
         return redirect(url_for('game_details', game_id=game_id, edit=1))
     return redirect(url_for('game_details', game_id=game_id))
+
+# View game lineup (for printing)
+@app.route('/game/<int:game_id>/lineup')
+def view_game_lineup(game_id):
+    games = load_games()
+    game = find_game_by_id(games, game_id)
+    if not game:
+        return "Game not found", 404
+    
+    # Load roster to get player details including nicknames
+    roster = []
+    if 'team' in game and game['team']:
+        roster = load_roster(game['team'])
+    
+    # Create a player map by "number - surname name" for quick lookup
+    player_map = {}
+    for player in roster:
+        key = f"{player['number']} - {player['surname']} {player['name']}"
+        player_map[key] = player
+    
+    return render_template('game_lineup.html', game=game, roster=roster, player_map=player_map)
 
 # Game creation form
 
@@ -573,27 +851,53 @@ def create_game():
         home_team = request.form.get('home_team')
         away_team = request.form.get('away_team')
         date = request.form.get('date')
+        
+        # Direct lineup entry from form
+        roster = load_roster(team)
+        player_map = {p['id']: p for p in roster}
+        
+        # Build lines from form number inputs (position 1-5)
         lines = []
         for i in range(1, 5):
-            line_players = request.form.get(f'line{i}', '')
-            lines.append([p.strip()
-                         for p in line_players.split(',') if p.strip()])
+            line_players_with_position = []
+            # Collect all form fields for this line
+            for player_id in player_map.keys():
+                position_value = request.form.get(f'l{i}_{player_id}', '').strip()
+                if position_value:
+                    player = player_map.get(player_id)
+                    if player:
+                        try:
+                            pos_num = int(position_value)
+                            line_players_with_position.append({
+                                'position': pos_num,
+                                'name': f"{player['number']} - {player['surname']} {player['name']}"
+                            })
+                        except ValueError:
+                            pass
+            
+            # Sort by position number and extract names
+            line_players_with_position.sort(key=lambda x: x['position'])
+            line_players = [p['name'] for p in line_players_with_position]
+            lines.append(line_players)
+        
+        # Get goalies from dropdown selections
         goalies = []
         for i in range(1, 3):
-            goalie = request.form.get(f'goalie{i}', '')
-            if goalie.strip():
-                goalies.append(goalie.strip())
+            goalie_id = request.form.get(f'goalie{i}', '')
+            if goalie_id:
+                player = player_map.get(goalie_id)
+                if player:
+                    goalies.append(f"{player['number']} - {player['surname']} {player['name']}")
 
         # Check if opponent goalie tracking should be enabled
-        enable_opponent_goalie = request.form.get(
-            'enable_opponent_goalie') == 'on'
+        enable_opponent_goalie = request.form.get('enable_opponent_goalie') == 'on'
 
         # Initialize period results
         result = {p: {"home": 0, "away": 0} for p in PERIODS}
         games = load_games()
         # Assign a unique id (max id + 1)
         if games:
-            max_id = max([g.get('id', i) for i, g in enumerate(games)])
+            max_id = max([game_item.get('id', i) for i, game_item in enumerate(games)])
             new_id = max_id + 1
         else:
             new_id = 0
@@ -609,10 +913,48 @@ def create_game():
             'result': result,
             'current_period': '1',
         }
+        
+        # Store formations from direct form entry with position numbers
+        for formation_key in ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line']:
+            formation_players_with_position = []
+            # Collect all form fields for this formation
+            for player_id in player_map.keys():
+                position_value = request.form.get(f'{formation_key}_{player_id}', '').strip()
+                if position_value:
+                    player = player_map.get(player_id)
+                    if player:
+                        try:
+                            pos_num = int(position_value)
+                            formation_players_with_position.append({
+                                'position': pos_num,
+                                'name': f"{player['number']} - {player['surname']} {player['name']}"
+                            })
+                        except ValueError:
+                            pass
+            
+            # Sort by position number and extract names
+            formation_players_with_position.sort(key=lambda x: x['position'])
+            formation_players = [p['name'] for p in formation_players_with_position]
+            game[formation_key] = formation_players
+        
         games.append(game)
         save_games(games)
         return redirect(url_for('index'))
-    return render_template('game_form.html')
+    
+    # GET request - load categories
+    categories = get_all_categories_with_rosters()
+    return render_template('game_form.html', categories=categories)
+
+
+@app.route('/api/roster/<category>')
+def get_roster_by_category(category):
+    """API endpoint to get roster by category"""
+    if category not in CATEGORIES:
+        return jsonify({'error': 'Invalid category'}), 400
+    
+    roster = load_roster(category)
+    roster_sorted = sorted(roster, key=lambda p: int(p.get('number', 999)))
+    return jsonify(roster_sorted)
 
 # Goalie stat actions: plus, minus, save, goal_conceded
 
@@ -621,9 +963,9 @@ def create_game():
 def goalie_action(game_id, goalie):
     action = request.args.get('action')
     games = load_games()
-    if game_id < 0 or game_id >= len(games):
+    game = find_game_by_id(games, game_id)
+    if not game:
         return "Game not found", 404
-    game = games[game_id]
     # Initialize goalie stats if not present
     if 'goalie_plusminus' not in game:
         game['goalie_plusminus'] = {}
@@ -668,7 +1010,11 @@ def goalie_action(game_id, goalie):
     elif action == 'assist_minus':
         if game['assists'][goalie] > 0:
             game['assists'][goalie] -= 1
-    games[game_id] = game
+    # Find and update game by ID
+    for i, game_item in enumerate(games):
+        if game_item.get('id') == game_id:
+            games[i] = game
+            break
     save_games(games)
     if request.args.get('edit') == '1':
         return redirect(url_for('game_details', game_id=game_id, edit=1))
@@ -681,9 +1027,9 @@ def goalie_action(game_id, goalie):
 def opponent_goalie_action(game_id):
     action = request.args.get('action')
     games = load_games()
-    if game_id < 0 or game_id >= len(games):
+    game = find_game_by_id(games, game_id)
+    if not game:
         return "Game not found", 404
-    game = games[game_id]
 
     # Always use "Opponent Goalie" as the key
     opponent_goalie = "Opponent Goalie"
@@ -717,7 +1063,11 @@ def opponent_goalie_action(game_id):
             game['opponent_goalie_goals_conceded'][opponent_goalie] -= 1
             if game['result'][period]['home'] > 0:
                 game['result'][period]['home'] -= 1
-    games[game_id] = game
+    # Find and update game by ID
+    for i, game_item in enumerate(games):
+        if game_item.get('id') == game_id:
+            games[i] = game
+            break
     save_games(games)
     if request.args.get('edit') == '1':
         return redirect(url_for('game_details', game_id=game_id, edit=1))
@@ -729,9 +1079,9 @@ def opponent_goalie_action(game_id):
 @app.route('/reset_game/<int:game_id>')
 def reset_game(game_id):
     games = load_games()
-    if game_id < 0 or game_id >= len(games):
+    game = find_game_by_id(games, game_id)
+    if not game:
         return "Game not found", 404
-    game = games[game_id]
     # Reset player stats
     for stat in ['plusminus', 'goals', 'assists', 'unforced_errors']:
         if stat not in game:
@@ -757,7 +1107,11 @@ def reset_game(game_id):
     else:
         for p in PERIODS:
             game['result'][p] = {"home": 0, "away": 0}
-    games[game_id] = game
+    # Find and update game by ID
+    for i, game_item in enumerate(games):
+        if game_item.get('id') == game_id:
+            games[i] = game
+            break
     save_games(games)
     if request.args.get('edit') == '1':
         return redirect(url_for('game_details', game_id=game_id, edit=1))
@@ -772,9 +1126,10 @@ def reset_game(game_id):
 @app.route('/delete_game/<int:game_id>', methods=['POST'])
 def delete_game(game_id):
     games = load_games()
-    if game_id < 0 or game_id >= len(games):
+    game = find_game_by_id(games, game_id)
+    if not game:
         return "Game not found", 404
-    games.pop(game_id)
+    games = [g for g in games if g.get('id') != game_id]
     save_games(games)
     return redirect(url_for('index'))
 
@@ -824,6 +1179,12 @@ def stats():
     if selected_team:
         games_sorted = [
             game for game in games_sorted if game.get('team') == selected_team]
+    
+    # Get filter parameters
+    hide_no_number = request.args.get('hide_no_number', 'false') == 'true'
+    hide_no_games = request.args.get('hide_no_games', 'false') == 'true'
+    hide_zero_stats = request.args.get('hide_zero_stats', 'false') == 'true'
+    
     # Collect all players
     player_set = set()
     for game in games_sorted:
@@ -930,16 +1291,86 @@ def stats():
     else:
         opponent_goalie_data['average_save_percentage'] = None
 
+    # Apply filters to players list
+    filtered_players = []
+    for player in players:
+        # Extract number from player string (format: "number - surname name")
+        player_number = None
+        if ' - ' in player:
+            try:
+                player_number = int(player.split(' - ')[0])
+            except (ValueError, IndexError):
+                player_number = 0
+        
+        # Filter 1: Hide players with no number or number 0
+        if hide_no_number and (player_number is None or player_number == 0):
+            continue
+        
+        # Filter 2: Hide players who never played (not in any game's lines)
+        if hide_no_games:
+            played = False
+            for game in games_sorted:
+                if any(player in line for line in game.get('lines', [])):
+                    played = True
+                    break
+            if not played:
+                continue
+        
+        # Filter 3: Hide players with all stats = 0
+        if hide_zero_stats:
+            totals = player_totals[player]
+            if (totals['plusminus'] == 0 and totals['goals'] == 0 and 
+                totals['assists'] == 0 and totals['unforced_errors'] == 0):
+                continue
+        
+        filtered_players.append(player)
+    
+    # Apply filters to goalies list
+    filtered_goalies = []
+    for goalie in goalies:
+        # Extract number from goalie string
+        goalie_number = None
+        if ' - ' in goalie:
+            try:
+                goalie_number = int(goalie.split(' - ')[0])
+            except (ValueError, IndexError):
+                goalie_number = 0
+        
+        # Filter 1: Hide goalies with no number or number 0
+        if hide_no_number and (goalie_number is None or goalie_number == 0):
+            continue
+        
+        # Filter 2: Hide goalies who never played
+        if hide_no_games:
+            played = False
+            for game in games_sorted:
+                if goalie in game.get('goalies', []):
+                    played = True
+                    break
+            if not played:
+                continue
+        
+        # Filter 3: Hide goalies with zero stats
+        if hide_zero_stats:
+            data = goalie_data[goalie]
+            if data['total_saves'] == 0 and data['total_goals_conceded'] == 0:
+                continue
+        
+        filtered_goalies.append(goalie)
+
     return render_template(
         'stats.html',
         games=games_sorted,
-        players=players,
+        players=filtered_players,
         player_totals=player_totals,
-        goalies=goalies,
+        goalies=filtered_goalies,
         goalie_data=goalie_data,
         opponent_goalie_data=opponent_goalie_data,
         teams=teams,
-        selected_team=selected_team)
+        selected_team=selected_team,
+        hide_no_number=hide_no_number,
+        hide_no_games=hide_no_games,
+        hide_zero_stats=hide_zero_stats)
 
 # Set period route
 
@@ -947,19 +1378,220 @@ def stats():
 @app.route('/set_period/<int:game_id>/<period>')
 def set_period(game_id, period):
     games = load_games()
-    if game_id < 0 or game_id >= len(games):
+    game = find_game_by_id(games, game_id)
+    if not game:
         return "Game not found", 404
-    game = games[game_id]
     if period not in PERIODS:
         return "Invalid period", 400
     game['current_period'] = period
-    games[game_id] = game
+    # Find and update game by ID
+    for i, game_item in enumerate(games):
+        if game_item.get('id') == game_id:
+            games[i] = game
+            break
     save_games(games)
     # Preserve edit mode if present
     edit = request.args.get('edit')
     if edit == '1':
         return redirect(url_for('game_details', game_id=game_id, edit=1))
     return redirect(url_for('game_details', game_id=game_id))
+
+
+# ===== ROSTER MANAGEMENT ROUTES =====
+
+@app.route('/roster')
+def roster_list():
+    # Get category from query parameter
+    selected_category = request.args.get('category', '')
+    
+    # Get all existing rosters
+    existing_rosters = get_all_categories_with_rosters()
+    
+    roster = load_roster(selected_category) if selected_category else []
+    # Sort by number - handle non-numeric values
+    def sort_key(player):
+        try:
+            return (0, int(player.get('number', 999)))
+        except (ValueError, TypeError):
+            # Non-numeric values sorted alphabetically after numeric
+            return (1, str(player.get('number', '')))
+    
+    roster_sorted = sorted(roster, key=sort_key)
+    return render_template('roster_list.html', roster=roster_sorted, 
+                         existing_rosters=existing_rosters,
+                         selected_category=selected_category)
+
+
+@app.route('/roster/bulk_import', methods=['GET', 'POST'])
+def roster_bulk_import():
+    category = request.args.get('category', request.form.get('category', ''))
+    
+    if request.method == 'POST':
+        category = request.form.get('category', '')
+        if not category:
+            return redirect(url_for('roster_bulk_import'))
+        
+        roster = load_roster(category)
+        # Get the maximum current ID
+        max_id = 0
+        for player in roster:
+            try:
+                max_id = max(max_id, int(player.get('id', 0)))
+            except:
+                pass
+        
+        # Process bulk data
+        players_data = request.form.get('bulk_data', '')
+        lines = [line.strip() for line in players_data.strip().split('\n') if line.strip()]
+        
+        added_count = 0
+        for line in lines:
+            # Split by tab or comma
+            if '\t' in line:
+                parts = line.split('\t')
+            else:
+                parts = [p.strip() for p in line.split(',')]
+            
+            if len(parts) >= 4:  # At least number, surname, name, position
+                max_id += 1
+                new_player = {
+                    'id': str(max_id),
+                    'number': parts[0].strip(),
+                    'surname': parts[1].strip(),
+                    'name': parts[2].strip(),
+                    'position': parts[3].strip().upper() if len(parts[3].strip()) <= 1 else 'A',
+                    'tesser': parts[4].strip() if len(parts) > 4 else 'U18',
+                    'nickname': parts[5].strip() if len(parts) > 5 else ''
+                }
+                roster.append(new_player)
+                added_count += 1
+        
+        save_roster(roster, category)
+        return redirect(url_for('roster_list', category=category))
+    
+    all_categories = get_all_categories_with_rosters()
+    return render_template('roster_bulk_import.html', categories=all_categories, category=category)
+
+
+@app.route('/roster/add', methods=['GET', 'POST'])
+def roster_add():
+    category = request.args.get('category', request.form.get('category', ''))
+    
+    if request.method == 'POST':
+        category = request.form.get('category', '')
+        if not category:
+            return redirect(url_for('roster_add'))
+        
+        roster = load_roster(category)
+        new_player = {
+            'id': str(len(roster) + 1),
+            'number': request.form.get('number', ''),
+            'surname': request.form.get('surname', ''),
+            'name': request.form.get('name', ''),
+            'nickname': request.form.get('nickname', ''),
+            'position': request.form.get('position', 'A'),
+            'tesser': request.form.get('tesser', 'U18')
+        }
+        roster.append(new_player)
+        save_roster(roster, category)
+        return redirect(url_for('roster_list', category=category))
+    
+    tesser_values = get_all_tesser_values()
+    all_categories = get_all_categories_with_rosters()
+    return render_template('roster_form.html', player=None, categories=all_categories, category=category, tesser_values=tesser_values)
+
+
+@app.route('/roster/edit/<player_id>', methods=['GET', 'POST'])
+def roster_edit(player_id):
+    category = request.args.get('category', request.form.get('category', ''))
+    if not category:
+        return redirect(url_for('roster_list'))
+    
+    roster = load_roster(category)
+    player = next((p for p in roster if p['id'] == player_id), None)
+    if not player:
+        return "Player not found", 404
+    
+    if request.method == 'POST':
+        category = request.form.get('category', '')
+        player['number'] = request.form.get('number', '')
+        player['surname'] = request.form.get('surname', '')
+        player['name'] = request.form.get('name', '')
+        player['nickname'] = request.form.get('nickname', '')
+        player['position'] = request.form.get('position', 'A')
+        player['tesser'] = request.form.get('tesser', 'U18')
+        save_roster(roster, category)
+        return redirect(url_for('roster_list', category=category))
+    
+    tesser_values = get_all_tesser_values()
+    all_categories = get_all_categories_with_rosters()
+    return render_template('roster_form.html', player=player, categories=all_categories, category=category, tesser_values=tesser_values)
+
+
+@app.route('/roster/delete/<player_id>')
+def roster_delete(player_id):
+    category = request.args.get('category', '')
+    if not category:
+        return redirect(url_for('roster_list'))
+    
+    roster = load_roster(category)
+    roster = [p for p in roster if p['id'] != player_id]
+    save_roster(roster, category)
+    return redirect(url_for('roster_list', category=category))
+
+
+@app.route('/roster/bulk_delete', methods=['POST'])
+def roster_bulk_delete():
+    try:
+        data = request.get_json()
+        category = data.get('category', '')
+        player_ids = data.get('player_ids', [])
+        
+        if not category or not player_ids:
+            return jsonify({'success': False, 'error': 'Missing category or player IDs'})
+        
+        roster = load_roster(category)
+        # Remove players with IDs in the list
+        roster = [p for p in roster if p['id'] not in player_ids]
+        save_roster(roster, category)
+        
+        return jsonify({'success': True, 'deleted_count': len(player_ids)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/roster/delete_roster', methods=['POST'])
+def delete_roster():
+    try:
+        data = request.get_json()
+        category = data.get('category', '')
+        
+        if not category:
+            return jsonify({'success': False, 'error': 'Missing category'})
+        
+        # Check if any games use this roster
+        games = load_games()
+        games_using_roster = [g for g in games if g.get('team') == category]
+        
+        if games_using_roster and not data.get('force', False):
+            # Return warning with game count
+            return jsonify({
+                'success': False, 
+                'warning': True,
+                'game_count': len(games_using_roster),
+                'message': f'{len(games_using_roster)} game(s) are using this roster. Deleting it will not affect existing game data, but you won\'t be able to load this roster for those games anymore.'
+            })
+        
+        # Delete the roster file
+        roster_file = get_roster_file(category)
+        if os.path.exists(roster_file):
+            os.remove(roster_file)
+            return jsonify({'success': True, 'message': 'Roster deleted successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'Roster file not found'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 
 if __name__ == '__main__':

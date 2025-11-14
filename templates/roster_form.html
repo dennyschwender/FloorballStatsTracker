@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{% if player %}{{ g.t['edit_player'] }}{% else %}{{ g.t['add_player'] }}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{% if player %}{{ g.t['edit_player'] }}{% else %}{{ g.t['add_player'] }}{% endif %}</h1>
+
+    <form method="post">
+        <!-- Category Selection (only show when adding new player) -->
+        {% if not player %}
+        <div class="mb-3">
+            <label for="categoryInput" class="form-label">{{ g.t['select_roster'] }}</label>
+            <input type="text" class="form-control" id="categoryInput" name="category" list="categoryList"
+                placeholder="-- {{ g.t['select_category'] }} --" value="{{ category if category else '' }}" required>
+            <datalist id="categoryList">
+                {% for cat in categories %}
+                <option value="{{ cat }}">
+                    {% endfor %}
+            </datalist>
+        </div>
+        {% else %}
+        <input type="hidden" name="category" value="{{ category }}">
+        <div class="mb-3">
+            <p><strong>{{ g.t['select_roster'] }}:</strong> {{ category }}</p>
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label for="number" class="form-label">{{ g.t['number'] }}</label>
+            <input type="text" class="form-control" id="number" name="number"
+                value="{{ player.number if player else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="surname" class="form-label">{{ g.t['surname'] }}</label>
+            <input type="text" class="form-control" id="surname" name="surname"
+                value="{{ player.surname if player else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="name" class="form-label">{{ g.t['name'] }}</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ player.name if player else '' }}"
+                required>
+        </div>
+
+        <div class="mb-3">
+            <label for="nickname" class="form-label">{{ g.t['nickname'] }}</label>
+            <input type="text" class="form-control" id="nickname" name="nickname"
+                value="{{ player.nickname if player else '' }}">
+        </div>
+
+        <div class="mb-3">
+            <label for="position" class="form-label">{{ g.t['position'] }}</label>
+            <select class="form-select" id="position" name="position" required>
+                <option value="A" {% if player and player.position=='A' %}selected{% endif %}>{{ g.t['position_a'] }}
+                </option>
+                <option value="C" {% if player and player.position=='C' %}selected{% endif %}>{{ g.t['position_c'] }}
+                </option>
+                <option value="D" {% if player and player.position=='D' %}selected{% endif %}>{{ g.t['position_d'] }}
+                </option>
+                <option value="P" {% if player and player.position=='P' %}selected{% endif %}>{{ g.t['position_p'] }}
+                </option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="tesser" class="form-label">{{ g.t['tesser'] }}</label>
+            <input type="text" class="form-control" id="tesser" name="tesser" list="tesserList"
+                value="{{ player.tesser if player else '' }}"
+                placeholder="{{ g.t['u18'] }}, {{ g.t['u21'] }}, {{ g.t['u21_dp'] }}, {{ g.t['u16'] }}" required>
+            <datalist id="tesserList">
+                {% for tesser in tesser_values %}
+                <option value="{{ tesser }}">
+                    {% endfor %}
+            </datalist>
+        </div>
+
+        <button type="submit" class="btn btn-primary">{{ g.t['save'] }}</button>
+        <a href="{{ url_for('roster_list') }}" class="btn btn-secondary">{{ g.t['cancel'] }}</a>
+    </form>
+</div>
+{% endblock %}
