@@ -265,6 +265,28 @@ def migrate_game(game, rosters, interactive=False):
                     )
             game[formation_key] = new_formation
     
+    # Migrate stats dictionaries (goals, assists, plusminus, saves, unforced_errors, etc.)
+    stats_keys = ['goals', 'assists', 'plusminus', 'saves', 'unforced_errors', 
+                  'opponent_goalie_saves', 'opponent_goalie_goals_conceded']
+    
+    for stat_key in stats_keys:
+        if stat_key in game and isinstance(game[stat_key], dict):
+            new_stats = {}
+            for player_string, value in game[stat_key].items():
+                matched_name, score = find_best_match(player_string, roster, interactive)
+                if matched_name:
+                    new_stats[matched_name] = value
+                    if matched_name != player_string:
+                        report['changes'].append(
+                            f"{stat_key}: '{player_string}' → '{matched_name}' (value: {value}, score: {score:.2f})"
+                        )
+                else:
+                    new_stats[player_string] = value
+                    report['warnings'].append(
+                        f"{stat_key}: No match found for '{player_string}' (value: {value}, best score: {score:.2f})"
+                    )
+            game[stat_key] = new_stats
+    
     return game, report
 
 def main():
