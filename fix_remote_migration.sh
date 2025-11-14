@@ -1,8 +1,8 @@
 #!/bin/bash
-# Script to fix games files location on remote server after migration
+# Script to move games files from .gamesFiles to gamesFiles (remove dot prefix)
 
 echo "=================================="
-echo "Fix Remote Migration Files"
+echo "Move Games Files to Standard Location"
 echo "=================================="
 echo ""
 
@@ -13,25 +13,23 @@ if [ ! -d ".gamesFiles" ]; then
     exit 1
 fi
 
-# Check if gamesFiles directory exists (incorrectly created)
+# Create gamesFiles directory if it doesn't exist
 if [ ! -d "gamesFiles" ]; then
-    echo "Error: gamesFiles directory not found!"
-    echo "Nothing to migrate."
-    exit 1
+    echo "Creating gamesFiles/ directory..."
+    mkdir gamesFiles
 fi
 
-echo "Found both directories:"
-echo "  .gamesFiles/ (correct location for Docker)"
-echo "  gamesFiles/ (incorrect location)"
+echo "Found source directory:"
+echo "  .gamesFiles/ (old location with dot)"
 echo ""
 
 # Show what will be moved
-echo "Files in gamesFiles/ to be moved:"
-ls -lh gamesFiles/
+echo "Files in .gamesFiles/ to be moved:"
+ls -lh .gamesFiles/
 echo ""
 
 # Ask for confirmation
-read -p "Move files from gamesFiles/ to .gamesFiles/? (yes/no): " confirm
+read -p "Move files from .gamesFiles/ to gamesFiles/? (yes/no): " confirm
 
 if [ "$confirm" != "yes" ]; then
     echo "Aborted."
@@ -41,20 +39,19 @@ fi
 # Move files
 echo ""
 echo "Moving files..."
-mv gamesFiles/* .gamesFiles/
+mv .gamesFiles/* gamesFiles/ 2>/dev/null || echo "No files to move or some files already exist"
 echo "✓ Files moved successfully"
 
-# Remove empty directory
-rmdir gamesFiles
-echo "✓ Removed empty gamesFiles/ directory"
+# Remove old directory
+rmdir .gamesFiles 2>/dev/null && echo "✓ Removed old .gamesFiles/ directory" || echo "⚠ Could not remove .gamesFiles/ (may contain hidden files or not be empty)"
 
 echo ""
 echo "=================================="
-echo "Migration fix complete!"
+echo "Migration complete!"
 echo "=================================="
 echo ""
-echo "Files now in .gamesFiles/:"
-ls -lh .gamesFiles/
+echo "Files now in gamesFiles/:"
+ls -lh gamesFiles/
 echo ""
 echo "You may need to restart your Docker container:"
 echo "  docker-compose restart"

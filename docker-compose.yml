@@ -5,7 +5,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./.gamesFiles/:/app/gamesFiles/
+      - ./gamesFiles/:/app/gamesFiles/
       - ./rosters/:/app/rosters/
     environment:
       - FLASK_APP=app.py
