@@ -7,13 +7,26 @@
     <h1>{{ g.t['roster_management'] }}</h1>
 
     {% if not selected_category %}
+    <!-- Season Selector -->
+    <div class="mb-4">
+        <form method="get" class="d-flex gap-2 align-items-center">
+            <label for="seasonSelect" class="fw-bold">{{ g.t['season'] }}:</label>
+            <select class="form-select" style="width: auto; min-width: 200px;" id="seasonSelect" name="season" onchange="this.form.submit()">
+                <option value="">{{ g.t['all_seasons'] }}</option>
+                {% for season in all_seasons %}
+                <option value="{{ season }}" {% if season==selected_season %}selected{% endif %}>{{ season }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
     <!-- Show existing rosters as clickable cards -->
     <div class="mb-4">
         <h4>{{ g.t['select_roster'] }}</h4>
         <div class="row">
             {% for roster_cat in existing_rosters %}
             <div class="col-md-3 mb-3">
-                <a href="{{ url_for('roster_list', category=roster_cat) }}" class="btn btn-outline-primary w-100 p-3"
+                <a href="{{ url_for('roster_list', category=roster_cat, season=selected_season) }}" class="btn btn-outline-primary w-100 p-3"
                     style="font-size: 1.2rem;">
                     {{ roster_cat }}
                 </a>
@@ -44,6 +57,11 @@
                 <div class="modal-body">
                     <form id="newRosterForm">
                         <div class="mb-3">
+                            <label for="newSeasonName" class="form-label">{{ g.t['season_name'] }}</label>
+                            <input type="text" class="form-control" id="newSeasonName"
+                                placeholder="e.g., 2024-25, Fall 2024" required>
+                        </div>
+                        <div class="mb-3">
                             <label for="newCategoryName" class="form-label">Roster Name/Category</label>
                             <input type="text" class="form-control" id="newCategoryName"
                                 placeholder="e.g., U18, Senior, NLA" required>
@@ -60,13 +78,20 @@
 
     <script>
         function createNewRoster() {
+            const seasonName = document.getElementById('newSeasonName').value.trim();
             const categoryName = document.getElementById('newCategoryName').value.trim();
-            if (categoryName) {
-                window.location.href = '{{ url_for("roster_list") }}?category=' + encodeURIComponent(categoryName);
+            if (seasonName && categoryName) {
+                window.location.href = '{{ url_for("roster_list") }}?season=' + encodeURIComponent(seasonName) + '&category=' + encodeURIComponent(categoryName);
             }
         }
 
         // Allow Enter key to submit
+        document.getElementById('newSeasonName')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('newCategoryName').focus();
+            }
+        });
         document.getElementById('newCategoryName')?.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -78,19 +103,19 @@
     {% else %}
     <!-- Viewing a specific roster -->
     <div class="mb-4 d-flex justify-content-between align-items-center">
-        <h3 class="mb-0">{{ g.t['roster'] }}: {{ selected_category }}</h3>
+        <h3 class="mb-0">{{ g.t['roster'] }}: {% if selected_season %}{{ selected_season }} - {% endif %}{{ selected_category }}</h3>
         <div>
             <button type="button" class="btn btn-outline-danger me-2" onclick="deleteEntireRoster()">
                 🗑️ Delete Roster
             </button>
-            <a href="{{ url_for('roster_list') }}" class="btn btn-secondary">← Back to Rosters</a>
+            <a href="{{ url_for('roster_list', season=selected_season) }}" class="btn btn-secondary">← Back to Rosters</a>
         </div>
     </div>
 
     <div class="mb-3">
-        <a href="{{ url_for('roster_add', category=selected_category) }}" class="btn btn-primary">{{ g.t['add_player']
+        <a href="{{ url_for('roster_add', category=selected_category, season=selected_season) }}" class="btn btn-primary">{{ g.t['add_player']
             }}</a>
-        <a href="{{ url_for('roster_bulk_import', category=selected_category) }}" class="btn btn-success">{{
+        <a href="{{ url_for('roster_bulk_import', category=selected_category, season=selected_season) }}" class="btn btn-success">{{
             g.t['bulk_import'] }}</a>
         <button type="button" class="btn btn-danger" id="bulkDeleteBtn" style="display:none;"
             onclick="bulkDeletePlayers()">
@@ -132,10 +157,10 @@
                         </td>
                         <td>{{ player.tesser }}</td>
                         <td>
-                            <a href="{{ url_for('roster_edit', player_id=player.id, category=selected_category) }}"
+                            <a href="{{ url_for('roster_edit', player_id=player.id, category=selected_category, season=selected_season) }}"
                                 class="btn btn-sm btn-warning">{{
                                 g.t['edit_player'] }}</a>
-                            <a href="{{ url_for('roster_delete', player_id=player.id, category=selected_category) }}"
+                            <a href="{{ url_for('roster_delete', player_id=player.id, category=selected_category, season=selected_season) }}"
                                 class="btn btn-sm btn-danger" data-confirm="{{ g.t['delete_confirm'] }}">{{
                                 g.t['delete_player'] }}</a>
                         </td>
@@ -244,6 +269,7 @@
                 },
                 body: JSON.stringify({
                     category: '{{ selected_category }}',
+                    season: '{{ selected_season }}',
                     player_ids: playerIds
                 })
             })

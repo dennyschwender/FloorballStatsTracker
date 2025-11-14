@@ -104,6 +104,17 @@
     <form method="get" class="mb-4">
         <div class="row g-2 align-items-center">
             <div class="col-auto">
+                <label for="season" class="form-label mb-0">{{ g.t['season'] }}</label>
+            </div>
+            <div class="col-auto">
+                <select class="form-select form-select-sm" id="season" name="season" onchange="this.form.submit()">
+                    <option value="">{{ g.t['all_seasons'] }}</option>
+                    {% for s in seasons %}
+                    <option value="{{ s }}" {% if s==selected_season %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
                 <label for="team" class="form-label mb-0">{{ g.t['category'] }}</label>
             </div>
             <div class="col-auto">
@@ -113,24 +124,6 @@
                     <option value="{{ t }}" {% if t==selected_team %}selected{% endif %}>{{ t }}</option>
                     {% endfor %}
                 </select>
-            </div>
-            <div class="col-auto">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="hide_no_number" name="hide_no_number" 
-                           value="true" {% if hide_no_number %}checked{% endif %} onchange="this.form.submit()">
-                    <label class="form-check-label" for="hide_no_number">
-                        Hide #0
-                    </label>
-                </div>
-            </div>
-            <div class="col-auto">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="hide_no_games" name="hide_no_games" 
-                           value="true" {% if hide_no_games %}checked{% endif %} onchange="this.form.submit()">
-                    <label class="form-check-label" for="hide_no_games">
-                        Hide unused
-                    </label>
-                </div>
             </div>
             <div class="col-auto">
                 <div class="form-check">

@@ -72,9 +72,9 @@ docker-compose.override.yml
 games.json
 
 # JSON data files
-gamesFiles/*.json
-rosters/*.json
-*games_backup*.json
+gamesFiles/*.json*
+rosters/*.json*
+*games_backup*.json*
 
 # Logs
 *.log

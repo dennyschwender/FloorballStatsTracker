@@ -29,8 +29,14 @@
 <div class="container mt-5">
     <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
         {% if games %}
-        <form method="get" action="/" class="d-inline-block">
-            <select class="form-select form-select-sm d-inline-block w-auto" name="team" onchange="this.form.submit()">
+        <form method="get" action="/" class="d-inline-flex gap-2 align-items-center">
+            <select class="form-select form-select-sm w-auto" name="season" onchange="this.form.submit()">
+                <option value="">{{ g.t['all_seasons'] if g.t is defined else 'All Seasons' }}</option>
+                {% for s in seasons %}
+                <option value="{{ s }}" {% if s==selected_season %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-select form-select-sm w-auto" name="team" onchange="this.form.submit()">
                 <option value="">{{ g.t['all_teams'] if g.t is defined else 'All Teams' }}</option>
                 {% set teams = games | map(attribute='team') | list | unique | sort %}
                 {% for team in teams %}

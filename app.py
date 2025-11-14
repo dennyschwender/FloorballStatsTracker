@@ -99,6 +99,11 @@ TRANSLATIONS = {
         'referee2': 'Referee 2',
         'referees': 'Referees',
         'notes': 'Notes',
+        'season': 'Season',
+        'select_season': 'Select Season',
+        'create_season': 'Create New Season',
+        'season_name': 'Season Name',
+        'all_seasons': 'All Seasons',
         'incorrect_pin': 'Incorrect PIN',
         'opponent_goalie_not_enabled': 'Opponent goalie tracking not enabled for this game',
         'goalies': 'Goalies',
@@ -223,6 +228,11 @@ TRANSLATIONS = {
         'referee2': 'Arbitro 2',
         'referees': 'Arbitri',
         'notes': 'Note',
+        'season': 'Stagione',
+        'select_season': 'Seleziona Stagione',
+        'create_season': 'Crea Nuova Stagione',
+        'season_name': 'Nome Stagione',
+        'all_seasons': 'Tutte le Stagioni',
         'opponent_goalie_not_enabled': 'Il monitoraggio del portiere avversario non è abilitato per questa partita',
         'goalies': 'Portieri',
         'opponent_goalie': 'Portiere avversario',
@@ -345,17 +355,20 @@ def save_games(games):
         json.dump(games, f, indent=2)
 
 
-def get_roster_file(category):
-    """Get the roster file path for a specific category"""
+def get_roster_file(category, season=None):
+    """Get the roster file path for a specific category and season"""
+    if season and season.strip():
+        return os.path.join(ROSTERS_DIR, f'roster_{season}_{category}.json')
+    # For backward compatibility, return old format if no season specified
     return os.path.join(ROSTERS_DIR, f'roster_{category}.json')
 
 
-def load_roster(category=None):
-    """Load roster for a specific category. If no category, return empty list."""
+def load_roster(category=None, season=None):
+    """Load roster for a specific category and season. If no category, return empty list."""
     if not category:
         return []
     
-    roster_file = get_roster_file(category)
+    roster_file = get_roster_file(category, season)
     try:
         if os.path.exists(roster_file):
             with open(roster_file, 'r') as f:
@@ -365,11 +378,58 @@ def load_roster(category=None):
     return []
 
 
-def save_roster(roster, category):
-    """Save roster for a specific category"""
-    roster_file = get_roster_file(category)
+def save_roster(roster, category, season=None):
+    """Save roster for a specific category and season"""
+    roster_file = get_roster_file(category, season)
     with open(roster_file, 'w') as f:
         json.dump(roster, f, indent=2)
+
+
+def get_all_seasons():
+    """Get list of all unique seasons from roster files"""
+    seasons = set()
+    
+    # Ensure rosters directory exists
+    if not os.path.exists(ROSTERS_DIR):
+        return sorted(seasons)
+    
+    # Scan for all roster_*.json files
+    for filename in os.listdir(ROSTERS_DIR):
+        if filename.startswith('roster_') and filename.endswith('.json'):
+            # Extract season and category from filename: roster_SEASON_CATEGORY.json or roster_CATEGORY.json
+            parts = filename[7:-5].split('_', 1)  # Remove 'roster_' prefix and '.json' suffix
+            if len(parts) == 2:
+                seasons.add(parts[0])  # First part is season
+    
+    return sorted(seasons, reverse=True)  # Most recent season first
+
+
+def get_all_categories_with_rosters(season=None):
+    """Get list of all categories that have roster files by scanning the rosters directory"""
+    categories = set()
+    
+    # Ensure rosters directory exists
+    if not os.path.exists(ROSTERS_DIR):
+        return sorted(categories)
+    
+    # Scan for all roster_*.json files
+    for filename in os.listdir(ROSTERS_DIR):
+        if filename.startswith('roster_') and filename.endswith('.json'):
+            # Extract category name from filename
+            parts = filename[7:-5].split('_', 1)  # Remove 'roster_' prefix and '.json' suffix
+            if season and season.strip():
+                # Filter by season: roster_SEASON_CATEGORY.json
+                if len(parts) == 2 and parts[0] == season:
+                    categories.add(parts[1])
+            else:
+                # Get all categories (with or without season)
+                if len(parts) == 2:
+                    categories.add(parts[1])
+                elif len(parts) == 1:
+                    categories.add(parts[0])  # Old format without season
+    
+    # Sort alphabetically
+    return sorted(categories)
 
 
 def find_game_by_id(games, game_id):
@@ -378,25 +438,6 @@ def find_game_by_id(games, game_id):
         if game.get('id') == game_id:
             return game
     return None
-
-
-def get_all_categories_with_rosters():
-    """Get list of all categories that have roster files by scanning the rosters directory"""
-    categories = []
-    
-    # Ensure rosters directory exists
-    if not os.path.exists(ROSTERS_DIR):
-        return categories
-    
-    # Scan for all roster_*.json files
-    for filename in os.listdir(ROSTERS_DIR):
-        if filename.startswith('roster_') and filename.endswith('.json'):
-            # Extract category name from filename: roster_CATEGORY.json
-            category = filename[7:-5]  # Remove 'roster_' prefix and '.json' suffix
-            categories.append(category)
-    
-    # Sort alphabetically
-    return sorted(categories)
 
 
 def get_all_tesser_values():
@@ -468,6 +509,15 @@ def index():
         return (date_val, -games.index(game))
 
     games_sorted = sorted(games, key=game_sort_key, reverse=True)
+    
+    # Filter by season
+    seasons = get_all_seasons()
+    selected_season = request.args.get('season')
+    if selected_season:
+        games_sorted = [
+            game for game in games_sorted if game.get('season') == selected_season]
+    
+    # Filter by team
     selected_team = request.args.get('team')
     if selected_team:
         filtered_games = [
@@ -482,6 +532,8 @@ def index():
         'index.html',
         games=games_sorted,
         latest_game_id=latest_game_id,
+        seasons=seasons,
+        selected_season=selected_season,
         selected_team=selected_team)
 
 # Add a before_request to protect all routes except static and pin
@@ -580,6 +632,7 @@ def modify_game(game_id):
     if not game:
         return "Game not found", 404
     if request.method == 'POST':
+        season = request.form.get('season', game.get('season', ''))
         team = request.form.get('team')
         home_team = request.form.get('home_team')
         away_team = request.form.get('away_team')
@@ -588,7 +641,7 @@ def modify_game(game_id):
         referee2 = request.form.get('referee2', '').strip()
         
         # Load roster for player lookup
-        roster = load_roster(team) if team else load_roster()
+        roster = load_roster(team, season) if team else load_roster()
         player_map = {p['id']: p for p in roster}
         
         # Build lines from form number inputs (position 1-5)
@@ -633,6 +686,7 @@ def modify_game(game_id):
         enable_opponent_goalie = request.form.get(
             'enable_opponent_goalie') == 'on' or has_opponent_stats
 
+        game['season'] = season
         game['team'] = team
         game['home_team'] = home_team
         game['away_team'] = away_team
@@ -678,14 +732,15 @@ def modify_game(game_id):
         save_games(games)
         return redirect(url_for('game_details', game_id=game_id))
     
-    # GET request - load categories for the form
-    categories = get_all_categories_with_rosters()
+    # GET request - load seasons for the form
+    seasons = get_all_seasons()
     return render_template(
         'game_form.html',
         game=game,
         modify=True,
         game_id=game_id,
-        categories=categories)
+        categories=[],
+        seasons=seasons)
 
 # Plus/minus, goal, assist action for a player
 
@@ -859,13 +914,14 @@ def view_game_lineup(game_id):
 @app.route('/create_game', methods=['GET', 'POST'])
 def create_game():
     if request.method == 'POST':
+        season = request.form.get('season', '')
         team = request.form.get('team')
         home_team = request.form.get('home_team')
         away_team = request.form.get('away_team')
         date = request.form.get('date')
         
         # Direct lineup entry from form
-        roster = load_roster(team)
+        roster = load_roster(team, season)
         player_map = {p['id']: p for p in roster}
         
         # Build lines from form number inputs (position 1-5)
@@ -915,6 +971,7 @@ def create_game():
             new_id = 0
         game = {
             'id': new_id,
+            'season': season,
             'team': team,
             'home_team': home_team,
             'away_team': away_team,
@@ -955,9 +1012,17 @@ def create_game():
         save_games(games)
         return redirect(url_for('index'))
     
-    # GET request - load categories
-    categories = get_all_categories_with_rosters()
-    return render_template('game_form.html', categories=categories)
+    # GET request - load seasons (categories loaded dynamically via API)
+    seasons = get_all_seasons()
+    return render_template('game_form.html', categories=[], seasons=seasons)
+
+
+@app.route('/api/categories')
+def get_categories_by_season():
+    """API endpoint to get categories by season"""
+    season = request.args.get('season', '')
+    categories = get_all_categories_with_rosters(season)
+    return jsonify(categories)
 
 
 @app.route('/api/roster/<category>')
@@ -966,7 +1031,8 @@ def get_roster_by_category(category):
     if category not in CATEGORIES:
         return jsonify({'error': 'Invalid category'}), 400
     
-    roster = load_roster(category)
+    season = request.args.get('season', '')
+    roster = load_roster(category, season)
     roster_sorted = sorted(roster, key=lambda p: int(p.get('number', 999)))
     return jsonify(roster_sorted)
 
@@ -1187,6 +1253,14 @@ def stats():
         return (date_val, -games.index(game))
 
     games_sorted = sorted(games, key=game_sort_key, reverse=False)
+    
+    # Filter by season
+    seasons = get_all_seasons()
+    selected_season = request.args.get('season')
+    if selected_season:
+        games_sorted = [
+            game for game in games_sorted if game.get('season') == selected_season]
+    
     # Filter by team/category
     teams = sorted(set(game.get('team', '') for game in games if game.get('team')))
     selected_team = request.args.get('team')
@@ -1195,8 +1269,6 @@ def stats():
             game for game in games_sorted if game.get('team') == selected_team]
     
     # Get filter parameters
-    hide_no_number = request.args.get('hide_no_number', 'false') == 'true'
-    hide_no_games = request.args.get('hide_no_games', 'false') == 'true'
     hide_zero_stats = request.args.get('hide_zero_stats', 'false') == 'true'
     
     # Collect all players
@@ -1308,29 +1380,7 @@ def stats():
     # Apply filters to players list
     filtered_players = []
     for player in players:
-        # Extract number from player string (format: "number - surname name")
-        player_number = None
-        if ' - ' in player:
-            try:
-                player_number = int(player.split(' - ')[0])
-            except (ValueError, IndexError):
-                player_number = 0
-        
-        # Filter 1: Hide players with no number or number 0
-        if hide_no_number and (player_number is None or player_number == 0):
-            continue
-        
-        # Filter 2: Hide players who never played (not in any game's lines)
-        if hide_no_games:
-            played = False
-            for game in games_sorted:
-                if any(player in line for line in game.get('lines', [])):
-                    played = True
-                    break
-            if not played:
-                continue
-        
-        # Filter 3: Hide players with all stats = 0
+        # Filter: Hide players with all stats = 0
         if hide_zero_stats:
             totals = player_totals[player]
             if (totals['plusminus'] == 0 and totals['goals'] == 0 and 
@@ -1342,29 +1392,7 @@ def stats():
     # Apply filters to goalies list
     filtered_goalies = []
     for goalie in goalies:
-        # Extract number from goalie string
-        goalie_number = None
-        if ' - ' in goalie:
-            try:
-                goalie_number = int(goalie.split(' - ')[0])
-            except (ValueError, IndexError):
-                goalie_number = 0
-        
-        # Filter 1: Hide goalies with no number or number 0
-        if hide_no_number and (goalie_number is None or goalie_number == 0):
-            continue
-        
-        # Filter 2: Hide goalies who never played
-        if hide_no_games:
-            played = False
-            for game in games_sorted:
-                if goalie in game.get('goalies', []):
-                    played = True
-                    break
-            if not played:
-                continue
-        
-        # Filter 3: Hide goalies with zero stats
+        # Filter: Hide goalies with zero stats
         if hide_zero_stats:
             data = goalie_data[goalie]
             if data['total_saves'] == 0 and data['total_goals_conceded'] == 0:
@@ -1380,10 +1408,10 @@ def stats():
         goalies=filtered_goalies,
         goalie_data=goalie_data,
         opponent_goalie_data=opponent_goalie_data,
+        seasons=seasons,
+        selected_season=selected_season,
         teams=teams,
         selected_team=selected_team,
-        hide_no_number=hide_no_number,
-        hide_no_games=hide_no_games,
         hide_zero_stats=hide_zero_stats)
 
 # Set period route
@@ -1415,13 +1443,21 @@ def set_period(game_id, period):
 
 @app.route('/roster')
 def roster_list():
-    # Get category from query parameter
+    # Get category and season from query parameters
     selected_category = request.args.get('category', '')
+    selected_season = request.args.get('season', '')
     
-    # Get all existing rosters
-    existing_rosters = get_all_categories_with_rosters()
+    # Get all existing seasons
+    all_seasons = get_all_seasons()
     
-    roster = load_roster(selected_category) if selected_category else []
+    # If no season selected but seasons exist, redirect to first season
+    if not selected_season and all_seasons and not selected_category:
+        return redirect(url_for('roster_list', season=all_seasons[0]))
+    
+    # Get categories for selected season
+    existing_rosters = get_all_categories_with_rosters(selected_season)
+    
+    roster = load_roster(selected_category, selected_season) if selected_category else []
     # Sort by number - handle non-numeric values
     def sort_key(player):
         try:
@@ -1433,19 +1469,23 @@ def roster_list():
     roster_sorted = sorted(roster, key=sort_key)
     return render_template('roster_list.html', roster=roster_sorted, 
                          existing_rosters=existing_rosters,
-                         selected_category=selected_category)
+                         all_seasons=all_seasons,
+                         selected_category=selected_category,
+                         selected_season=selected_season)
 
 
 @app.route('/roster/bulk_import', methods=['GET', 'POST'])
 def roster_bulk_import():
     category = request.args.get('category', request.form.get('category', ''))
+    season = request.args.get('season', request.form.get('season', ''))
     
     if request.method == 'POST':
         category = request.form.get('category', '')
+        season = request.form.get('season', '')
         if not category:
-            return redirect(url_for('roster_bulk_import'))
+            return redirect(url_for('roster_bulk_import', season=season))
         
-        roster = load_roster(category)
+        roster = load_roster(category, season)
         # Get the maximum current ID
         max_id = 0
         for player in roster:
@@ -1480,23 +1520,25 @@ def roster_bulk_import():
                 roster.append(new_player)
                 added_count += 1
         
-        save_roster(roster, category)
-        return redirect(url_for('roster_list', category=category))
+        save_roster(roster, category, season)
+        return redirect(url_for('roster_list', category=category, season=season))
     
-    all_categories = get_all_categories_with_rosters()
-    return render_template('roster_bulk_import.html', categories=all_categories, category=category)
+    all_categories = get_all_categories_with_rosters(season)
+    return render_template('roster_bulk_import.html', categories=all_categories, category=category, season=season)
 
 
 @app.route('/roster/add', methods=['GET', 'POST'])
 def roster_add():
     category = request.args.get('category', request.form.get('category', ''))
+    season = request.args.get('season', request.form.get('season', ''))
     
     if request.method == 'POST':
         category = request.form.get('category', '')
+        season = request.form.get('season', '')
         if not category:
-            return redirect(url_for('roster_add'))
+            return redirect(url_for('roster_add', season=season))
         
-        roster = load_roster(category)
+        roster = load_roster(category, season)
         new_player = {
             'id': str(len(roster) + 1),
             'number': request.form.get('number', ''),
@@ -1507,51 +1549,54 @@ def roster_add():
             'tesser': request.form.get('tesser', 'U18')
         }
         roster.append(new_player)
-        save_roster(roster, category)
-        return redirect(url_for('roster_list', category=category))
+        save_roster(roster, category, season)
+        return redirect(url_for('roster_list', category=category, season=season))
     
     tesser_values = get_all_tesser_values()
-    all_categories = get_all_categories_with_rosters()
-    return render_template('roster_form.html', player=None, categories=all_categories, category=category, tesser_values=tesser_values)
+    all_categories = get_all_categories_with_rosters(season)
+    return render_template('roster_form.html', player=None, categories=all_categories, category=category, season=season, tesser_values=tesser_values)
 
 
 @app.route('/roster/edit/<player_id>', methods=['GET', 'POST'])
 def roster_edit(player_id):
     category = request.args.get('category', request.form.get('category', ''))
+    season = request.args.get('season', request.form.get('season', ''))
     if not category:
-        return redirect(url_for('roster_list'))
+        return redirect(url_for('roster_list', season=season))
     
-    roster = load_roster(category)
+    roster = load_roster(category, season)
     player = next((p for p in roster if p['id'] == player_id), None)
     if not player:
         return "Player not found", 404
     
     if request.method == 'POST':
         category = request.form.get('category', '')
+        season = request.form.get('season', '')
         player['number'] = request.form.get('number', '')
         player['surname'] = request.form.get('surname', '')
         player['name'] = request.form.get('name', '')
         player['nickname'] = request.form.get('nickname', '')
         player['position'] = request.form.get('position', 'A')
         player['tesser'] = request.form.get('tesser', 'U18')
-        save_roster(roster, category)
-        return redirect(url_for('roster_list', category=category))
+        save_roster(roster, category, season)
+        return redirect(url_for('roster_list', category=category, season=season))
     
     tesser_values = get_all_tesser_values()
-    all_categories = get_all_categories_with_rosters()
-    return render_template('roster_form.html', player=player, categories=all_categories, category=category, tesser_values=tesser_values)
+    all_categories = get_all_categories_with_rosters(season)
+    return render_template('roster_form.html', player=player, categories=all_categories, category=category, season=season, tesser_values=tesser_values)
 
 
 @app.route('/roster/delete/<player_id>')
 def roster_delete(player_id):
     category = request.args.get('category', '')
+    season = request.args.get('season', '')
     if not category:
-        return redirect(url_for('roster_list'))
+        return redirect(url_for('roster_list', season=season))
     
-    roster = load_roster(category)
+    roster = load_roster(category, season)
     roster = [p for p in roster if p['id'] != player_id]
-    save_roster(roster, category)
-    return redirect(url_for('roster_list', category=category))
+    save_roster(roster, category, season)
+    return redirect(url_for('roster_list', category=category, season=season))
 
 
 @app.route('/roster/bulk_delete', methods=['POST'])
@@ -1559,15 +1604,16 @@ def roster_bulk_delete():
     try:
         data = request.get_json()
         category = data.get('category', '')
+        season = data.get('season', '')
         player_ids = data.get('player_ids', [])
         
         if not category or not player_ids:
             return jsonify({'success': False, 'error': 'Missing category or player IDs'})
         
-        roster = load_roster(category)
+        roster = load_roster(category, season)
         # Remove players with IDs in the list
         roster = [p for p in roster if p['id'] not in player_ids]
-        save_roster(roster, category)
+        save_roster(roster, category, season)
         
         return jsonify({'success': True, 'deleted_count': len(player_ids)})
     except Exception as e:

@@ -135,16 +135,27 @@
     <form method="post" action="{{ url_for('modify_game', game_id=game_id) if modify else '/create_game' }}"
         id="gameForm">
         <div class="mb-3">
+            <label for="season" class="form-label">{{ g.t['season'] }}</label>
+            {% if modify %}
+            <input type="text" class="form-control" id="season" name="season" required
+                value="{{ game.season if game.season is defined else '' }}" readonly>
+            {% else %}
+            <select class="form-select" id="season" name="season" required>
+                <option value="">{{ g.t['select_season'] }}</option>
+                {% for s in seasons %}
+                <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+        </div>
+        <div class="mb-3">
             <label for="team" class="form-label">{{ g.t['category'] }}</label>
             {% if modify %}
             <input type="text" class="form-control" id="team" name="team" required
                 value="{{ game.team if game.team is defined else '' }}" readonly>
             {% else %}
-            <select class="form-select" id="team" name="team" required>
-                <option value="">{{ g.t['select_category'] }}</option>
-                {% for category in categories %}
-                <option value="{{ category }}">{{ category }}</option>
-                {% endfor %}
+            <select class="form-select" id="team" name="team" required disabled>
+                <option value="">{{ g.t['select_season'] if g.t is defined else 'Select season first' }}</option>
             </select>
             {% endif %}
         </div>
@@ -358,10 +369,109 @@
 
         // Handle category selection to load roster
         var teamSelect = document.getElementById('team');
+        var seasonSelect = document.getElementById('season');
         var lineupSection = document.getElementById('lineupSection');
 
         console.log('Team select element:', teamSelect);
+        console.log('Season select element:', seasonSelect);
         console.log('Lineup section element:', lineupSection);
+        
+        // Function to load categories based on selected season
+        function loadCategoriesForSeason(season) {
+            if (!teamSelect || !season) {
+                return;
+            }
+            
+            console.log('Loading categories for season:', season);
+            fetch('/api/categories?season=' + encodeURIComponent(season))
+                .then(response => response.json())
+                .then(categories => {
+                    console.log('Categories loaded:', categories);
+                    
+                    // Clear and populate category dropdown
+                    teamSelect.innerHTML = '<option value="">{{ g.t["select_category"] if g.t is defined else "Select Category" }}</option>';
+                    categories.forEach(function(category) {
+                        var option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        teamSelect.appendChild(option);
+                    });
+                    
+                    // Enable category select
+                    teamSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error loading categories:', error);
+                    teamSelect.innerHTML = '<option value="">{{ g.t["error_loading"] if g.t is defined else "Error loading categories" }}</option>';
+                    teamSelect.disabled = true;
+                });
+        }
+        
+        // Function to load roster based on current season and category
+        function loadRosterForCurrentSelection() {
+            if (!teamSelect || !teamSelect.value || !teamSelect.value.trim()) {
+                if (lineupSection) {
+                    lineupSection.style.display = 'none';
+                }
+                return;
+            }
+            
+            var category = teamSelect.value.trim();
+            var season = seasonSelect ? seasonSelect.value.trim() : '';
+            
+            console.log('Loading roster for category:', category, 'season:', season);
+            var url = '/api/roster/' + encodeURIComponent(category);
+            if (season) {
+                url += '?season=' + encodeURIComponent(season);
+            }
+            
+            fetch(url)
+                .then(response => {
+                    console.log('Roster fetch response:', response);
+                    if (!response.ok) {
+                        return [];
+                    }
+                    return response.json();
+                })
+                .then(roster => {
+                    console.log('Roster loaded:', roster);
+                    currentRoster = roster;
+                    populateRosterUI(roster);
+                    if (lineupSection) {
+                        lineupSection.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading roster:', error);
+                    currentRoster = [];
+                    populateRosterUI([]);
+                    if (lineupSection) {
+                        lineupSection.style.display = 'block';
+                    }
+                });
+        }
+        
+        // Add season change listener
+        if (seasonSelect && !seasonSelect.readOnly) {
+            console.log('Adding change listener to season select');
+            seasonSelect.addEventListener('change', function() {
+                console.log('Season changed to:', this.value);
+                
+                // Reset category selection
+                if (teamSelect) {
+                    teamSelect.value = '';
+                    teamSelect.disabled = true;
+                    if (lineupSection) {
+                        lineupSection.style.display = 'none';
+                    }
+                }
+                
+                // Load categories for new season
+                if (this.value) {
+                    loadCategoriesForSeason(this.value);
+                }
+            });
+        }
 
         if (teamSelect) {
             console.log('Adding change listener to team select');
@@ -370,34 +480,7 @@
                 var category = this.value.trim();
                 console.log('Category changed to:', category);
                 if (category) {
-                    // Load roster for selected category
-                    console.log('Fetching roster for category:', category);
-                    fetch('/api/roster/' + encodeURIComponent(category))
-                        .then(response => {
-                            console.log('Roster fetch response:', response);
-                            if (!response.ok) {
-                                // Category doesn't exist yet, show empty roster
-                                return [];
-                            }
-                            return response.json();
-                        })
-                        .then(roster => {
-                            console.log('Roster loaded:', roster);
-                            currentRoster = roster;
-                            populateRosterUI(roster);
-                            if (lineupSection) {
-                                lineupSection.style.display = 'block';
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error loading roster:', error);
-                            // For new categories, just show empty lineup
-                            currentRoster = [];
-                            populateRosterUI([]);
-                            if (lineupSection) {
-                                lineupSection.style.display = 'block';
-                            }
-                        });
+                    loadRosterForCurrentSelection();
                 } else {
                     if (lineupSection) {
                         lineupSection.style.display = 'none';
@@ -408,32 +491,7 @@
             // For modify mode or if category is already selected, load roster immediately
             if (teamSelect.value && teamSelect.value.trim()) {
                 console.log('Initial category value detected:', teamSelect.value);
-                var category = teamSelect.value.trim();
-                // Directly fetch roster for modify mode (readonly input won't trigger change event)
-                fetch('/api/roster/' + encodeURIComponent(category))
-                    .then(response => {
-                        console.log('Roster fetch response:', response);
-                        if (!response.ok) {
-                            return [];
-                        }
-                        return response.json();
-                    })
-                    .then(roster => {
-                        console.log('Roster loaded:', roster);
-                        currentRoster = roster;
-                        populateRosterUI(roster);
-                        if (lineupSection) {
-                            lineupSection.style.display = 'block';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading roster:', error);
-                        currentRoster = [];
-                        populateRosterUI([]);
-                        if (lineupSection) {
-                            lineupSection.style.display = 'block';
-                        }
-                    });
+                loadRosterForCurrentSelection();
             } else if (lineupSection) {
                 lineupSection.style.display = 'none';
             }

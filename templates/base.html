@@ -79,9 +79,11 @@
                     {% if games is defined and games|length > 1 %}
                     <select id="navbar-game-switch" class="form-select form-select-sm mt-1" aria-label="Switch game">
                         <option value="">{{ g.t['all'] }}</option>
-                        {% for gg in games %}
-                        <option value="{{ loop.index0 }}" {% if g.get('current_game_id') is not none and
-                            loop.index0==g.current_game_id %}selected{% endif %}>{{ gg.home_team }} vs {{ gg.away_team
+                        {% set sorted_games = games | sort(attribute='date', reverse=True) %}
+                        {% for gg in sorted_games %}
+                        {% set short_date = gg.date.split('-')[2] ~ '.' ~ gg.date.split('-')[1] if gg.date else '' %}
+                        <option value="{{ gg.id }}" {% if g.get('current_game_id') is not none and
+                            gg.id==g.current_game_id %}selected{% endif %}>{{ short_date ~ ' ' if short_date }}{{ gg.home_team }} vs {{ gg.away_team
                             }}</option>
                         {% endfor %}
                     </select>
@@ -115,9 +117,11 @@
                 <div class="w-100 d-lg-none mt-2 order-1">
                     <select id="navbar-game-switch-mobile" class="form-select form-select-sm" aria-label="Switch game">
                         <option value="">{{ g.t['all'] }}</option>
-                        {% for gg in games %}
-                        <option value="{{ loop.index0 }}" {% if g.get('current_game_id') is not none and
-                            loop.index0==g.current_game_id %}selected{% endif %}>{{ gg.home_team }} vs {{ gg.away_team
+                        {% set sorted_games = games | sort(attribute='date', reverse=True) %}
+                        {% for gg in sorted_games %}
+                        {% set short_date = gg.date.split('-')[2] ~ '.' ~ gg.date.split('-')[1] if gg.date else '' %}
+                        <option value="{{ gg.id }}" {% if g.get('current_game_id') is not none and
+                            gg.id==g.current_game_id %}selected{% endif %}>{{ short_date ~ ' ' if short_date }}{{ gg.home_team }} vs {{ gg.away_team
                             }}</option>
                         {% endfor %}
                     </select>

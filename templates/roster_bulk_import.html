@@ -25,6 +25,15 @@
 <div class="container">
     <h1>{{ g.t['bulk_import_title'] }}</h1>
 
+    <!-- Season Selection -->
+    <div class="mb-4">
+        <label for="seasonInput" class="form-label"><strong>{{ g.t['season'] }}</strong></label>
+        <input type="text" class="form-control" id="seasonInput"
+            placeholder="e.g., 2024-25" value="{{ season if season else '' }}"
+            oninput="updateSeasonInForm(this.value)">
+        <small class="form-text text-muted">Enter season name</small>
+    </div>
+
     <!-- Category Selection -->
     <div class="mb-4">
         <label for="categoryInput" class="form-label"><strong>{{ g.t['select_roster'] }}</strong></label>
@@ -40,16 +49,22 @@
     </div>
 
     <script>
-        function updateCategoryInForm(value) {
-            document.getElementById('categoryField').value = value;
+        function updateSeasonInForm(season) {
+            document.getElementById('seasonField').value = season;
         }
+
+        function updateCategoryInForm(category) {
+            document.getElementById('categoryField').value = category;
+        }
+
         // Initialize on load
+        if (document.getElementById('seasonInput').value) {
+            updateSeasonInForm(document.getElementById('seasonInput').value);
+        }
         if (document.getElementById('categoryInput').value) {
             updateCategoryInForm(document.getElementById('categoryInput').value);
         }
-    </script>
-
-    <div class="format-info">
+    </script>    <div class="format-info">
         <h5>{{ g.t['bulk_import_instructions'] }}</h5>
         <p><strong>{{ g.t['bulk_import_format'] }}</strong></p>
         <div class="example-box">
@@ -63,6 +78,7 @@
     </div>
 
     <form method="post">
+        <input type="hidden" name="season" id="seasonField" value="{{ season if season else '' }}">
         <input type="hidden" name="category" id="categoryField" value="{{ category if category else '' }}">
 
         <div class="mb-3">

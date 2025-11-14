@@ -7,8 +7,13 @@
     <h1>{% if player %}{{ g.t['edit_player'] }}{% else %}{{ g.t['add_player'] }}{% endif %}</h1>
 
     <form method="post">
-        <!-- Category Selection (only show when adding new player) -->
+        <!-- Season and Category Selection (only show when adding new player) -->
         {% if not player %}
+        <div class="mb-3">
+            <label for="seasonInput" class="form-label">{{ g.t['season'] }}</label>
+            <input type="text" class="form-control" id="seasonInput" name="season"
+                placeholder="e.g., 2024-25" value="{{ season if season else '' }}" required>
+        </div>
         <div class="mb-3">
             <label for="categoryInput" class="form-label">{{ g.t['select_roster'] }}</label>
             <input type="text" class="form-control" id="categoryInput" name="category" list="categoryList"
@@ -20,8 +25,10 @@
             </datalist>
         </div>
         {% else %}
+        <input type="hidden" name="season" value="{{ season }}">
         <input type="hidden" name="category" value="{{ category }}">
         <div class="mb-3">
+            <p><strong>{{ g.t['season'] }}:</strong> {{ season }}</p>
             <p><strong>{{ g.t['select_roster'] }}:</strong> {{ category }}</p>
         </div>
         {% endif %}
