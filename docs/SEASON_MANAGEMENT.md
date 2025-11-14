@@ -5,6 +5,7 @@ This guide explains how to use the season management features in Floorball Stats
 ## Overview
 
 Season management allows you to organize your games and rosters by season (e.g., "2024-25", "2025-26"). This makes it easy to:
+
 - Keep historical data organized
 - Filter stats by specific seasons
 - Manage multiple teams across different seasons
@@ -13,11 +14,13 @@ Season management allows you to organize your games and rosters by season (e.g.,
 ## Season Naming Convention
 
 We recommend using the format `YYYY-YY` for season names:
+
 - `2024-25` for the 2024-2025 season
 - `2025-26` for the 2025-2026 season
 - etc.
 
 This format:
+
 - Sorts chronologically
 - Is internationally recognized
 - Clearly indicates the season span
@@ -49,6 +52,7 @@ This format:
 Rosters are saved as: `rosters/roster_SEASON_CATEGORY.json`
 
 Example:
+
 - `roster_2025-26_U21.json`
 - `roster_2025-26_U18.json`
 - `roster_2024-25_U21.json`
@@ -99,6 +103,7 @@ python scripts/assign_season.py 2025-26
 ```
 
 This will:
+
 1. **Backup your data** automatically
 2. **Rename roster files**: `roster_U21.json` → `roster_2025-26_U21.json`
 3. **Update all games**: Add `"season": "2025-26"` to each game
@@ -111,12 +116,14 @@ The script is safe and creates backups before making any changes.
 If you prefer manual control:
 
 1. **Backup your data**:
+
    ```bash
    python scripts/backup_games.py
    cp rosters/roster_*.json rosters/backup/
    ```
 
 2. **Rename roster files**:
+
    ```bash
    mv rosters/roster_U21.json rosters/roster_2025-26_U21.json
    ```
@@ -146,11 +153,13 @@ If you prefer manual control:
 To archive (but not delete) old season data:
 
 1. Create a backup:
+
    ```bash
    python scripts/backup_games.py
    ```
 
 2. Move old roster files to an archive folder:
+
    ```bash
    mkdir -p rosters/archive/2024-25
    mv rosters/roster_2024-25_*.json rosters/archive/2024-25/
@@ -161,15 +170,18 @@ To archive (but not delete) old season data:
 ## Best Practices
 
 ### 1. Consistent Naming
+
 - Always use the same format for season names
 - Use `YYYY-YY` format for clarity
 - Don't include extra text (e.g., avoid "Season 2025-26" - just use "2025-26")
 
 ### 2. One Season at a Time
+
 - When creating games, stay focused on one season
 - Don't mix players from different seasons in the same game
 
 ### 3. Regular Backups
+
 ```bash
 # Before starting a new season
 python scripts/backup_games.py
@@ -179,11 +191,13 @@ python scripts/backup_games.py
 ```
 
 ### 4. Clean Transitions
+
 - Finish entering all games for a season before starting the next
 - Archive or backup old season data
 - Create fresh rosters for the new season
 
 ### 5. Testing
+
 - Test your workflow with a dummy season first (e.g., "TEST-25")
 - Delete test data before going live
 - Verify filters work as expected
@@ -195,6 +209,7 @@ python scripts/backup_games.py
 **Cause**: No rosters exist for the selected season
 
 **Solution**:
+
 1. Select the correct season
 2. Go to Team Roster
 3. Create a roster for that season and category
@@ -205,6 +220,7 @@ python scripts/backup_games.py
 **Cause**: File name doesn't match expected format
 
 **Solution**:
+
 - Ensure file is named: `roster_SEASON_CATEGORY.json`
 - Check for typos in season or category names
 - Verify file is in `rosters/` directory
@@ -214,6 +230,7 @@ python scripts/backup_games.py
 **Cause**: Game has wrong season field or no season field
 
 **Solution**:
+
 1. Backup your data
 2. Edit `gamesFiles/games.json`
 3. Find the game (search by teams or date)
@@ -225,27 +242,31 @@ python scripts/backup_games.py
 **Cause**: No rosters or games exist for that season
 
 **Solution**:
+
 - Seasons are auto-detected from existing rosters
 - Create at least one roster to make a season appear
 
 ## API for Developers
 
 ### Get all seasons
-```
+
+```http
 GET /api/seasons
 ```
 
 Returns array of season strings.
 
 ### Get categories for a season
-```
+
+```http
 GET /api/categories?season=2025-26
 ```
 
 Returns array of category strings for that season.
 
 ### Get roster for season and category
-```
+
+```http
 GET /api/roster/U21?season=2025-26
 ```
 
@@ -254,6 +275,7 @@ Returns array of player objects.
 ## Data Structures
 
 ### Season-aware Roster File
+
 ```json
 [
   {
@@ -271,6 +293,7 @@ Returns array of player objects.
 File: `rosters/roster_2025-26_U21.json`
 
 ### Season-aware Game Object
+
 ```json
 {
   "id": 0,

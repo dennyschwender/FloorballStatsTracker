@@ -31,10 +31,11 @@ def test_goalie_save_percentage_with_fallback(client):
     
     client.post('/create_game', data=game_data, follow_redirects=True)
     
-    # Get game ID
+    # Get the game
     with open(GAMES_FILE) as f:
         games = json.load(f)
     game = next((g for g in games if g['home_team'] == 'Test Team'), None)
+    assert game is not None, "Game should be created"
     game_id = game['id']
     goalie_name = '57 - Peverelli Matteo'
     
@@ -128,6 +129,7 @@ def test_goalie_save_percentage_calculation(client):
     with open(GAMES_FILE) as f:
         games = json.load(f)
     game = next((g for g in games if g['home_team'] == 'Save % Test'), None)
+    assert game is not None, "Game should be created"
     game_id = game['id']
     
     goalie = '30 - Goalie Test'
@@ -200,6 +202,7 @@ def test_goalie_with_only_saves_no_goals(client):
     with open(GAMES_FILE) as f:
         games = json.load(f)
     game = next((g for g in games if g['home_team'] == 'Perfect Save Test'), None)
+    assert game is not None, "Game should be created"
     game_id = game['id']
     
     goalie = '30 - Perfect Goalie'

@@ -9,16 +9,19 @@ This directory contains utility scripts for managing your Floorball Stats Tracke
 **Purpose**: Migrate existing games and rosters to use season identifiers.
 
 **Usage**:
+
 ```bash
 python scripts/assign_season.py <season_name>
 ```
 
 **Example**:
+
 ```bash
 python scripts/assign_season.py 2025-26
 ```
 
 **What it does**:
+
 - ✅ Creates automatic backup of games.json
 - ✅ Renames roster files: `roster_U21.json` → `roster_2025-26_U21.json`
 - ✅ Adds `"season": "2025-26"` field to all games without a season
@@ -26,7 +29,8 @@ python scripts/assign_season.py 2025-26
 - ✅ Skips files that already have seasons
 
 **Output Example**:
-```
+
+```text
 🏒 Assigning season '2025-26' to existing data...
 
 📋 Processing rosters...
@@ -46,11 +50,13 @@ python scripts/assign_season.py 2025-26
 ```
 
 **When to use**:
+
 - First time setting up seasons
 - Migrating from old version without season support
 - Assigning a season to imported data
 
 **Safety**:
+
 - Creates backup before making any changes
 - Skips files that already match the target format
 - Non-destructive (original backup preserved)
@@ -62,23 +68,27 @@ python scripts/assign_season.py 2025-26
 **Purpose**: Create a timestamped backup of your games file.
 
 **Usage**:
+
 ```bash
 python scripts/backup_games.py
 ```
 
 **What it does**:
+
 - ✅ Creates backup in `gamesFiles/` directory
 - ✅ Uses timestamp in filename: `games_backup_YYYYMMDD_HHMMSS.json`
 - ✅ Preserves all game data exactly as-is
 - ✅ Confirms backup location
 
 **Output Example**:
-```
+
+```text
 💾 Creating backup of games.json...
 ✅ Backup created: gamesFiles/games_backup_20251114_153045.json
 ```
 
 **When to use**:
+
 - Before making manual edits to games.json
 - Before running migration scripts
 - Before starting a new season
@@ -86,6 +96,7 @@ python scripts/backup_games.py
 - Before bulk operations
 
 **Recommended Schedule**:
+
 - Weekly during active season
 - Before any data migration
 - After major tournaments/events
@@ -98,11 +109,13 @@ python scripts/backup_games.py
 **Purpose**: Perform data structure migrations and schema updates.
 
 **Usage**:
+
 ```bash
 python scripts/migrate_games.py
 ```
 
 **What it does**:
+
 - ✅ Creates backup before migration
 - ✅ Updates game data structures
 - ✅ Ensures all required fields exist
@@ -110,13 +123,15 @@ python scripts/migrate_games.py
 - ✅ Reports migration summary
 
 **Common Migrations**:
+
 - Adding new stat fields (e.g., `unforced_errors`)
 - Adding opponent goalie tracking
 - Updating period result structure
 - Converting player ID formats
 
 **Output Example**:
-```
+
+```text
 🔄 Starting migration...
 💾 Backup created: gamesFiles/games_backup_20251114_153045.json
 ✅ Migrated 15 games
@@ -126,12 +141,14 @@ python scripts/migrate_games.py
 ```
 
 **When to use**:
+
 - After upgrading the application
 - When instructed in release notes
 - To fix data structure issues
 - To add new features to existing games
 
 **Important**:
+
 - Always review the migration script before running
 - Keep the backup file until verified
 - Test on a copy first if unsure
@@ -143,24 +160,28 @@ python scripts/migrate_games.py
 **Purpose**: Fix file paths after server deployment or directory moves.
 
 **Usage**:
+
 ```bash
 bash scripts/fix_remote_migration.sh
 ```
 
 **What it does**:
+
 - ✅ Moves files from `.gamesFiles/` to `gamesFiles/`
 - ✅ Updates file permissions
 - ✅ Ensures correct directory structure
 - ✅ Reports moved files
 
 **When to use**:
+
 - After deploying to a new server
 - After restoring from backup
 - When file paths are incorrect
 - After migrating hosting environments
 
 **Output Example**:
-```
+
+```text
 📁 Checking directory structure...
 ✅ Found .gamesFiles/ directory
 🔄 Moving files to gamesFiles/...
@@ -235,6 +256,7 @@ ls -t games_backup_*.json | tail -n +6 | xargs rm -f
 **Error**: `python: can't open file 'assign_season.py'`
 
 **Solution**: Make sure you're in the project root directory:
+
 ```bash
 cd /path/to/floorball_stats_tracker
 python scripts/assign_season.py 2025-26
@@ -245,6 +267,7 @@ python scripts/assign_season.py 2025-26
 **Error**: `Permission denied: 'gamesFiles/games.json'`
 
 **Solution**: Check file permissions:
+
 ```bash
 chmod 644 gamesFiles/games.json
 chmod 755 gamesFiles/
@@ -255,6 +278,7 @@ chmod 755 gamesFiles/
 **Error**: `JSONDecodeError: Expecting value`
 
 **Solution**: Your games.json may be corrupted
+
 ```bash
 # Restore from latest backup
 cp gamesFiles/games_backup_YYYYMMDD_HHMMSS.json gamesFiles/games.json
@@ -266,7 +290,8 @@ cp gamesFiles/games_backup_YYYYMMDD_HHMMSS.json gamesFiles/games.json
 
 **Meaning**: File already migrated - this is safe to ignore
 
-**Action**: 
+**Action**:
+
 - If the old file still exists, you can safely delete it
 - Or keep it as a backup
 
