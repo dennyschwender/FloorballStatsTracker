@@ -1,5 +1,30 @@
 {% extends "base.html" %}
 {% block title %}{{ g.t['title'] if g.t is defined else 'Floorball Stats Tracker' }}{% endblock %}
+
+{% block head %}
+<style>
+    .sortable {
+        cursor: pointer;
+        position: relative;
+        padding-right: 20px !important;
+    }
+    .sort-icon::after {
+        content: '\21c5';
+        position: absolute;
+        right: 5px;
+        opacity: 0.3;
+    }
+    .sort-icon.asc::after {
+        content: '\2191';
+        opacity: 1;
+    }
+    .sort-icon.desc::after {
+        content: '\2193';
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
     <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
@@ -22,24 +47,95 @@
     <h1 class="mb-3" style="font-size:1.2rem;">{{ g.t['title'] if g.t is defined else 'Floorball Stats Tracker' }}</h1>
     {% if games %}
     <h2 class="mb-3">{{ g.t['all_games'] if not selected_team else g.t['all_games_for'] ~ ' ' ~ selected_team }}</h2>
-    <ul class="list-group">
-        {% for game in games %}
-        {% if not selected_team or game.team == selected_team %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>
-                {% if not selected_team and game.team %}
-                <span class="badge bg-info text-dark me-2">{{ game.team }}</span>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover" id="gamesTable">
+            <thead>
+                <tr>
+                    {% if not selected_team %}
+                    <th class="sortable" onclick="sortTable(0)" style="cursor: pointer;">{{ g.t['category'] if g.t is defined else 'Category' }} <span class="sort-icon"></span></th>
+                    {% endif %}
+                    <th class="sortable" onclick="sortTable({% if not selected_team %}1{% else %}0{% endif %})" style="cursor: pointer;">{{ g.t['date'] if g.t is defined else 'Date' }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortTable({% if not selected_team %}2{% else %}1{% endif %})" style="cursor: pointer;">{{ g.t['home_team'] if g.t is defined else 'Home' }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortTable({% if not selected_team %}3{% else %}2{% endif %})" style="cursor: pointer;">{{ g.t['away_team'] if g.t is defined else 'Away' }} <span class="sort-icon"></span></th>
+                    <th>{{ g.t['actions'] if g.t is defined else 'Actions' }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for game in games %}
+                {% if not selected_team or game.team == selected_team %}
+                <tr>
+                    {% if not selected_team %}
+                    <td><span class="badge bg-info text-dark">{{ game.team if game.team else '' }}</span></td>
+                    {% endif %}
+                    <td>{{ game.date if game.date else '' }}</td>
+                    <td>{{ game.home_team }}</td>
+                    <td>{{ game.away_team }}</td>
+                    <td>
+                        <a href="/game/{{ game.id }}" class="btn btn-outline-secondary btn-sm">{{ g.t['view'] if g.t is defined else 'View' }}</a>
+                    </td>
+                </tr>
                 {% endif %}
-                <span class="text-muted small">{{ game.date if game.date else '' }}</span>
-                {{ game.home_team }} vs {{ game.away_team }}
-            </span>
-            <a href="/game/{{ game.id }}" class="btn btn-outline-secondary btn-sm">{{ g.t['view'] }}</a>
-        </li>
-        {% endif %}
-        {% endfor %}
-    </ul>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
     <p>{{ g.t['no_games'] }}</p>
     {% endif %}
 </div>
+
+<script>
+    let sortDirection = {};
+
+    function sortTable(columnIndex) {
+        const table = document.getElementById('gamesTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        // Toggle sort direction
+        sortDirection[columnIndex] = sortDirection[columnIndex] === 'asc' ? 'desc' : 'asc';
+        const isAsc = sortDirection[columnIndex] === 'asc';
+        
+        // Sort rows
+        rows.sort((a, b) => {
+            const aCell = a.cells[columnIndex].textContent.trim();
+            const bCell = b.cells[columnIndex].textContent.trim();
+            
+            // Try to parse as date (format: YYYY-MM-DD)
+            if (aCell.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return isAsc ? aCell.localeCompare(bCell) : bCell.localeCompare(aCell);
+            }
+            
+            // Try to parse as number
+            const aNum = parseFloat(aCell);
+            const bNum = parseFloat(bCell);
+            
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+                return isAsc ? aNum - bNum : bNum - aNum;
+            }
+            
+            // String comparison
+            return isAsc ? aCell.localeCompare(bCell) : bCell.localeCompare(aCell);
+        });
+        
+        // Reorder table
+        rows.forEach(row => tbody.appendChild(row));
+        
+        // Update sort icons
+        document.querySelectorAll('.sort-icon').forEach(icon => {
+            icon.className = 'sort-icon';
+        });
+        const currentHeader = table.querySelector(`thead th:nth-child(${columnIndex + 1}) .sort-icon`);
+        if (currentHeader) {
+            currentHeader.className = `sort-icon ${isAsc ? 'asc' : 'desc'}`;
+        }
+    }
+
+    // Sort by date descending on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateColumnIndex = {% if not selected_team %}1{% else %}0{% endif %};
+        sortDirection[dateColumnIndex] = 'asc'; // Set to asc so the toggle makes it desc
+        sortTable(dateColumnIndex);
+    });
+</script>
 {% endblock %}

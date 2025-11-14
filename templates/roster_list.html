@@ -101,16 +101,16 @@
     {% if roster %}
     <form id="bulkDeleteForm">
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
+            <table class="table table-striped table-hover" id="rosterTable">
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
-                        <th>{{ g.t['number'] }}</th>
-                        <th>{{ g.t['surname'] }}</th>
-                        <th>{{ g.t['name'] }}</th>
-                        <th>{{ g.t['nickname'] }}</th>
-                        <th>{{ g.t['position'] }}</th>
-                        <th>{{ g.t['tesser'] }}</th>
+                        <th class="sortable" onclick="sortTable(1)" style="cursor: pointer;">{{ g.t['number'] }} <span class="sort-icon"></span></th>
+                        <th class="sortable" onclick="sortTable(2)" style="cursor: pointer;">{{ g.t['surname'] }} <span class="sort-icon"></span></th>
+                        <th class="sortable" onclick="sortTable(3)" style="cursor: pointer;">{{ g.t['name'] }} <span class="sort-icon"></span></th>
+                        <th class="sortable" onclick="sortTable(4)" style="cursor: pointer;">{{ g.t['nickname'] }} <span class="sort-icon"></span></th>
+                        <th class="sortable" onclick="sortTable(5)" style="cursor: pointer;">{{ g.t['position'] }} <span class="sort-icon"></span></th>
+                        <th class="sortable" onclick="sortTable(6)" style="cursor: pointer;">{{ g.t['tesser'] }} <span class="sort-icon"></span></th>
                         <th>{{ g.t['actions'] }}</th>
                     </tr>
                 </thead>
@@ -146,7 +146,69 @@
         </div>
     </form>
 
+    <style>
+        .sortable {
+            position: relative;
+            padding-right: 20px !important;
+        }
+        .sort-icon::after {
+            content: '⇅';
+            position: absolute;
+            right: 5px;
+            opacity: 0.3;
+        }
+        .sort-icon.asc::after {
+            content: '↑';
+            opacity: 1;
+        }
+        .sort-icon.desc::after {
+            content: '↓';
+            opacity: 1;
+        }
+    </style>
+
     <script>
+        let sortDirection = {};
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById('rosterTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Toggle sort direction
+            sortDirection[columnIndex] = sortDirection[columnIndex] === 'asc' ? 'desc' : 'asc';
+            const isAsc = sortDirection[columnIndex] === 'asc';
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                const aCell = a.cells[columnIndex].textContent.trim();
+                const bCell = b.cells[columnIndex].textContent.trim();
+                
+                // Try to parse as number first
+                const aNum = parseFloat(aCell);
+                const bNum = parseFloat(bCell);
+                
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return isAsc ? aNum - bNum : bNum - aNum;
+                }
+                
+                // String comparison
+                return isAsc ? aCell.localeCompare(bCell) : bCell.localeCompare(aCell);
+            });
+            
+            // Reorder table
+            rows.forEach(row => tbody.appendChild(row));
+            
+            // Update sort icons
+            document.querySelectorAll('.sort-icon').forEach(icon => {
+                icon.className = 'sort-icon';
+            });
+            const currentHeader = table.querySelector(`thead th:nth-child(${columnIndex + 1}) .sort-icon`);
+            if (currentHeader) {
+                currentHeader.className = `sort-icon ${isAsc ? 'asc' : 'desc'}`;
+            }
+        }
+
         function toggleSelectAll(checkbox) {
             const checkboxes = document.querySelectorAll('.player-checkbox');
             checkboxes.forEach(cb => cb.checked = checkbox.checked);
