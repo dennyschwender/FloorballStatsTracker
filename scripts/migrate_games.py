@@ -267,6 +267,7 @@ def migrate_game(game, rosters, interactive=False):
     
     # Migrate stats dictionaries (goals, assists, plusminus, saves, unforced_errors, etc.)
     stats_keys = ['goals', 'assists', 'plusminus', 'saves', 'unforced_errors', 
+                  'goals_conceded', 'goalie_plusminus',
                   'opponent_goalie_saves', 'opponent_goalie_goals_conceded']
     
     for stat_key in stats_keys:
