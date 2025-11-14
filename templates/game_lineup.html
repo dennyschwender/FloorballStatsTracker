@@ -335,6 +335,13 @@
                 {% if game.date %}
                 <p class="mb-0">{{ game.date }}</p>
                 {% endif %}
+                {% if game.referee1 or game.referee2 %}
+                <p class="mb-0"><strong>{{ g.t.get('referees', 'Referees') }}:</strong> 
+                    {% if game.referee1 %}{{ game.referee1 }}{% endif %}
+                    {% if game.referee1 and game.referee2 %}, {% endif %}
+                    {% if game.referee2 %}{{ game.referee2 }}{% endif %}
+                </p>
+                {% endif %}
             </div>
 
             <div class="lines-row">
@@ -440,7 +447,11 @@
                         <td class="header-label">Data:</td>
                         <td>{{ game.date if game.date else '' }}</td>
                         <td class="header-label">Arbitri:</td>
-                        <td></td>
+                        <td>
+                            {% if game.referee1 %}{{ game.referee1 }}{% endif %}
+                            {% if game.referee1 and game.referee2 %}, {% endif %}
+                            {% if game.referee2 %}{{ game.referee2 }}{% endif %}
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -645,43 +656,43 @@
                                 </div>
                                 <div class="position-layout">
                                     {% if game['6vs5'] %}
-                                    <!-- Position 4 (row 1, col 1) -->
-                                    <div class="player-position" style="grid-column: 1; grid-row: 1;">
+                                    <!-- Position 4 (row 1, col 2) -->
+                                    <div class="player-position" style="grid-column: 2; grid-row: 1;">
                                         <div class="position-number">4</div>
                                         {% if game['6vs5']|length >= 4 %}
                                         <div class="player-name-small">{{ display_player(game['6vs5'][3]) }}</div>
                                         {% endif %}
                                     </div>
-                                    <!-- Position 6 (row 1, col 2) -->
-                                    <div class="player-position" style="grid-column: 2; grid-row: 1;">
+                                    <!-- Position 6 (row 1, col 3) -->
+                                    <div class="player-position" style="grid-column: 3; grid-row: 1;">
                                         <div class="position-number">6</div>
                                         {% if game['6vs5']|length >= 6 %}
                                         <div class="player-name-small">{{ display_player(game['6vs5'][5]) }}</div>
                                         {% endif %}
                                     </div>
-                                    <!-- Position 5 (row 1, col 3) -->
-                                    <div class="player-position" style="grid-column: 3; grid-row: 1;">
+                                    <!-- Position 5 (row 1, col 4) -->
+                                    <div class="player-position" style="grid-column: 4; grid-row: 1;">
                                         <div class="position-number">5</div>
                                         {% if game['6vs5']|length >= 5 %}
                                         <div class="player-name-small">{{ display_player(game['6vs5'][4]) }}</div>
                                         {% endif %}
                                     </div>
-                                    <!-- Position 3 (row 2, col 1) -->
-                                    <div class="player-position" style="grid-column: 1; grid-row: 2;">
+                                    <!-- Position 3 (row 2, col 2) -->
+                                    <div class="player-position" style="grid-column: 2; grid-row: 2;">
                                         <div class="position-number">3</div>
                                         {% if game['6vs5']|length >= 3 %}
                                         <div class="player-name-small">{{ display_player(game['6vs5'][2]) }}</div>
                                         {% endif %}
                                     </div>
-                                    <!-- Position 2 (row 2, col 3) -->
-                                    <div class="player-position" style="grid-column: 3; grid-row: 2;">
+                                    <!-- Position 2 (row 2, col 4) -->
+                                    <div class="player-position" style="grid-column: 4; grid-row: 2;">
                                         <div class="position-number">2</div>
                                         {% if game['6vs5']|length >= 2 %}
                                         <div class="player-name-small">{{ display_player(game['6vs5'][1]) }}</div>
                                         {% endif %}
                                     </div>
-                                    <!-- Position 1 (row 3, col 2) -->
-                                    <div class="player-position" style="grid-column: 2; grid-row: 3;">
+                                    <!-- Position 1 (row 3, col 3) -->
+                                    <div class="player-position" style="grid-column: 3; grid-row: 3;">
                                         <div class="position-number">1</div>
                                         {% if game['6vs5']|length >= 1 %}
                                         <div class="player-name-small">{{ display_player(game['6vs5'][0]) }}</div>
@@ -698,36 +709,36 @@
                                 </div>
                                 <div class="position-layout">
                                     {% if game.stress_line %}
-                                    <!-- Position 5 (row 1, col 1) -->
-                                    <div class="player-position" style="grid-column: 1; grid-row: 1;">
+                                    <!-- Position 5 (row 1, col 2) -->
+                                    <div class="player-position" style="grid-column: 2; grid-row: 1;">
                                         <div class="position-number">5</div>
                                         {% if game.stress_line|length >= 5 %}
                                         <div class="player-name-small">{{ display_player(game.stress_line[4]) }}</div>
                                         {% endif %}
                                     </div>
-                                    <!-- Position 4 (row 1, col 3) -->
-                                    <div class="player-position" style="grid-column: 3; grid-row: 1;">
+                                    <!-- Position 4 (row 1, col 4) -->
+                                    <div class="player-position" style="grid-column: 4; grid-row: 1;">
                                         <div class="position-number">4</div>
                                         {% if game.stress_line|length >= 4 %}
                                         <div class="player-name-small">{{ display_player(game.stress_line[3]) }}</div>
                                         {% endif %}
                                     </div>
-                                    <!-- Position 3 (row 2, col 1) -->
-                                    <div class="player-position" style="grid-column: 1; grid-row: 2;">
+                                    <!-- Position 3 (row 2, col 2) -->
+                                    <div class="player-position" style="grid-column: 2; grid-row: 2;">
                                         <div class="position-number">3</div>
                                         {% if game.stress_line|length >= 3 %}
                                         <div class="player-name-small">{{ display_player(game.stress_line[2]) }}</div>
                                         {% endif %}
                                     </div>
-                                    <!-- Position 2 (row 2, col 3) -->
-                                    <div class="player-position" style="grid-column: 3; grid-row: 2;">
+                                    <!-- Position 2 (row 2, col 4) -->
+                                    <div class="player-position" style="grid-column: 4; grid-row: 2;">
                                         <div class="position-number">2</div>
                                         {% if game.stress_line|length >= 2 %}
                                         <div class="player-name-small">{{ display_player(game.stress_line[1]) }}</div>
                                         {% endif %}
                                     </div>
-                                    <!-- Position 1 (row 3, col 2) -->
-                                    <div class="player-position" style="grid-column: 2; grid-row: 3;">
+                                    <!-- Position 1 (row 3, col 3) -->
+                                    <div class="player-position" style="grid-column: 3; grid-row: 3;">
                                         <div class="position-number">1</div>
                                         {% if game.stress_line|length >= 1 %}
                                         <div class="player-name-small">{{ display_player(game.stress_line[0]) }}</div>
@@ -741,32 +752,22 @@
 
                     <!-- Sidebar -->
                     <td class="sidebar" rowspan="2">
-                        <!-- A disp. -->
-                        <div class="sidebar-section">
-                            <div class="sidebar-title">A disp.</div>
-                            <ul class="sidebar-list">
-                                <li>&nbsp;</li>
-                            </ul>
-                        </div>
-
-                        <!-- PP Cambi difesa -->
-                        <div class="sidebar-section">
-                            <div class="sidebar-title">PP Cambi difesa</div>
-                            <ul class="sidebar-list">
-                                <li>1 ________</li>
-                                <li>2 ________</li>
-                                <li>3 ________</li>
-                            </ul>
-                        </div>
-
                         <!-- Portieri -->
-                        <div class="sidebar-section" style="border-bottom: none;">
+                        <div class="sidebar-section">
                             <div class="sidebar-title">Portieri</div>
                             <ul class="sidebar-list">
                                 {% for goalie in game.goalies %}
-                                <li>{{ loop.index }} {{ display_player(goalie) }}</li>
+                                <li>{{ loop.index }} - {{ display_player(goalie) }}</li>
                                 {% endfor %}
                             </ul>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="sidebar-section" style="border-bottom: none;">
+                            <div class="sidebar-title">{{ g.t.get('notes', 'Notes') }}</div>
+                            <div style="padding: 10px; min-height: 150px;">
+                                <!-- Empty space for handwritten notes -->
+                            </div>
                         </div>
                     </td>
                 </tr>

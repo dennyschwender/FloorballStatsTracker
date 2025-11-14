@@ -95,6 +95,10 @@ TRANSLATIONS = {
         'change': 'Change',
         'lang_en': 'English',
         'lang_it': 'Italiano',
+        'referee1': 'Referee 1',
+        'referee2': 'Referee 2',
+        'referees': 'Referees',
+        'notes': 'Notes',
         'incorrect_pin': 'Incorrect PIN',
         'opponent_goalie_not_enabled': 'Opponent goalie tracking not enabled for this game',
         'goalies': 'Goalies',
@@ -215,6 +219,10 @@ TRANSLATIONS = {
         'lang_en': 'Inglese',
         'lang_it': 'Italiano',
         'incorrect_pin': 'PIN non corretto',
+        'referee1': 'Arbitro 1',
+        'referee2': 'Arbitro 2',
+        'referees': 'Arbitri',
+        'notes': 'Note',
         'opponent_goalie_not_enabled': 'Il monitoraggio del portiere avversario non è abilitato per questa partita',
         'goalies': 'Portieri',
         'opponent_goalie': 'Portiere avversario',
@@ -576,6 +584,8 @@ def modify_game(game_id):
         home_team = request.form.get('home_team')
         away_team = request.form.get('away_team')
         date = request.form.get('date')
+        referee1 = request.form.get('referee1', '').strip()
+        referee2 = request.form.get('referee2', '').strip()
         
         # Load roster for player lookup
         roster = load_roster(team) if team else load_roster()
@@ -627,6 +637,8 @@ def modify_game(game_id):
         game['home_team'] = home_team
         game['away_team'] = away_team
         game['date'] = date
+        game['referee1'] = referee1
+        game['referee2'] = referee2
         game['lines'] = lines
         game['goalies'] = goalies
         game['opponent_goalie_enabled'] = enable_opponent_goalie
@@ -907,6 +919,8 @@ def create_game():
             'home_team': home_team,
             'away_team': away_team,
             'date': date,
+            'referee1': referee1,
+            'referee2': referee2,
             'lines': lines,
             'goalies': goalies,
             'opponent_goalie_enabled': enable_opponent_goalie,

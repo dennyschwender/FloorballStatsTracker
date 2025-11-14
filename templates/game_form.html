@@ -111,7 +111,8 @@
         transition: background-color 0.2s;
     }
 
-    .player-with-position.has-position {
+    .player-with-position.has-position,
+    .player-option.has-position {
         background-color: #fffde7;
     }
 
@@ -161,6 +162,18 @@
             <label for="date" class="form-label">{{ g.t['date'] }}</label>
             <input type="date" class="form-control" id="date" name="date" required
                 value="{{ game.date if modify and game.date is defined else '' }}">
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="referee1" class="form-label">{{ g.t['referee1'] }}</label>
+                <input type="text" class="form-control" id="referee1" name="referee1"
+                    value="{{ game.referee1 if modify and game.referee1 is defined else '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="referee2" class="form-label">{{ g.t['referee2'] }}</label>
+                <input type="text" class="form-control" id="referee2" name="referee2"
+                    value="{{ game.referee2 if modify and game.referee2 is defined else '' }}">
+            </div>
         </div>
 
         <!-- Complete Lineup Section -->
@@ -289,7 +302,7 @@
                             data-position="{{ player.position }}">
                             <input class="form-control form-control-sm player-position-input" type="number"
                                 name="{{ formation_key }}_{{ player.id }}" id="{{ formation_key }}_{{ player.id }}"
-                                min="1" max="5" placeholder="#" data-formation="{{ formation_key }}"
+                                min="1" max="6" placeholder="#" data-formation="{{ formation_key }}"
                                 data-player-id="{{ player.id }}">
                             <label for="{{ formation_key }}_{{ player.id }}">
                                 #{{ player.number }} {{ player.surname }} {{ player.name }}
