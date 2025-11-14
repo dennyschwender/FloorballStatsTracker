@@ -3,22 +3,25 @@ import os
 from app import GAMES_FILE, ROSTERS_DIR
 
 
-def create_test_game(client, roster_data, home_team, away_team, team='U21', date='2025-11-14', 
+def create_test_game(client, roster_data, home_team, away_team, team='U21', season='2024-25', date='2025-11-14', 
                      line1_players=None, line2_players=None, goalies=None, opponent_goalie=False):
     """Helper function to create a test game with roster-based format
     
     Args:
+        team: category/team name
+        season: season identifier (e.g., '2024-25')
         line1_players: list of player IDs for line 1 (e.g., ['1', '2', '3'])
         line2_players: list of player IDs for line 2
         goalies: list of goalie player IDs (e.g., ['4'])
     """
-    # Create roster
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{team}.json')
+    # Create roster with season
+    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
     with open(roster_path, 'w') as f:
         json.dump(roster_data, f)
     
     # Build form data
     data = {
+        'season': season,
         'team': team,
         'home_team': home_team,
         'away_team': away_team,
@@ -74,18 +77,20 @@ def test_roster_management(client):
         {"id": "5", "number": "77", "surname": "Schwender", "name": "Dennis", "position": "P", "tesser": "U21", "nickname": "Denny"}
     ]
     
-    # Create test roster
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_TestTeam.json')
+    # Create test roster with season
+    test_season = '2024-25'
+    roster_path = os.path.join(ROSTERS_DIR, f'roster_{test_season}_TestTeam.json')
     with open(roster_path, 'w') as f:
         json.dump(roster_data, f)
     
-    # Test roster loads correctly - just check it returns 200
-    response = client.get('/roster?team=TestTeam')
+    # Test roster loads correctly with season parameter - just check it returns 200
+    response = client.get(f'/roster?team=TestTeam&season={test_season}')
     assert response.status_code == 200
     
     # Cleanup
     if os.path.exists(roster_path):
         os.remove(roster_path)
+
 
 
 def test_create_game_with_realistic_data(client):

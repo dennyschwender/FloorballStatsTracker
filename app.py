@@ -919,6 +919,8 @@ def create_game():
         home_team = request.form.get('home_team')
         away_team = request.form.get('away_team')
         date = request.form.get('date')
+        referee1 = request.form.get('referee1', '')
+        referee2 = request.form.get('referee2', '')
         
         # Direct lineup entry from form
         roster = load_roster(team, season)
