@@ -559,6 +559,27 @@ def game_details(game_id):
         return "Game not found", 404
     # ensure current game id is available to templates (fallback)
     g.current_game_id = game_id
+    
+    # Load roster to get player nicknames
+    roster = []
+    if 'team' in game and game['team']:
+        season = game.get('season', '')
+        roster = load_roster(game['team'], season) if season else load_roster(game['team'])
+    
+    # Create a mapping from full name to nickname
+    player_nicknames = {}
+    for player in roster:
+        number = player.get('number', '')
+        surname = player.get('surname', '')
+        name = player.get('name', '')
+        nickname = player.get('nickname', '')
+        if number and surname and name:
+            full_name = f"{number} - {surname} {name}"
+            if nickname:
+                player_nicknames[full_name] = f"{number} - {nickname}"
+            else:
+                player_nicknames[full_name] = full_name
+    
     # --- Error management: ensure all required fields exist and set defaults if missing ---
     changed = False
     # Ensure 'result' exists and has all periods
@@ -620,7 +641,8 @@ def game_details(game_id):
         'game_details.html',
         game=game,
         game_id=game_id,
-        games=games)
+        games=games,
+        player_nicknames=player_nicknames)
 
 # Modify game page
 

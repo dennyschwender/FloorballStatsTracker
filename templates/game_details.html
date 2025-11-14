@@ -4,47 +4,66 @@
 
 {% block content %}
 <div class="container mt-4 mb-4">
-    {# Game-switch moved to navbar. If JS is disabled or navbar not available, show a small fallback link #}
-    {% if games and games|length > 1 %}
-    <div class="mb-2 d-lg-none">
-        <a href="/" class="small">{{ g.t['all_games'] if g.t is defined else 'All Games' }}</a>
-    </div>
-    {% endif %}
-
     {% if game.team %}
     <div class="mb-2"><span class="badge bg-info text-dark fs-6">{{ game.team }}</span></div>
     {% endif %}
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0" style="font-size:1.2rem;">{{ game.home_team }} vs {{ game.away_team }}</h1>
-        <div class="result-summary bg-light border rounded px-3 py-2 ms-3" style="min-width: 320px;">
-            {% set periods = ['1', '2', '3', 'OT'] %}
-            {% set home_total = namespace(val=0) %}
-            {% set away_total = namespace(val=0) %}
-            {% set period_results = [] %}
-            {% for p in periods %}
-            {% set h = game.result[p]['home'] %}
-            {% set a = game.result[p]['away'] %}
-            {% set _ = period_results.append((('P' ~ p) if p != 'OT' else 'OT') ~ ':' ~ h ~ '-' ~ a) %}
-            {% set home_total.val = home_total.val + h %}
-            {% set away_total.val = away_total.val + a %}
-            {% endfor %}
-            <div class="fs-5 fw-bold text-center mb-1">
-                <span class="text-primary">{{ home_total.val }}</span>
-                <span class="mx-1">:</span>
-                <span class="text-danger">{{ away_total.val }}</span>
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h1 class="mb-2 mb-md-0" style="font-size:1.2rem;">{{ game.home_team }} vs {{ game.away_team }}</h1>
+            <div class="result-summary bg-light border rounded px-3 py-2 ms-md-3" style="min-width: 320px;">
+                {% set periods = ['1', '2', '3', 'OT'] %}
+                {% set home_total = namespace(val=0) %}
+                {% set away_total = namespace(val=0) %}
+                {% set period_results = [] %}
+                {% for p in periods %}
+                {% set h = game.result[p]['home'] %}
+                {% set a = game.result[p]['away'] %}
+                {% set _ = period_results.append((('P' ~ p) if p != 'OT' else 'OT') ~ ':' ~ h ~ '-' ~ a) %}
+                {% set home_total.val = home_total.val + h %}
+                {% set away_total.val = away_total.val + a %}
+                {% endfor %}
+                <div class="fs-5 fw-bold text-center mb-1">
+                    <span class="text-primary">{{ home_total.val }}</span>
+                    <span class="mx-1">:</span>
+                    <span class="text-danger">{{ away_total.val }}</span>
+                </div>
+                <div class="text-center small text-muted">({{ period_results | join(' | ') }})</div>
             </div>
-            <div class="text-center small text-muted">({{ period_results | join(' | ') }})</div>
         </div>
     </div>
 
-    <div class="mb-3">
-        <a href="{{ url_for('view_game_lineup', game_id=game_id) }}" class="btn btn-primary" target="_blank">
-            📋 {{ g.t.get('view_lineup', 'View Lineup') }}
-        </a>
-        <a href="{{ url_for('edit_game_json', game_id=game_id) }}" class="btn btn-warning">
-            <i class="bi bi-code-square"></i> {{ g.t.get('edit_json', 'Edit JSON') }}
-        </a>
+    <div class="mb-3 d-flex justify-content-between flex-wrap gap-2">
+        <div class="d-flex gap-2 flex-wrap">
+            {% if request.args.get('edit') != '1' %}
+            <a href="{{ url_for('game_details', game_id=game_id, edit=1) }}" class="btn btn-secondary">
+                <i class="bi bi-toggle-on"></i> {{ g.t.get('edit_mode', 'Edit Mode') }}
+            </a>
+            <a href="{{ url_for('view_game_lineup', game_id=game_id) }}" class="btn btn-primary" target="_blank">
+                📋 {{ g.t.get('view_lineup', 'View Lineup') }}
+            </a>
+            {% else %}
+            <a href="{{ url_for('game_details', game_id=game_id) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-toggle-off"></i> Exit Edit Mode
+            </a>
+            {% endif %}
+            <button type="button" class="btn btn-outline-primary" id="toggleNicknames">
+                <i class="bi bi-person-badge"></i> <span id="nicknameToggleText">Show Nicknames</span>
+            </button>
+        </div>
+        {% if request.args.get('edit') != '1' %}
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('modify_game', game_id=game_id) }}" class="btn btn-info">
+                <i class="bi bi-pencil-square"></i> {{ g.t.get('modify_game', 'Modify Game') }}
+            </a>
+            <a href="{{ url_for('edit_game_json', game_id=game_id) }}" class="btn btn-warning">
+                <i class="bi bi-code-square"></i> {{ g.t.get('edit_json', 'Edit JSON') }}
+            </a>
+            <a href="#" class="btn btn-danger reset-game-link" data-reset-url="/reset_game/{{ game_id }}">
+                <i class="bi bi-arrow-counterclockwise"></i> {{ g.t.get('reset_stats', 'Reset Stats') }}
+            </a>
+        </div>
+        {% endif %}
     </div>
 
     {% if request.args.get('edit') == '1' %}
@@ -92,7 +111,13 @@
                         </div>
                     </td>
                     {% endif %}
-                    <td>{{ player }}</td>
+                    <td>
+                        <span class="player-name" 
+                              data-fullname="{{ player }}" 
+                              data-nickname="{{ player_nicknames.get(player, player) }}">
+                            {{ player }}
+                        </span>
+                    </td>
                     <td class="text-center"><span class="fw-bold">{{ game.plusminus[player] if game.plusminus and player
                             in game.plusminus else 0 }}</span></td>
                     <td class="text-center"><span class="fw-bold">{{ game.goals[player] if game.goals and player in
@@ -152,7 +177,13 @@
             <tbody>
                 {% for goalie in game.goalies %}
                 <tr>
-                    <td>{{ goalie }}</td>
+                    <td>
+                        <span class="player-name" 
+                              data-fullname="{{ goalie }}" 
+                              data-nickname="{{ player_nicknames.get(goalie, goalie) }}">
+                            {{ goalie }}
+                        </span>
+                    </td>
                     <td class="text-center"><span class="fw-bold">{{ game.assists[goalie] if game.assists and goalie in
                             game.assists else 0 }}</span></td>
                     <td class="text-center"><span class="fw-bold">{{ game.saves[goalie] if game.saves and goalie in
@@ -370,5 +401,36 @@
     document.addEventListener('DOMContentLoaded', function () {
         initTableDropdownPopper();
     });
+
+    // Nickname toggle functionality
+    let showingNicknames = false;
+    const toggleBtn = document.getElementById('toggleNicknames');
+    const toggleText = document.getElementById('nicknameToggleText');
+    
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            showingNicknames = !showingNicknames;
+            
+            // Update all player names
+            document.querySelectorAll('.player-name').forEach(function(elem) {
+                if (showingNicknames) {
+                    elem.textContent = elem.getAttribute('data-nickname');
+                } else {
+                    elem.textContent = elem.getAttribute('data-fullname');
+                }
+            });
+            
+            // Update button text
+            if (showingNicknames) {
+                toggleText.textContent = 'Show Full Names';
+                toggleBtn.classList.remove('btn-outline-primary');
+                toggleBtn.classList.add('btn-primary');
+            } else {
+                toggleText.textContent = 'Show Nicknames';
+                toggleBtn.classList.remove('btn-primary');
+                toggleBtn.classList.add('btn-outline-primary');
+            }
+        });
+    }
 </script>
 {% endblock %}

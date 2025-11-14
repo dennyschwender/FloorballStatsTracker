@@ -90,29 +90,6 @@
                     {% endif %}
                 </div>
 
-                {# Actions dropdown: compact and consistent across screen sizes #}
-                <div class="dropdown ms-3 order-3 order-lg-3">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle nav-action-btn" type="button"
-                        id="gameActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
-                        {{ g.t['actions'] }}
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="gameActionsDropdown"
-                        style="min-width:180px; overflow: visible; max-height: none;">
-                        <li><a class="dropdown-item" href="/create_game">{{ g.t['create_new_game'] }}</a></li>
-                        <li><a class="dropdown-item" href="/stats">{{ g.t['stats'] }}</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        {% if g.get('current_game_id') is not none %}
-                        <li><a class="dropdown-item" href="/modify_game/{{ g.current_game_id }}">{{ g.t['modify_game']
-                                }}</a></li>
-                        <li><a class="dropdown-item reset-game-link" href="#"
-                                data-reset-url="/reset_game/{{ g.current_game_id }}">{{ g.t['reset_stats'] }}</a></li>
-                        <li><a class="dropdown-item" href="/game/{{ g.current_game_id }}?edit=1"
-                                id="navbar-edit-mode-link">{{ g.t['edit_mode'] }}</a></li>
-                        {% endif %}
-                    </ul>
-                </div>
                 {% if games is defined and games|length > 1 %}
                 <div class="w-100 d-lg-none mt-2 order-1">
                     <select id="navbar-game-switch-mobile" class="form-select form-select-sm" aria-label="Switch game">
