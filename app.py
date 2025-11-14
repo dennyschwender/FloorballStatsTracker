@@ -966,7 +966,8 @@ def view_game_lineup(game_id):
     # Load roster to get player details including nicknames
     roster = []
     if 'team' in game and game['team']:
-        roster = load_roster(game['team'])
+        season = game.get('season', '')
+        roster = load_roster(game['team'], season) if season else load_roster(game['team'])
     
     # Create a player map by "number - surname name" for quick lookup
     player_map = {}
