@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ g.t.get('edit_json', 'Edit Game JSON') }} - Game #{{ game_id }}</h2>
+    <p class="text-muted">{{ game.date }} - {{ game.home_team }} vs {{ game.away_team }}</p>
+    
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+    
+    <div class="alert alert-warning" role="alert">
+        <strong>Warning:</strong> Editing JSON directly can break your game data if the format is incorrect. 
+        Make sure you understand the structure before saving changes.
+    </div>
+    
+    <form method="post">
+        <div class="mb-3">
+            <label for="json_data" class="form-label">Game Data (JSON format)</label>
+            <textarea 
+                class="form-control font-monospace" 
+                id="json_data" 
+                name="json_data" 
+                rows="30" 
+                style="font-size: 0.9rem;"
+                required>{{ json_data }}</textarea>
+            <div class="form-text">
+                Edit the JSON structure. Common operations:
+                <ul>
+                    <li>Remove opponent goalie stats: Delete <code>"opponent_goalie_saves"</code> and <code>"opponent_goalie_goals_conceded"</code> fields</li>
+                    <li>Fix player names: Update any player name string (in lines, goalies, stats, etc.)</li>
+                    <li>Update stats: Modify goals, assists, saves, goals_conceded, etc.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Save Changes
+            </button>
+            <a href="{{ url_for('game_details', game_id=game_id) }}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancel
+            </a>
+            <button type="button" class="btn btn-info" onclick="validateJSON()">
+                <i class="bi bi-check-circle"></i> Validate JSON
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function validateJSON() {
+    const textarea = document.getElementById('json_data');
+    const jsonData = textarea.value;
+    
+    try {
+        JSON.parse(jsonData);
+        alert('✓ JSON is valid!');
+    } catch (e) {
+        alert('✗ Invalid JSON:\n\n' + e.message);
+    }
+}
+
+// Auto-format JSON on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('json_data');
+    try {
+        const parsed = JSON.parse(textarea.value);
+        textarea.value = JSON.stringify(parsed, null, 2);
+    } catch (e) {
+        // Keep original if parsing fails
+    }
+});
+</script>
+{% endblock %}

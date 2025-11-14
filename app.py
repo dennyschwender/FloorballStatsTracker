@@ -887,6 +887,52 @@ def line_action(game_id, line_idx):
         return redirect(url_for('game_details', game_id=game_id, edit=1))
     return redirect(url_for('game_details', game_id=game_id))
 
+
+# Edit game JSON directly
+@app.route('/game/<int:game_id>/edit_json', methods=['GET', 'POST'])
+def edit_game_json(game_id):
+    games = load_games()
+    game = find_game_by_id(games, game_id)
+    if not game:
+        return "Game not found", 404
+    
+    if request.method == 'POST':
+        try:
+            # Parse the JSON from the form
+            json_data = request.form.get('json_data', '{}')
+            updated_game = json.loads(json_data)
+            
+            # Preserve the game ID
+            updated_game['id'] = game_id
+            
+            # Update the game in the games list
+            for i, game_item in enumerate(games):
+                if game_item.get('id') == game_id:
+                    games[i] = updated_game
+                    break
+            
+            save_games(games)
+            return redirect(url_for('game_details', game_id=game_id))
+        except json.JSONDecodeError as e:
+            error_message = f"Invalid JSON: {str(e)}"
+            return render_template(
+                'edit_game_json.html',
+                game=game,
+                game_id=game_id,
+                json_data=request.form.get('json_data', ''),
+                error=error_message
+            )
+    
+    # GET request - show the JSON editor
+    json_data = json.dumps(game, indent=2, ensure_ascii=False)
+    return render_template(
+        'edit_game_json.html',
+        game=game,
+        game_id=game_id,
+        json_data=json_data
+    )
+
+
 # View game lineup (for printing)
 @app.route('/game/<int:game_id>/lineup')
 def view_game_lineup(game_id):
