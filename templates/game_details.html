@@ -154,12 +154,20 @@
                             game.assists else 0 }}</span></td>
                     <td class="text-center"><span class="fw-bold">{{ game.saves[goalie] if game.saves and goalie in
                             game.saves else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.goals_conceded[goalie] if game.goals_conceded
-                            and goalie in game.goals_conceded else 0 }}</span></td>
+                    {% set saves = game.saves[goalie] if game.saves and goalie in game.saves else 0 %}
+                    {% set gc = game.goals_conceded[goalie] if game.goals_conceded and goalie in game.goals_conceded else 0 %}
+                    {# FALLBACK: If goals_conceded is 0 but goalie has saves, infer from game result #}
+                    {% if gc == 0 and saves > 0 and game.result %}
+                        {% set away_goals = namespace(total=0) %}
+                        {% for period, scores in game.result.items() %}
+                            {% set away_goals.total = away_goals.total + (scores.away if scores.away else 0) %}
+                        {% endfor %}
+                        {% if away_goals.total > 0 %}
+                            {% set gc = away_goals.total %}
+                        {% endif %}
+                    {% endif %}
+                    <td class="text-center"><span class="fw-bold">{{ gc }}</span></td>
                     <td class="text-center">
-                        {% set saves = game.saves[goalie] if game.saves and goalie in game.saves else 0 %}
-                        {% set gc = game.goals_conceded[goalie] if game.goals_conceded and goalie in game.goals_conceded
-                        else 0 %}
                         {% set total = saves + gc %}
                         {% if total > 0 %}
                         <span class="fw-bold">{{ ((saves / total) * 100) | round(1) }}%</span>

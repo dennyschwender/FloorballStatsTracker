@@ -1323,6 +1323,21 @@ def stats():
         for goalie in goalies:
             saves = game.get('saves', {}).get(goalie, 0)
             goals_conceded = game.get('goals_conceded', {}).get(goalie, 0)
+            
+            # FALLBACK: If goals_conceded is 0 but the goalie has saves recorded,
+            # infer goals conceded from the game result (away team score)
+            # This handles cases where goals_conceded wasn't manually tracked
+            if goals_conceded == 0 and saves > 0:
+                # Calculate total away goals from all periods
+                result = game.get('result', {})
+                if result:
+                    away_goals = sum(period_result.get('away', 0) for period_result in result.values())
+                    # Only use this fallback if there are away goals
+                    if away_goals > 0:
+                        # If this goalie played (has saves), attribute the away goals to them
+                        # In future, this should be split among goalies based on ice time
+                        goals_conceded = away_goals
+            
             total_shots = saves + goals_conceded
 
             if total_shots > 0:
