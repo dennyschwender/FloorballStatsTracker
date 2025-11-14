@@ -62,12 +62,12 @@ def load_all_rosters():
     
     for filename in os.listdir(ROSTERS_DIR):
         if filename.startswith('roster_') and filename.endswith('.json'):
-            # Extract category name from filename: roster_CATEGORY.json
-            category = filename.replace('roster_', '').replace('.json', '')
+            # Extract category name from filename: roster_SEASON_CATEGORY.json or roster_CATEGORY.json
+            roster_key = filename.replace('roster_', '').replace('.json', '')
             filepath = os.path.join(ROSTERS_DIR, filename)
             roster = load_json(filepath)
-            rosters[category] = roster
-            print(f"✓ Loaded roster: {category} ({len(roster)} players)")
+            rosters[roster_key] = roster
+            print(f"✓ Loaded roster: {roster_key} ({len(roster)} players)")
     
     return rosters
 
@@ -197,16 +197,36 @@ def migrate_game(game, rosters, interactive=False):
         'warnings': []
     }
     
-    # Get the team/category for this game
+    # Get the team/category and season for this game
     team = game.get('team', '')
+    season = game.get('season', '')
+    
     if not team:
         report['warnings'].append("No team/category specified")
         return game, report
     
-    # Find matching roster
-    roster = rosters.get(team)
+    # Find matching roster - try season_team first, then fall back to just team
+    roster_key = None
+    if season:
+        # Try with season prefix (e.g., "2025-26_U21")
+        roster_key = f"{season}_{team}"
+        roster = rosters.get(roster_key)
+        if roster:
+            report['changes'].append(f"Using roster: {roster_key}")
+        else:
+            # Fall back to just team name
+            roster = rosters.get(team)
+            if roster:
+                roster_key = team
+                report['changes'].append(f"Using roster: {roster_key} (no season-specific roster found)")
+    else:
+        # No season specified, use team only
+        roster = rosters.get(team)
+        if roster:
+            roster_key = team
+    
     if not roster:
-        report['warnings'].append(f"No roster found for category: {team}")
+        report['warnings'].append(f"No roster found for category: {team}" + (f" (season: {season})" if season else ""))
         return game, report
     
     # Migrate lines
