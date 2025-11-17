@@ -558,7 +558,7 @@
                     <option value="nickname">{{ g.t.get('nicknames', 'Nicknames') }}</option>
                 </select>
 
-                <button onclick="window.print()" class="btn btn-primary ms-0 ms-sm-3">🖨️ {{ g.t.get('print', 'Print')
+                <button onclick="printPage()" class="btn btn-primary ms-0 ms-sm-3">🖨️ {{ g.t.get('print', 'Print')
                     }}</button>
                 <button onclick="generatePDF()" class="btn btn-danger ms-0 ms-sm-2">📄 {{ g.t.get('generate_pdf', 'Generate PDF')
                     }}</button>
@@ -570,14 +570,14 @@
         <script>
             const playerData = {{ player_map| tojson }};
             const gameData = {
-                lines: {{ game.lines | tojson }},
-                goalies: {{ game.goalies | tojson }},
-                pp1: {{ game.pp1 | tojson }},
-                pp2: {{ game.pp2 | tojson }},
-                bp1: {{ game.bp1 | tojson }},
-                bp2: {{ game.bp2 | tojson }},
-                sixvsfive: {{ game['6vs5'] | tojson }},
-                stressLine: {{ game.stress_line | tojson }}
+                lines: {{ game.lines | default([]) | tojson }},
+                goalies: {{ game.goalies | default([]) | tojson }},
+                pp1: {{ game.pp1 | default([]) | tojson }},
+                pp2: {{ game.pp2 | default([]) | tojson }},
+                bp1: {{ game.bp1 | default([]) | tojson }},
+                bp2: {{ game.bp2 | default([]) | tojson }},
+                sixvsfive: {{ game['6vs5'] | default([]) | tojson }},
+                stressLine: {{ game.stress_line | default([]) | tojson }}
             };
         </script>
 
@@ -1154,6 +1154,13 @@
     </div>
 
     <script>
+        function printPage() {
+            // Use setTimeout to ensure mobile browsers don't block the print dialog
+            setTimeout(function() {
+                window.print();
+            }, 100);
+        }
+
         function changeFormat(format) {
             document.getElementById('format-1-content').style.display = format === 'format-1' ? 'block' : 'none';
             document.getElementById('format-2-content').style.display = format === 'format-2' ? 'block' : 'none';
@@ -1554,20 +1561,21 @@
                     doc.setFont(undefined, 'normal');
                     doc.setFontSize(6.5);
                     
-                    if (players && players.length > 0) {
-                        positionConfig.forEach((pos, idx) => {
-                            if (players[idx]) {
-                                const playerInfo = playerData[players[idx]] || {};
-                                const surname = playerInfo.surname || players[idx];
-                                const posX = x + pos.x;
-                                const posY = y + pos.y;
-                                doc.setDrawColor(0);
-                                doc.setLineWidth(0.3);
-                                doc.line(posX, posY, posX + pos.w, posY);
-                                doc.text(surname, posX + pos.w / 2, posY - 1, { align: 'center', maxWidth: pos.w });
-                            }
-                        });
-                    }
+                    // Always draw position lines to maintain grid structure
+                    positionConfig.forEach((pos, idx) => {
+                        const posX = x + pos.x;
+                        const posY = y + pos.y;
+                        doc.setDrawColor(0);
+                        doc.setLineWidth(0.3);
+                        doc.line(posX, posY, posX + pos.w, posY);
+                        
+                        // Add player name if available
+                        if (players && players[idx]) {
+                            const playerInfo = playerData[players[idx]] || {};
+                            const surname = playerInfo.surname || players[idx];
+                            doc.text(surname, posX + pos.w / 2, posY - 1, { align: 'center', maxWidth: pos.w });
+                        }
+                    });
                 };
                 
                 // Formations grid - 2x3 layout (70% width)
