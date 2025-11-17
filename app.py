@@ -1341,6 +1341,15 @@ def stats():
     
     # Get filter parameters
     hide_zero_stats = request.args.get('hide_zero_stats', 'false') == 'true'
+    hide_future_games = request.args.get('hide_future_games', 'true') != 'false'
+    
+    # Filter out future games if enabled (default: true)
+    if hide_future_games:
+        today = datetime.now().date()
+        games_sorted = [
+            game for game in games_sorted 
+            if game.get('date') and datetime.strptime(game['date'], '%Y-%m-%d').date() <= today
+        ]
     
     # Collect all players
     player_set = set()
@@ -1498,7 +1507,8 @@ def stats():
         selected_season=selected_season,
         teams=teams,
         selected_team=selected_team,
-        hide_zero_stats=hide_zero_stats)
+        hide_zero_stats=hide_zero_stats,
+        hide_future_games=hide_future_games)
 
 # Set period route
 

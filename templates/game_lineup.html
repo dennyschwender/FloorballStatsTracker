@@ -21,6 +21,10 @@
                 display: none !important;
             }
 
+            .column-filters {
+                display: none !important;
+            }
+
             body {
                 font-size: 10pt;
             }
@@ -164,7 +168,7 @@
 
         .format-2 .main-table td {
             border: 1px solid #000;
-            padding: 10px;
+            padding: 5px;
             vertical-align: top;
         }
 
@@ -198,8 +202,8 @@
 
         .format-2 .formation-cell {
             border: 1px solid #000;
-            padding: 10px;
-            padding-top: 35px;
+            padding: 5px;
+            padding-top: 25px;
             min-height: 120px;
             position: relative;
         }
@@ -233,9 +237,9 @@
 
         .format-2 .position-layout {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: 0.5fr 1fr 1fr 1fr 0.5fr;
             grid-template-rows: repeat(5, auto);
-            gap: 5px;
+            column-gap: 2px;
             text-align: center;
         }
 
@@ -288,6 +292,220 @@
         .format-2 .sidebar-list li {
             padding: 2px 0;
         }
+
+        /* Format 3 - Player Roster */
+        .format-3 {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .format-3 .roster-header {
+            background-color: #f8f9fa;
+            border: 2px solid #0d6efd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .format-3 .roster-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .format-3 .roster-header h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .format-3 .roster-header p {
+            font-size: 0.9rem;
+        }
+
+        .format-3 h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .format-3 .roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            table-layout: auto;
+        }
+
+        .format-3 .roster-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 768px) {
+            .format-3 .roster-table {
+                font-size: 0.8rem;
+            }
+            
+            .format-3 .roster-table th,
+            .format-3 .roster-table td {
+                padding: 3px 5px;
+            }
+
+            .format-3 .roster-table th {
+                font-size: 0.75rem;
+            }
+        }
+
+        .format-3 .roster-table th {
+            background-color: #0d6efd;
+            color: white;
+            padding: 6px 8px;
+            text-align: left;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .format-3 .roster-table th:hover {
+            background-color: #0b5ed7;
+        }
+
+        .format-3 .roster-table th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.5;
+        }
+
+        .format-3 .roster-table th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .format-3 .roster-table th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        .format-3 .roster-table td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #dee2e6;
+            white-space: nowrap;
+        }
+
+        .format-3 .roster-table td:first-child {
+            width: 1%;
+        }
+
+        .format-3 .roster-table td:nth-child(2) {
+            width: 1%;
+        }
+
+        .format-3 .roster-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .format-3 .roster-table tr:hover {
+            background-color: #e7f1ff;
+        }
+
+        .format-3 .summary-table {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .format-3 .summary-table th,
+        .format-3 .summary-table td {
+            padding: 5px 10px;
+            border: 1px solid #dee2e6;
+            text-align: left;
+        }
+
+        .format-3 .summary-table th {
+            background-color: #6c757d;
+            color: white;
+            font-size: 0.85rem;
+        }
+
+        .format-3 .summary-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .format-3 .summary-table .total-row {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+
+        .format-3 .column-filters {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .format-3 .column-filters .left-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .format-3 .column-filters label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .format-3 .column-filters input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .format-3 .column-filters .filter-label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .format-3 .copy-button {
+            padding: 5px 15px;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .format-3 .copy-button:hover {
+            background-color: #0b5ed7;
+        }
+
+        .format-3 .copy-button:active {
+            background-color: #0a58ca;
+        }
+
+        .format-3 .copy-button.copied {
+            background-color: #198754;
+        }
+
+        .format-2 .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .format-2 .sidebar-list li {
+            padding: 2px 0;
+        }
     </style>
 </head>
 
@@ -309,6 +527,7 @@
                     onchange="changeFormat(this.value)">
                     <option value="format-1">{{ g.t.get('simple_list', 'Simple List') }}</option>
                     <option value="format-2">{{ g.t.get('table_layout', 'Table Layout') }}</option>
+                    <option value="format-3">{{ g.t.get('player_roster', 'Player Roster') }}</option>
                 </select>
 
                 <label for="nameDisplay" class="fw-bold ms-0 ms-sm-3">{{ g.t.get('display_names', 'Display') }}:</label>
@@ -469,7 +688,7 @@
                             <table style="width: 100%; border-collapse: collapse;">
                                 <tr>
                                     <td class="line-number">{{ line_idx + 1 }}</td>
-                                    <td style="padding: 10px;">
+                                    <td>
                                         <div class="players-row">
                                             {% for player in game.lines[line_idx] %}
                                             <span class="player-name">{{ display_player(player) }}</span>
@@ -728,21 +947,21 @@
                                         {% endif %}
                                     </div>
                                     <!-- Position 3 (row 2, col 2) -->
-                                    <div class="player-position" style="grid-column: 2; grid-row: 2;">
+                                    <div class="player-position" style="grid-column: 3; grid-row: 3;">
                                         <div class="position-number">3</div>
                                         {% if game.stress_line|length >= 3 %}
                                         <div class="player-name-small">{{ display_player(game.stress_line[2]) }}</div>
                                         {% endif %}
                                     </div>
                                     <!-- Position 2 (row 2, col 4) -->
-                                    <div class="player-position" style="grid-column: 4; grid-row: 2;">
+                                    <div class="player-position" style="grid-column: 4; grid-row: 4;">
                                         <div class="position-number">2</div>
                                         {% if game.stress_line|length >= 2 %}
                                         <div class="player-name-small">{{ display_player(game.stress_line[1]) }}</div>
                                         {% endif %}
                                     </div>
                                     <!-- Position 1 (row 3, col 3) -->
-                                    <div class="player-position" style="grid-column: 3; grid-row: 3;">
+                                    <div class="player-position" style="grid-column: 2; grid-row: 4;">
                                         <div class="position-number">1</div>
                                         {% if game.stress_line|length >= 1 %}
                                         <div class="player-name-small">{{ display_player(game.stress_line[0]) }}</div>
@@ -777,12 +996,184 @@
                 </tr>
             </table>
         </div>
+
+        <!-- Format 3: Player Roster -->
+        <div id="format-3-content" class="format-3" style="display: none;">
+            <div class="roster-header">
+                <h1 class="mb-2">{{ game.home_team }} vs {{ game.away_team }}</h1>
+                {% if game.team %}
+                <h3 class="text-muted">{{ game.team }}</h3>
+                {% endif %}
+                {% if game.date %}
+                <p class="mb-0">{{ game.date }}</p>
+                {% endif %}
+            </div>
+
+            <h3>Player Roster</h3>
+            
+            <div class="column-filters">
+                <div class="left-section">
+                    <span class="filter-label">Show columns:</span>
+                    <label>
+                        <input type="checkbox" class="column-toggle" data-column="0" checked>
+                        #
+                    </label>
+                    <label>
+                        <input type="checkbox" class="column-toggle" data-column="1" checked>
+                        Nr.
+                    </label>
+                    <label>
+                        <input type="checkbox" class="column-toggle" data-column="2" checked>
+                        Surname
+                    </label>
+                    <label>
+                        <input type="checkbox" class="column-toggle" data-column="3" checked>
+                        Name
+                    </label>
+                    <label>
+                        <input type="checkbox" class="column-toggle" data-column="4" checked>
+                        Nickname
+                    </label>
+                    <label>
+                        <input type="checkbox" class="column-toggle" data-column="5" checked>
+                        Category
+                    </label>
+                </div>
+                <button class="copy-button" onclick="copyTableToClipboard()">📋 Copy to Clipboard</button>
+            </div>
+            
+            <div class="roster-table-wrapper">
+                <table class="roster-table" id="rosterTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortRosterTable(0)" data-column="0">#</th>
+                            <th class="sortable" onclick="sortRosterTable(1)" data-column="1">Nr.</th>
+                            <th class="sortable" onclick="sortRosterTable(2)" data-column="2">Surname</th>
+                            <th class="sortable" onclick="sortRosterTable(3)" data-column="3">Name</th>
+                            <th class="sortable" onclick="sortRosterTable(4)" data-column="4">Nickname</th>
+                            <th class="sortable" onclick="sortRosterTable(5)" data-column="5">Category</th>
+                        </tr>
+                    </thead>
+                <tbody>
+                    {% set all_players = [] %}
+                    {% for line in game.lines %}
+                        {% for player in line %}
+                            {% if player not in all_players %}
+                                {% set _ = all_players.append(player) %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    {% for goalie in game.goalies %}
+                        {% if goalie not in all_players %}
+                            {% set _ = all_players.append(goalie) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for player in all_players %}
+                        {% set player_info = player_map.get(player) %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ player_info.get('number', '') if player_info else '' }}</td>
+                            <td>{{ player_info.get('surname', '') if player_info else '' }}</td>
+                            <td>{{ player_info.get('name', '') if player_info else '' }}</td>
+                            <td>{{ player_info.get('nickname', '') if player_info else '' }}</td>
+                            <td>{{ player_info.get('tesser', '') if player_info else '' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+
+            <h3 class="mt-4">Players by Category</h3>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set category_counts = {} %}
+                    {% for player in all_players %}
+                        {% set player_info = player_map.get(player) %}
+                        {% set category = player_info.get('tesser', 'Unknown') if player_info else 'Unknown' %}
+                        {% if category in category_counts %}
+                            {% set _ = category_counts.update({category: category_counts[category] + 1}) %}
+                        {% else %}
+                            {% set _ = category_counts.update({category: 1}) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for category, count in category_counts.items()|sort %}
+                    <tr>
+                        <td>{{ category }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                    
+                    <tr class="total-row">
+                        <td>Total</td>
+                        <td>{{ all_players|length }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
         function changeFormat(format) {
             document.getElementById('format-1-content').style.display = format === 'format-1' ? 'block' : 'none';
             document.getElementById('format-2-content').style.display = format === 'format-2' ? 'block' : 'none';
+            document.getElementById('format-3-content').style.display = format === 'format-3' ? 'block' : 'none';
+        }
+
+        let rosterSortColumn = -1;
+        let rosterSortAsc = true;
+
+        function sortRosterTable(columnIndex) {
+            const table = document.getElementById('rosterTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Toggle sort direction if clicking same column
+            if (rosterSortColumn === columnIndex) {
+                rosterSortAsc = !rosterSortAsc;
+            } else {
+                rosterSortColumn = columnIndex;
+                rosterSortAsc = true;
+            }
+            
+            // Remove all sorting classes
+            table.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            // Add sorting class to current column
+            const currentTh = table.querySelector(`th[data-column="${columnIndex}"]`);
+            currentTh.classList.add(rosterSortAsc ? 'sorted-asc' : 'sorted-desc');
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aValue = a.cells[columnIndex].textContent.trim();
+                let bValue = b.cells[columnIndex].textContent.trim();
+                
+                // For numeric columns (# and Number), convert to numbers
+                if (columnIndex === 0 || columnIndex === 1) {
+                    aValue = parseInt(aValue) || 0;
+                    bValue = parseInt(bValue) || 0;
+                    return rosterSortAsc ? aValue - bValue : bValue - aValue;
+                }
+                
+                // For text columns, compare as strings
+                const comparison = aValue.localeCompare(bValue, undefined, { numeric: true, sensitivity: 'base' });
+                return rosterSortAsc ? comparison : -comparison;
+            });
+            
+            // Re-append sorted rows and update numbering
+            rows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+                tbody.appendChild(row);
+            });
         }
 
         function changeNameDisplay(displayType) {
@@ -800,6 +1191,96 @@
                     // Use full name
                     element.textContent = fullName;
                 }
+            });
+        }
+
+        // Column visibility toggle
+        document.querySelectorAll('.column-toggle').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const columnIndex = parseInt(this.getAttribute('data-column'));
+                const table = document.getElementById('rosterTable');
+                const isVisible = this.checked;
+                
+                // Toggle header column
+                const headerCells = table.querySelectorAll(`thead th:nth-child(${columnIndex + 1})`);
+                headerCells.forEach(cell => {
+                    cell.style.display = isVisible ? '' : 'none';
+                });
+                
+                // Toggle body columns
+                const bodyCells = table.querySelectorAll(`tbody td:nth-child(${columnIndex + 1})`);
+                bodyCells.forEach(cell => {
+                    cell.style.display = isVisible ? '' : 'none';
+                });
+            });
+        });
+
+        // Copy table to clipboard
+        function copyTableToClipboard() {
+            const table = document.getElementById('rosterTable');
+            const button = event.target;
+            
+            // Get visible columns with their indices
+            const visibleColumns = Array.from(table.querySelectorAll('thead th'))
+                .map((th, index) => ({ th, index }))
+                .filter(({ th }) => th.style.display !== 'none');
+            
+            // Get headers
+            const headers = visibleColumns.map(({ th }) => 
+                th.textContent.trim().replace(/[⇅↑↓]/g, '').trim()
+            );
+            
+            // Get visible rows data
+            const rows = Array.from(table.querySelectorAll('tbody tr')).map(row => {
+                return visibleColumns.map(({ index }) => 
+                    row.cells[index].textContent.trim()
+                );
+            });
+            
+            // Calculate maximum length for each column
+            const columnMaxLengths = headers.map((header, colIndex) => {
+                const headerLength = header.length;
+                const maxDataLength = Math.max(...rows.map(row => row[colIndex].length));
+                return Math.max(headerLength, maxDataLength);
+            });
+            
+            // Helper function to add appropriate number of tabs
+            const addTabs = (text, maxLength) => {
+                // Use ~8 characters per tab stop
+                const textLength = text.length;
+                const tabsNeeded = Math.ceil((maxLength - textLength) / 8) + 1;
+                return text + '\t'.repeat(Math.max(1, tabsNeeded));
+            };
+            
+            // Create formatted text with smart tabbing
+            let text = headers.map((h, i) => 
+                i === headers.length - 1 ? h : addTabs(h, columnMaxLengths[i])
+            ).join('') + '\n';
+            
+            text += headers.map((h, i) => 
+                i === headers.length - 1 ? '---' : addTabs('---', columnMaxLengths[i])
+            ).join('') + '\n';
+            
+            text += rows.map(row => 
+                row.map((cell, i) => 
+                    i === row.length - 1 ? cell : addTabs(cell, columnMaxLengths[i])
+                ).join('')
+            ).join('\n');
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy to clipboard');
+                console.error('Copy failed:', err);
             });
         }
     </script>
