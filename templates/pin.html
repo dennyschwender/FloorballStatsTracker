@@ -4,20 +4,20 @@
 <div class="bg-light d-flex align-items-center" style="height: 100vh;">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-4">
+            <div class="col-md-6 col-lg-5">
                 <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="card-title mb-3 text-center" style="font-size:1.2rem;">{{ g.t['enter_access_pin'] }}
+                    <div class="card-body p-4 p-md-5">
+                        <h4 class="card-title mb-4 text-center" style="font-size:1.8rem;">{{ g.t['enter_access_pin'] }}
                         </h4>
                         {% if error %}
                         <div class="alert alert-danger">{{ error }}</div>
                         {% endif %}
                         <form method="post">
-                            <div class="mb-3">
-                                <input type="password" class="form-control" name="pin"
-                                    placeholder="{{ g.t['pin_placeholder'] }}" autofocus required>
+                            <div class="mb-4">
+                                <input type="password" inputmode="numeric" pattern="[0-9]*" class="form-control form-control-lg" name="pin"
+                                    placeholder="{{ g.t['pin_placeholder'] }}" autofocus required style="font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem;">
                             </div>
-                            <button type="submit" class="btn btn-primary btn-sm w-100">{{ g.t['enter'] }}</button>
+                            <button type="submit" class="btn btn-primary btn-lg w-100" style="font-size: 1.2rem;">{{ g.t['enter'] }}</button>
                         </form>
                     </div>
                 </div>
