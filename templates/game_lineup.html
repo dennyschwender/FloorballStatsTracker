@@ -121,6 +121,7 @@
         .format-1 .player-list {
             list-style: none;
             padding-left: 0;
+            margin-bottom: 0;
         }
 
         .format-1 .player-list li {
@@ -611,9 +612,6 @@
                     </ul>
                 </div>
                 {% endfor %}
-            </div>
-
-            <div class="other-formations">
                 <div class="formation-box goalie-section">
                     <div class="formation-title">{{ g.t.get('goalies', 'Goalies') }}</div>
                     <ul class="player-list">
@@ -622,7 +620,9 @@
                         {% endfor %}
                     </ul>
                 </div>
+            </div>
 
+            <div class="other-formations">
                 {% if game.pp1 %}
                 <div class="formation-box">
                     <div class="formation-title">{{ g.t.get('pp1', 'Power Play 1') }}</div>
