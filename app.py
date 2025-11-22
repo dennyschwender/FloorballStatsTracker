@@ -1099,9 +1099,8 @@ def get_categories_by_season():
 @app.route('/api/roster/<category>')
 def get_roster_by_category(category):
     """API endpoint to get roster by category"""
-    if category not in CATEGORIES:
-        return jsonify({'error': 'Invalid category'}), 400
-    
+    # Don't validate against hardcoded CATEGORIES - allow any category
+    # load_roster() will return an empty list if the roster doesn't exist
     season = request.args.get('season', '')
     roster = load_roster(category, season)
     roster_sorted = sorted(roster, key=lambda p: int(p.get('number', 999)))

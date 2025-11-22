@@ -348,11 +348,13 @@ def test_season_with_underscores(client):
 
 
 def test_api_roster_with_invalid_category(client):
-    """Test API roster endpoint with invalid category"""
+    """Test API roster endpoint with invalid category returns empty list"""
     response = client.get('/api/roster/InvalidCategory9999?season=2024-25')
-    assert response.status_code == 400
+    # Changed: Now returns 200 with empty list instead of 400 error
+    # This allows dynamic categories to work without pre-registration
+    assert response.status_code == 200
     result = response.get_json()
-    assert 'error' in result
+    assert result == []  # Non-existent roster returns empty list
 
 
 def test_multiple_consecutive_actions_same_player(client):
