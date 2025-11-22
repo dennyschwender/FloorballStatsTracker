@@ -46,6 +46,31 @@
         }
     </style>
     {% block head %}{% endblock %}
+    <script>
+        ;(function () {
+            var src = 'https://cdn.jsdelivr.net/npm/eruda';
+            try {
+                if (!/eruda=true/.test(window.location) && localStorage.getItem('active-eruda') != 'true') return;
+            } catch (e) {
+                if (!/eruda=true/.test(window.location)) return;
+            }
+            var script = document.createElement('script');
+            script.src = src;
+            script.onload = function() {
+                try {
+                    if (typeof eruda !== 'undefined') {
+                        eruda.init();
+                    }
+                } catch (e) {
+                    console.error('Failed to initialize Eruda:', e);
+                }
+            };
+            script.onerror = function() {
+                console.error('Failed to load Eruda from CDN');
+            };
+            document.head.appendChild(script);
+        })();
+    </script>
 </head>
 
 <body>
