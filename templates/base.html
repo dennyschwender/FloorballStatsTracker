@@ -57,7 +57,16 @@
             var script = document.createElement('script');
             script.src = src;
             script.onload = function() {
-                eruda.init();
+                try {
+                    if (typeof eruda !== 'undefined') {
+                        eruda.init();
+                    }
+                } catch (e) {
+                    console.error('Failed to initialize Eruda:', e);
+                }
+            };
+            script.onerror = function() {
+                console.error('Failed to load Eruda from CDN');
             };
             document.head.appendChild(script);
         })();
