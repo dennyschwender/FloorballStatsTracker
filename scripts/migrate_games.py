@@ -17,7 +17,10 @@ from difflib import SequenceMatcher
 
 # File paths
 GAMES_FILE = 'gamesFiles/games.json'
-ROSTERS_DIR = 'rosters'
+# Get the directory where app.py is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Create the absolute path to the rosters folder
+ROSTERS_DIR = os.path.join(BASE_DIR, 'rosters')
 
 def similarity(a, b):
     """Calculate similarity ratio between two strings."""

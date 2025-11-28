@@ -1,0 +1,10 @@
+# Development and testing dependencies
+# Use with a virtual environment and tools like pip-compile for pinning.
+
+pytest>=7.0,<8.0
+pip-tools>=6.18.0,<7.0
+pip-audit>=2.2,<3.0
+black>=23.7,<24.0
+ruff>=0.18,<0.20
+isort>=5.10,<6.0
+pre-commit>=3.3,<4.0

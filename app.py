@@ -6,7 +6,10 @@ from datetime import datetime
 REQUIRED_PIN = os.environ.get('FLOORBALL_PIN', '1717')
 
 GAMES_FILE = 'gamesFiles/games.json'
-ROSTERS_DIR = 'rosters'
+# Get the directory where app.py is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Create the absolute path to the rosters folder
+ROSTERS_DIR = os.path.join(BASE_DIR, 'rosters')
 
 # Ensure rosters directory exists
 if not os.path.exists(ROSTERS_DIR):
