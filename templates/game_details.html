@@ -80,6 +80,9 @@
             {% endfor %}
         </div>
     </div>
+    <div class="alert alert-info mb-3" role="alert">
+        <strong>{{ g.t.get('plusminus_rules_title', 'Plus/Minus Rules') }}:</strong> {{ g.t.get('plusminus_rules_text', 'A player gets +1 for each even-strength or shorthanded goal their team scores while on the ice, and -1 for each such goal by the opposing team. Power-play goals and penalty shots do not affect plus/minus. Goalies do not have a plus/minus rating.') }}
+    </div>
     {% endif %}
 
     <div class="table-responsive-sm mb-4 mx-lg-5">
