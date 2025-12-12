@@ -1,10 +1,8 @@
 # FloorballStatsTracker Copilot Instructions
 
-Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.
-
 ## Overview
 
-FloorballStatsTracker is a Flask-based Python web application for tracking floorball game statistics, including player and goalie stats, period-based results, and team management. The app features a Bootstrap UI, PIN-based authentication, and optional Google Sheets integration.
+Flask-based web app for comprehensive floorball game tracking with **season management**, **multi-language support** (EN/IT), and **roster organization**. Features PIN-based auth, real-time stats, and optional Google Sheets integration. Mobile-responsive Bootstrap UI with JSON file storage.
 
 ## Working Effectively
 
@@ -59,40 +57,62 @@ Always manually validate changes by running through these complete scenarios:
 - **No existing linting configuration** - basic syntax validation only
 - **No test suite exists** - manual testing is required
 
-## Codebase Structure
+## Architecture
 
 ### Key Files
-- `app.py`: Main Flask application (550+ lines)
-- `sheets_service.py`: Google Sheets integration
-- `requirements.txt`: Python dependencies
-- `gamesFiles/games.json`: Game data storage (auto-created)
-- `templates/`: HTML templates (Bootstrap-based UI)
-- `Dockerfile` and `docker-compose.yml`: Container deployment
+- `app.py` - Main Flask app (550+ lines), all routes and business logic
+- `sheets_service.py` - Optional Google Sheets integration
+- `gamesFiles/games.json` - Game data storage (auto-created)
+- `rosters/roster_{SEASON}_{CATEGORY}.json` - Season-based roster files
+- `templates/` - Jinja2 templates with Bootstrap 5 UI
 
-### Important Directories
-```
-/home/runner/work/FloorballStatsTracker/FloorballStatsTracker/
-├── app.py                 # Main Flask app
-├── sheets_service.py      # Google Sheets integration  
-├── requirements.txt       # Dependencies
-├── Dockerfile            # Container build
-├── docker-compose.yml    # Container orchestration
-├── templates/            # HTML templates
-│   ├── index.html        # Main dashboard
-│   ├── game_details.html # Game stats interface
-│   ├── game_form.html    # Game creation/edit
-│   ├── pin.html          # PIN login
-│   └── stats.html        # Statistics overview
-└── gamesFiles/           # Data directory (auto-created)
-    └── games.json        # Game data storage
-```
+### Core Features
+- **Season Management**: Multi-season support with automatic detection, season-based filtering for games/stats/rosters
+- **Game Tracking**: Create/modify/delete games with period-based scoring (1, 2, 3, OT)
+- **Player Stats**: Plus/minus, goals, assists, unforced errors per game and period
+- **Goalie Stats**: Saves, goals conceded, save percentage calculations
+- **Roster Management**: Season-based rosters with bulk CSV import, position tracking (A/C/D/P)
+- **Lineup Builder**: 4 playing lines, special formations (PP1/2, BP1/2, 6vs5, Stress), category counters (U18/U21/etc.)
+- **Bilingual UI**: English and Italian language toggle
+- **Authentication**: PIN-based access (env var `FLOORBALL_PIN`, default: 1234)
 
-### Core Functionality
-- **Game Management**: Create, modify, delete games with teams and player lineups
-- **Stats Tracking**: Plus/minus, goals, assists for players and goalies per period
-- **Data Storage**: JSON file-based storage (gamesFiles/games.json)
-- **Authentication**: PIN-based access control
-- **UI**: Mobile-friendly Bootstrap interface
+## Key Patterns
+
+### Season-Based Data Organization
+- Games: Stored in `games.json` with `season` field (e.g., "2024-25")
+- Rosters: Separate files `roster_{SEASON}_{CATEGORY}.json` in `rosters/` directory
+- Stats filtering: UI dropdowns filter by season, then by team/category within season
+- Migration tool: `scripts/migrate_to_seasons.py` converts old data to season structure
+
+### Real-Time Stats Updates
+When goals/assists added in `game_details.html`, JavaScript immediately:
+1. Updates player stat displays
+2. Recalculates period scores
+3. Updates running totals
+No page refresh needed - all via inline JavaScript event handlers.
+
+### Roster Import Format
+Bulk import accepts CSV or formatted text:
+```
+Number, Name, Surname, Nickname, Position, Category
+1,John,Doe,Johnny,A,U21
+```
+Parsed in `app.py` route `/roster/<season>/<category>/import`.
+
+### Google Sheets Integration (Optional)
+If `GOOGLE_APPLICATION_CREDENTIALS` and `SPREADSHEET_ID` env vars set:
+- Pushes game results to Google Sheets after game completion
+- Uses service account auth (no OAuth flow)
+- Implemented in `sheets_service.py:upload_game_to_sheets()`
+
+## Project Conventions
+
+- **Single JSON file storage** - Not for high-concurrency, suitable for team use (5-20 concurrent users)
+- **Auto-generated game IDs** - Timestamp-based, ensure uniqueness within single process
+- **No test suite** - Manual validation required, see testing scenarios in instructions
+- **Bootstrap from CDN** - Requires internet, templates load CSS/JS from cdn.jsdelivr.net
+- **Bilingual from templates** - Language strings in Jinja2 templates, not in database
+- **Docker SSL issue** - Builds may fail in sandboxed environments accessing PyPI
 
 ## Common Commands Reference
 
