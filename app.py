@@ -46,6 +46,12 @@ def format_date(date_str):
 app.jinja_env.globals['format_date'] = format_date
 
 
+# Calculate Game Score for a player
+# GS = (1.5 * Goals) + (1.0 * Assists) + (0.3 * Plus/Minus) - (0.2 * Errors)
+def calculate_game_score(goals, assists, plusminus, errors):
+    return (1.5 * goals) + (1.0 * assists) + (0.3 * plusminus) - (0.2 * errors)
+
+
 # Language support
 LANGUAGES = ['en', 'it']
 TRANSLATIONS = {
@@ -1430,13 +1436,12 @@ def stats():
                 'penalties_drawn', {}).get(p, 0)
     
     # Calculate Game Score for each player
-    # GS = (1.5 * Goals) + (1.0 * Assists) + (0.3 * Plus/Minus) - (0.2 * Errors)
     for p in players:
         goals = player_totals[p]['goals']
         assists = player_totals[p]['assists']
         plusminus = player_totals[p]['plusminus']
         errors = player_totals[p]['unforced_errors']
-        player_totals[p]['game_score'] = (1.5 * goals) + (1.0 * assists) + (0.3 * plusminus) - (0.2 * errors)
+        player_totals[p]['game_score'] = calculate_game_score(goals, assists, plusminus, errors)
 
     # Collect all goalies
     goalie_set = set()
@@ -1472,7 +1477,7 @@ def stats():
             assists = game.get('assists', {}).get(p, 0)
             plusminus = game.get('plusminus', {}).get(p, 0)
             errors = game.get('unforced_errors', {}).get(p, 0)
-            game['game_scores'][p] = (1.5 * goals) + (1.0 * assists) + (0.3 * plusminus) - (0.2 * errors)
+            game['game_scores'][p] = calculate_game_score(goals, assists, plusminus, errors)
         
         # Add save percentage calculation for each goalie in this game
         game['save_percentages'] = {}
