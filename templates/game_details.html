@@ -122,19 +122,15 @@
                             {{ player }}
                         </span>
                     </td>
-                    <td class="text-center"><span class="fw-bold">{{ game.plusminus[player] if game.plusminus and player
-                            in game.plusminus else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.goals[player] if game.goals and player in
-                            game.goals else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.assists[player] if game.assists and player in
-                            game.assists else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.unforced_errors[player] if
-                            game.unforced_errors and player in game.unforced_errors else 0 }}</span></td>
+                    {% set pm = game.plusminus[player] if game.plusminus and player in game.plusminus else 0 %}
+                    {% set goals = game.goals[player] if game.goals and player in game.goals else 0 %}
+                    {% set assists = game.assists[player] if game.assists and player in game.assists else 0 %}
+                    {% set errors = game.unforced_errors[player] if game.unforced_errors and player in game.unforced_errors else 0 %}
+                    <td class="text-center"><span class="fw-bold">{{ pm }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ goals }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ assists }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ errors }}</span></td>
                     <td class="text-center">
-                        {% set pm = game.plusminus[player] if game.plusminus and player in game.plusminus else 0 %}
-                        {% set goals = game.goals[player] if game.goals and player in game.goals else 0 %}
-                        {% set assists = game.assists[player] if game.assists and player in game.assists else 0 %}
-                        {% set errors = game.unforced_errors[player] if game.unforced_errors and player in game.unforced_errors else 0 %}
                         {% set gs = (1.5 * goals) + (1.0 * assists) + (0.3 * pm) - (0.2 * errors) %}
                         <span class="fw-bold">{{ "%.1f"|format(gs) }}</span>
                     </td>
