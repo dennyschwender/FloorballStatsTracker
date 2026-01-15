@@ -77,6 +77,12 @@ TRANSLATIONS = {
         'goals': 'Goals',
         'assists': 'Assists',
         'errors': 'Errors',
+        'sog': 'SOG',
+        'shots_on_goal': 'Shots on Goal',
+        'penalties_taken': 'Penalties Taken',
+        'penalties_drawn': 'Penalties Drawn',
+        'penalty_taken': 'Penalty',
+        'penalty_drawn': 'Drawn',
         'actions': 'Actions',
         'goal': 'Goal',
         'save': 'Save',
@@ -207,6 +213,12 @@ TRANSLATIONS = {
         'goals': 'Gol',
         'assists': 'Assist',
         'errors': 'Errori',
+        'sog': 'TIG',
+        'shots_on_goal': 'Tiri in Porta',
+        'penalties_taken': 'Penalità Commesse',
+        'penalties_drawn': 'Penalità Subite',
+        'penalty_taken': 'Penalità',
+        'penalty_drawn': 'Subita',
         'actions': 'Azioni',
         'goal': 'Rete',
         'save': 'Salva',
@@ -628,6 +640,9 @@ def game_details(game_id):
         'goals',
         'assists',
         'unforced_errors',
+        'shots_on_goal',
+        'penalties_taken',
+        'penalties_drawn',
         'goalie_plusminus',
         'saves',
         'goals_conceded',
@@ -790,6 +805,12 @@ def player_action(game_id, player):
         game['assists'] = {}
     if 'unforced_errors' not in game:
         game['unforced_errors'] = {}
+    if 'shots_on_goal' not in game:
+        game['shots_on_goal'] = {}
+    if 'penalties_taken' not in game:
+        game['penalties_taken'] = {}
+    if 'penalties_drawn' not in game:
+        game['penalties_drawn'] = {}
     if player not in game['plusminus']:
         game['plusminus'][player] = 0
     if player not in game['goals']:
@@ -798,6 +819,12 @@ def player_action(game_id, player):
         game['assists'][player] = 0
     if player not in game['unforced_errors']:
         game['unforced_errors'][player] = 0
+    if player not in game['shots_on_goal']:
+        game['shots_on_goal'][player] = 0
+    if player not in game['penalties_taken']:
+        game['penalties_taken'][player] = 0
+    if player not in game['penalties_drawn']:
+        game['penalties_drawn'][player] = 0
     # Period result tracking
     period = game.get('current_period', '1')
     if 'result' not in game:
@@ -843,6 +870,21 @@ def player_action(game_id, player):
     elif action == 'unforced_error_minus':
         if game['unforced_errors'][player] > 0:
             game['unforced_errors'][player] -= 1
+    elif action == 'shot_on_goal':
+        game['shots_on_goal'][player] += 1
+    elif action == 'shot_on_goal_minus':
+        if game['shots_on_goal'][player] > 0:
+            game['shots_on_goal'][player] -= 1
+    elif action == 'penalty_taken':
+        game['penalties_taken'][player] += 1
+    elif action == 'penalty_taken_minus':
+        if game['penalties_taken'][player] > 0:
+            game['penalties_taken'][player] -= 1
+    elif action == 'penalty_drawn':
+        game['penalties_drawn'][player] += 1
+    elif action == 'penalty_drawn_minus':
+        if game['penalties_drawn'][player] > 0:
+            game['penalties_drawn'][player] -= 1
     # Find and update game by ID
     for i, game_item in enumerate(games):
         if game_item.get('id') == game_id:
@@ -1240,7 +1282,7 @@ def reset_game(game_id):
     if not game:
         return "Game not found", 404
     # Reset player stats
-    for stat in ['plusminus', 'goals', 'assists', 'unforced_errors']:
+    for stat in ['plusminus', 'goals', 'assists', 'unforced_errors', 'shots_on_goal', 'penalties_taken', 'penalties_drawn']:
         if stat not in game:
             game[stat] = {}
         for line in game.get('lines', []):
@@ -1305,6 +1347,9 @@ def stats():
             'goals',
             'assists',
             'unforced_errors',
+            'shots_on_goal',
+            'penalties_taken',
+            'penalties_drawn',
             'saves',
                 'goals_conceded']:
             if stat not in game or not isinstance(game[stat], dict):
@@ -1365,7 +1410,8 @@ def stats():
     players = sorted(player_set)
     # Prepare per-player totals
     player_totals = {p: {'plusminus': 0, 'goals': 0,
-                         'assists': 0, 'unforced_errors': 0} for p in players}
+                         'assists': 0, 'unforced_errors': 0, 'shots_on_goal': 0,
+                         'penalties_taken': 0, 'penalties_drawn': 0} for p in players}
     for game in games_sorted:
         for p in players:
             player_totals[p]['plusminus'] += game.get(
@@ -1374,6 +1420,12 @@ def stats():
             player_totals[p]['assists'] += game.get('assists', {}).get(p, 0)
             player_totals[p]['unforced_errors'] += game.get(
                 'unforced_errors', {}).get(p, 0)
+            player_totals[p]['shots_on_goal'] += game.get(
+                'shots_on_goal', {}).get(p, 0)
+            player_totals[p]['penalties_taken'] += game.get(
+                'penalties_taken', {}).get(p, 0)
+            player_totals[p]['penalties_drawn'] += game.get(
+                'penalties_drawn', {}).get(p, 0)
 
     # Collect all goalies
     goalie_set = set()
@@ -1485,7 +1537,9 @@ def stats():
         if hide_zero_stats:
             totals = player_totals[player]
             if (totals['plusminus'] == 0 and totals['goals'] == 0 and 
-                totals['assists'] == 0 and totals['unforced_errors'] == 0):
+                totals['assists'] == 0 and totals['unforced_errors'] == 0 and
+                totals['shots_on_goal'] == 0 and totals['penalties_taken'] == 0 and
+                totals['penalties_drawn'] == 0):
                 continue
         
         filtered_players.append(player)
