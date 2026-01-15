@@ -97,6 +97,7 @@ TRANSLATIONS = {
         'plus_minus': 'Plus/Minus',
         'goals_assists': 'Goals / Assists',
         'unforced_errors': 'Unforced Errors',
+        'game_score': 'Game Score',
         'goalie_save_percent': 'Goalie Save Percentages',
         'all': 'All',
         'plus_all': '+1 All',
@@ -233,6 +234,7 @@ TRANSLATIONS = {
         'plus_minus': 'Plus/Minus',
         'goals_assists': 'Gol / Assist',
         'unforced_errors': 'Errori non forzati',
+        'game_score': 'Punteggio Partita',
         'goalie_save_percent': 'Percentuali salvataggi portieri',
         'all': 'Tutte',
         'plus_all': '+1 Tutti',
@@ -1411,7 +1413,7 @@ def stats():
     # Prepare per-player totals
     player_totals = {p: {'plusminus': 0, 'goals': 0,
                          'assists': 0, 'unforced_errors': 0, 'shots_on_goal': 0,
-                         'penalties_taken': 0, 'penalties_drawn': 0} for p in players}
+                         'penalties_taken': 0, 'penalties_drawn': 0, 'game_score': 0} for p in players}
     for game in games_sorted:
         for p in players:
             player_totals[p]['plusminus'] += game.get(
@@ -1426,6 +1428,15 @@ def stats():
                 'penalties_taken', {}).get(p, 0)
             player_totals[p]['penalties_drawn'] += game.get(
                 'penalties_drawn', {}).get(p, 0)
+    
+    # Calculate Game Score for each player
+    # GS = (1.5 * Goals) + (1.0 * Assists) + (0.3 * Plus/Minus) - (0.2 * Errors)
+    for p in players:
+        goals = player_totals[p]['goals']
+        assists = player_totals[p]['assists']
+        plusminus = player_totals[p]['plusminus']
+        errors = player_totals[p]['unforced_errors']
+        player_totals[p]['game_score'] = (1.5 * goals) + (1.0 * assists) + (0.3 * plusminus) - (0.2 * errors)
 
     # Collect all goalies
     goalie_set = set()
@@ -1454,6 +1465,15 @@ def stats():
 
     # Calculate save percentages for each game
     for game in games_sorted:
+        # Add game score calculation for each player in this game
+        game['game_scores'] = {}
+        for p in players:
+            goals = game.get('goals', {}).get(p, 0)
+            assists = game.get('assists', {}).get(p, 0)
+            plusminus = game.get('plusminus', {}).get(p, 0)
+            errors = game.get('unforced_errors', {}).get(p, 0)
+            game['game_scores'][p] = (1.5 * goals) + (1.0 * assists) + (0.3 * plusminus) - (0.2 * errors)
+        
         # Add save percentage calculation for each goalie in this game
         game['save_percentages'] = {}
         for goalie in goalies:
