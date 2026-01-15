@@ -319,6 +319,66 @@
         </table>
     </div>
     {% endif %}
+
+    <h3>Game Score - Players</h3>
+    <div class="table-responsive-sm mb-4">
+        <table class="table table-bordered align-middle text-center" id="gameScoreTable" style="table-layout: auto;">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 1)" style="cursor: pointer;">Game Score <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 2)" style="cursor: pointer;">{{ g.t['goals'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 3)" style="cursor: pointer;">{{ g.t['assists'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 4)" style="cursor: pointer;">SOG <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 5)" style="cursor: pointer;">{{ g.t['plusminus'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 6)" style="cursor: pointer;">PD <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 7)" style="cursor: pointer;">PT <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 8)" style="cursor: pointer;">{{ g.t['errors'] }} <span class="sort-icon"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players %}
+                <tr>
+                    <td class="text-start">{{ player }}</td>
+                    <td class="fw-bold">{{ player_totals[player]['game_score'] }}</td>
+                    <td>{{ player_totals[player]['goals'] }}</td>
+                    <td>{{ player_totals[player]['assists'] }}</td>
+                    <td>{{ player_totals[player]['shots_on_goal'] }}</td>
+                    <td>{{ player_totals[player]['plusminus'] }}</td>
+                    <td>{{ player_totals[player]['penalties_drawn'] }}</td>
+                    <td>{{ player_totals[player]['penalties_taken'] }}</td>
+                    <td>{{ player_totals[player]['unforced_errors'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if goalies %}
+    <h3>Game Score - Goalies</h3>
+    <div class="table-responsive-sm mb-4">
+        <table class="table table-bordered align-middle text-center" id="goalieGameScoreTable" style="table-layout: auto;">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortStatsTable('goalieGameScoreTable', 0)" style="cursor: pointer;">{{ g.t['goalie'] if g.t is defined else 'Goalie' }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('goalieGameScoreTable', 1)" style="cursor: pointer;">Game Score <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('goalieGameScoreTable', 2)" style="cursor: pointer;">{{ g.t['saves'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('goalieGameScoreTable', 3)" style="cursor: pointer;">{{ g.t['goals_conceded'] }} <span class="sort-icon"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for goalie in goalies %}
+                <tr>
+                    <td class="text-start">{{ goalie }}</td>
+                    <td class="fw-bold">{{ goalie_data[goalie]['game_score'] }}</td>
+                    <td>{{ goalie_data[goalie]['total_saves'] }}</td>
+                    <td>{{ goalie_data[goalie]['total_goals_conceded'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
 </div>
 
 <script>
