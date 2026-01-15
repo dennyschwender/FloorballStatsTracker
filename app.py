@@ -178,6 +178,8 @@ TRANSLATIONS = {
         'error_loading_roster': 'Error loading roster for this category',
         'plusminus_rules_title': 'Plus/Minus Rules',
         'plusminus_rules_text': 'A player gets +1 for each even-strength or shorthanded goal their team scores while on the ice, and -1 for each such goal by the opposing team. Power-play goals and penalty shots do not affect plus/minus. Goalies do not have a plus/minus rating.',
+        'game_score': 'GS',
+        'game_score_full': 'Game Score',
     },
     'it': {
         'brand': 'Floorball Stats',
@@ -307,6 +309,8 @@ TRANSLATIONS = {
         'error_loading_roster': 'Errore nel caricamento del roster per questa categoria',
         'plusminus_rules_title': 'Regole Plus/Minus',
         'plusminus_rules_text': 'Un giocatore riceve +1 per ogni gol a squadre pari o in inferiorità numerica segnato dalla propria squadra mentre è in campo, e -1 per ogni gol simile segnato dalla squadra avversaria. I gol in superiorità numerica e i rigori non influenzano il plus/minus. I portieri non hanno una valutazione plus/minus.',
+        'game_score': 'GS',
+        'game_score_full': 'Game Score',
     }
 }
 

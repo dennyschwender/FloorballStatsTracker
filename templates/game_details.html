@@ -95,6 +95,7 @@
                     <th class="text-center">{{ g.t['goals'] }}</th>
                     <th class="text-center">{{ g.t['assists'] }}</th>
                     <th class="text-center">{{ g.t['errors'] }}</th>
+                    <th class="text-center" title="{{ g.t.get('game_score_full', 'Game Score') }}">{{ g.t.get('game_score', 'GS') }}</th>
                     <th class="actions-col d-none">{{ g.t['actions'] }}</th>
                 </tr>
             </thead>
@@ -129,6 +130,14 @@
                             game.assists else 0 }}</span></td>
                     <td class="text-center"><span class="fw-bold">{{ game.unforced_errors[player] if
                             game.unforced_errors and player in game.unforced_errors else 0 }}</span></td>
+                    <td class="text-center">
+                        {% set pm = game.plusminus[player] if game.plusminus and player in game.plusminus else 0 %}
+                        {% set goals = game.goals[player] if game.goals and player in game.goals else 0 %}
+                        {% set assists = game.assists[player] if game.assists and player in game.assists else 0 %}
+                        {% set errors = game.unforced_errors[player] if game.unforced_errors and player in game.unforced_errors else 0 %}
+                        {% set gs = (1.5 * goals) + (1.0 * assists) + (0.3 * pm) - (0.2 * errors) %}
+                        <span class="fw-bold">{{ "%.1f"|format(gs) }}</span>
+                    </td>
                     <td class="actions-col d-none">
                         <div class="dropdown text-center action-dropdown d-none">
                             <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
