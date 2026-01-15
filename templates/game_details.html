@@ -95,6 +95,9 @@
                     <th class="text-center">{{ g.t['goals'] }}</th>
                     <th class="text-center">{{ g.t['assists'] }}</th>
                     <th class="text-center">{{ g.t['errors'] }}</th>
+                    <th class="text-center">{{ g.t['sog'] }}</th>
+                    <th class="text-center">{{ g.t['penalty_taken'] }}</th>
+                    <th class="text-center">{{ g.t['penalty_drawn'] }}</th>
                     <th class="actions-col d-none">{{ g.t['actions'] }}</th>
                 </tr>
             </thead>
@@ -129,6 +132,12 @@
                             game.assists else 0 }}</span></td>
                     <td class="text-center"><span class="fw-bold">{{ game.unforced_errors[player] if
                             game.unforced_errors and player in game.unforced_errors else 0 }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ game.shots_on_goal[player] if
+                            game.shots_on_goal and player in game.shots_on_goal else 0 }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ game.penalties_taken[player] if
+                            game.penalties_taken and player in game.penalties_taken else 0 }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ game.penalties_drawn[player] if
+                            game.penalties_drawn and player in game.penalties_drawn else 0 }}</span></td>
                     <td class="actions-col d-none">
                         <div class="dropdown text-center action-dropdown d-none">
                             <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
@@ -154,6 +163,21 @@
                                     class="btn btn-warning btn-sm my-1">{{ g.t['errors'] }}</a>
                                 <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
                                     class="btn btn-outline-warning btn-sm my-1">-{{ g.t['errors'] }}</a>
+                                <hr class="dropdown-divider">
+                                <a href="/action/{{ game_id }}/{{ player }}?action=shot_on_goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                    class="btn btn-info btn-sm my-1">{{ g.t['sog'] }}</a>
+                                <a href="/action/{{ game_id }}/{{ player }}?action=shot_on_goal_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                    class="btn btn-outline-info btn-sm my-1">-{{ g.t['sog'] }}</a>
+                                <hr class="dropdown-divider">
+                                <a href="/action/{{ game_id }}/{{ player }}?action=penalty_taken{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                    class="btn btn-danger btn-sm my-1">{{ g.t['penalty_taken'] }}</a>
+                                <a href="/action/{{ game_id }}/{{ player }}?action=penalty_taken_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                    class="btn btn-outline-danger btn-sm my-1">-{{ g.t['penalty_taken'] }}</a>
+                                <hr class="dropdown-divider">
+                                <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                    class="btn btn-success btn-sm my-1">{{ g.t['penalty_drawn'] }}</a>
+                                <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                    class="btn btn-outline-success btn-sm my-1">-{{ g.t['penalty_drawn'] }}</a>
                             </div>
                         </div>
                     </td>
