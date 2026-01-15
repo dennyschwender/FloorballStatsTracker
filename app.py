@@ -178,6 +178,9 @@ TRANSLATIONS = {
         'error_loading_roster': 'Error loading roster for this category',
         'plusminus_rules_title': 'Plus/Minus Rules',
         'plusminus_rules_text': 'A player gets +1 for each even-strength or shorthanded goal their team scores while on the ice, and -1 for each such goal by the opposing team. Power-play goals and penalty shots do not affect plus/minus. Goalies do not have a plus/minus rating.',
+        'game_score': 'Game Score',
+        'game_score_players': 'Game Score - Players',
+        'game_score_goalies': 'Game Score - Goalies',
     },
     'it': {
         'brand': 'Floorball Stats',
@@ -307,6 +310,9 @@ TRANSLATIONS = {
         'error_loading_roster': 'Errore nel caricamento del roster per questa categoria',
         'plusminus_rules_title': 'Regole Plus/Minus',
         'plusminus_rules_text': 'Un giocatore riceve +1 per ogni gol a squadre pari o in inferiorità numerica segnato dalla propria squadra mentre è in campo, e -1 per ogni gol simile segnato dalla squadra avversaria. I gol in superiorità numerica e i rigori non influenzano il plus/minus. I portieri non hanno una valutazione plus/minus.',
+        'game_score': 'Game Score',
+        'game_score_players': 'Game Score - Giocatori',
+        'game_score_goalies': 'Game Score - Portieri',
     }
 }
 
@@ -1394,10 +1400,18 @@ def stats():
             player_set.update(line)
     players = sorted(player_set)
     # Prepare per-player totals
-    player_totals = {p: {'plusminus': 0, 'goals': 0,
-                         'assists': 0, 'unforced_errors': 0, 
-                         'shots_on_goal': 0, 'penalties_taken': 0,
-                         'penalties_drawn': 0, 'game_score': 0} for p in players}
+    player_totals = {
+        p: {
+            'plusminus': 0,
+            'goals': 0,
+            'assists': 0,
+            'unforced_errors': 0,
+            'shots_on_goal': 0,
+            'penalties_taken': 0,
+            'penalties_drawn': 0,
+            'game_score': 0
+        } for p in players
+    }
     for game in games_sorted:
         for p in players:
             player_totals[p]['plusminus'] += game.get(
@@ -1414,7 +1428,7 @@ def stats():
                 'penalties_drawn', {}).get(p, 0)
     
     # Calculate Game Score for each player
-    # GS = (1.5 * G) + (1.0 * A) + (0.1 * SOG) + (0.3 * PM) + (0.15 * PD) - (0.15 * PT) - (0.2 * Errors)
+    # GS = (1.5 * G) + (1.0 * A) + (0.1 * SOG) + (0.3 * PM) + (0.15 * PD) - (0.15 * PT) - (0.2 * Unforced Errors)
     for p in players:
         totals = player_totals[p]
         game_score = (
@@ -1522,7 +1536,7 @@ def stats():
             goalie_data[goalie]['average_save_percentage'] = None
         
         # Calculate Game Score for goalie
-        # GS Goalie = (0.10 * Saves) - (0.25 * Goals Conceded)
+        # GS Goalie = (0.10 * saves) - (0.25 * goals conceded)
         game_score = (0.10 * total_saves) - (0.25 * total_goals_conceded)
         goalie_data[goalie]['game_score'] = round(game_score, 2)
 
@@ -1543,10 +1557,10 @@ def stats():
         # Filter: Hide players with all stats = 0
         if hide_zero_stats:
             totals = player_totals[player]
-            if (totals['plusminus'] == 0 and totals['goals'] == 0 and 
-                totals['assists'] == 0 and totals['unforced_errors'] == 0 and
-                totals['shots_on_goal'] == 0 and totals['penalties_taken'] == 0 and
-                totals['penalties_drawn'] == 0):
+            # Check if all stats are zero
+            all_stats = ['plusminus', 'goals', 'assists', 'unforced_errors',
+                        'shots_on_goal', 'penalties_taken', 'penalties_drawn']
+            if all(totals[stat] == 0 for stat in all_stats):
                 continue
         
         filtered_players.append(player)

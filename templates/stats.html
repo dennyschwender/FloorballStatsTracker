@@ -320,13 +320,13 @@
     </div>
     {% endif %}
 
-    <h3>Game Score - Players</h3>
+    <h3>{{ g.t['game_score_players'] if g.t is defined else 'Game Score - Players' }}</h3>
     <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" id="gameScoreTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('gameScoreTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 1)" style="cursor: pointer;">Game Score <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 1)" style="cursor: pointer;">{{ g.t['game_score'] if g.t is defined else 'Game Score' }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('gameScoreTable', 2)" style="cursor: pointer;">{{ g.t['goals'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('gameScoreTable', 3)" style="cursor: pointer;">{{ g.t['assists'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('gameScoreTable', 4)" style="cursor: pointer;">SOG <span class="sort-icon"></span></th>
@@ -355,13 +355,13 @@
     </div>
 
     {% if goalies %}
-    <h3>Game Score - Goalies</h3>
+    <h3>{{ g.t['game_score_goalies'] if g.t is defined else 'Game Score - Goalies' }}</h3>
     <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" id="goalieGameScoreTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('goalieGameScoreTable', 0)" style="cursor: pointer;">{{ g.t['goalie'] if g.t is defined else 'Goalie' }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('goalieGameScoreTable', 1)" style="cursor: pointer;">Game Score <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('goalieGameScoreTable', 1)" style="cursor: pointer;">{{ g.t['game_score'] if g.t is defined else 'Game Score' }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('goalieGameScoreTable', 2)" style="cursor: pointer;">{{ g.t['saves'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('goalieGameScoreTable', 3)" style="cursor: pointer;">{{ g.t['goals_conceded'] }} <span class="sort-icon"></span></th>
                 </tr>
