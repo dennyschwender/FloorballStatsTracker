@@ -215,6 +215,40 @@
         </table>
     </div>
 
+    <h3>{{ g.t['game_score'] }}</h3>
+    <div class="table-responsive-sm mb-4">
+        <table class="table table-bordered align-middle text-center" id="gameScoreTable" style="table-layout: auto;">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    {% for game in games %}
+                    <th class="rotate">
+                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }}</div>
+                    </th>
+                    {% endfor %}
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players %}
+                <tr>
+                    <td class="text-start">{{ player }}</td>
+                    {% for game in games %}
+                    {% set player_in_game = namespace(found=false) %}
+                    {% for line in game.lines %}
+                        {% if player in line %}
+                            {% set player_in_game.found = true %}
+                        {% endif %}
+                    {% endfor %}
+                    <td>{% if player_in_game.found %}{{ "%.1f"|format(game.game_scores.get(player, 0)) }}{% else %}-{% endif %}</td>
+                    {% endfor %}
+                    <td class="fw-bold">{{ "%.1f"|format(player_totals[player]['game_score']) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
     <h3>{{ g.t['unforced_errors'] }}</h3>
     <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" id="unforcedErrorsTable" style="table-layout: auto;">
