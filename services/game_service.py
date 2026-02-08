@@ -78,3 +78,74 @@ def ensure_game_ids(games):
             changed = True
         seen_ids.add(game['id'])
     return changed
+
+
+def ensure_game_stats(game):
+    """Ensure all stat dictionaries exist in game
+    
+    Args:
+        game: Game dictionary to ensure stats for
+        
+    Returns:
+        The game dictionary with all stat dictionaries initialized
+    """
+    stat_keys = ['plusminus', 'goals', 'assists', 'unforced_errors', 
+                 'shots_on_goal', 'penalties_taken', 'penalties_drawn',
+                 'saves', 'goals_conceded']
+    for stat in stat_keys:
+        if stat not in game or not isinstance(game[stat], dict):
+            game[stat] = {}
+    return game
+
+
+def ensure_player_stats(game, player):
+    """Ensure player has all stat entries initialized to 0
+    
+    Args:
+        game: Game dictionary containing stat dictionaries
+        player: Player name to initialize stats for
+        
+    Returns:
+        The game dictionary with player stats initialized
+    """
+    for stat in ['plusminus', 'goals', 'assists', 'unforced_errors', 
+                 'shots_on_goal', 'penalties_taken', 'penalties_drawn']:
+        if stat in game and player not in game[stat]:
+            game[stat][player] = 0
+    return game
+
+
+def build_formation_from_form(request_form, formation_keys, player_map):
+    """Extract formation data from form request with position-based ordering
+    
+    Args:
+        request_form: Flask request.form object
+        formation_keys: List of keys to extract (e.g., ['pp1', 'pp2'])
+        player_map: Dict mapping player IDs to player data dicts
+        
+    Returns:
+        Dict mapping formation keys to lists of player names, ordered by position
+    """
+    formations = {}
+    for key in formation_keys:
+        formation_players_with_position = []
+        # Collect all form fields for this formation
+        for player_id in player_map.keys():
+            position_value = request_form.get(f'{key}_{player_id}', '').strip()
+            if position_value:
+                player = player_map.get(player_id)
+                if player:
+                    try:
+                        pos_num = int(position_value)
+                        formation_players_with_position.append({
+                            'position': pos_num,
+                            'name': f"{player['number']} - {player['surname']} {player['name']}"
+                        })
+                    except ValueError:
+                        pass
+        
+        # Sort by position number and extract names
+        formation_players_with_position.sort(key=lambda x: x['position'])
+        formation_players = [p['name'] for p in formation_players_with_position]
+        formations[key] = formation_players
+    return formations

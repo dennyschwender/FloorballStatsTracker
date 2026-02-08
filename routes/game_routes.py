@@ -6,7 +6,10 @@ import hmac
 from datetime import datetime
 from flask import Blueprint, request, render_template, redirect, url_for, session, g
 from config import REQUIRED_PIN, PERIODS
-from services.game_service import load_games, save_games, find_game_by_id, ensure_game_ids
+from services.game_service import (
+    load_games, save_games, find_game_by_id, ensure_game_ids,
+    ensure_game_stats, ensure_player_stats, build_formation_from_form
+)
 from models.roster import load_roster, get_all_seasons
 
 game_bp = Blueprint('game', __name__)
@@ -140,20 +143,10 @@ def game_details(game_id):
         game['opponent_goalie_enabled'] = False
         changed = True
     # Ensure stat dicts exist
-    for stat in [
-        'plusminus',
-        'goals',
-        'assists',
-        'unforced_errors',
-        'shots_on_goal',
-        'penalties_taken',
-        'penalties_drawn',
-        'goalie_plusminus',
-        'saves',
-        'goals_conceded',
-        'opponent_goalie_saves',
-        'opponent_goalie_goals_conceded'
-    ]:
+    ensure_game_stats(game)
+    # Also ensure goalie stats
+    for stat in ['goalie_plusminus', 'saves', 'goals_conceded',
+                 'opponent_goalie_saves', 'opponent_goalie_goals_conceded']:
         if stat not in game or not isinstance(game[stat], dict):
             game[stat] = {}
             changed = True
@@ -252,27 +245,10 @@ def create_game():
         }
         
         # Store formations from direct form entry with position numbers
-        for formation_key in ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line']:
-            formation_players_with_position = []
-            # Collect all form fields for this formation
-            for player_id in player_map.keys():
-                position_value = request.form.get(f'{formation_key}_{player_id}', '').strip()
-                if position_value:
-                    player = player_map.get(player_id)
-                    if player:
-                        try:
-                            pos_num = int(position_value)
-                            formation_players_with_position.append({
-                                'position': pos_num,
-                                'name': f"{player['number']} - {player['surname']} {player['name']}"
-                            })
-                        except ValueError:
-                            pass
-            
-            # Sort by position number and extract names
-            formation_players_with_position.sort(key=lambda x: x['position'])
-            formation_players = [p['name'] for p in formation_players_with_position]
-            game[formation_key] = formation_players
+        formation_keys = ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line']
+        formations = build_formation_from_form(request.form, formation_keys, player_map)
+        for key, players in formations.items():
+            game[key] = players
         
         games.append(game)
         save_games(games)
@@ -354,27 +330,10 @@ def modify_game(game_id):
         game['opponent_goalie_enabled'] = enable_opponent_goalie
         
         # Store formations from direct form entry with position numbers
-        for formation_key in ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line']:
-            formation_players_with_position = []
-            # Collect all form fields for this formation
-            for player_id in player_map.keys():
-                position_value = request.form.get(f'{formation_key}_{player_id}', '').strip()
-                if position_value:
-                    player = player_map.get(player_id)
-                    if player:
-                        try:
-                            pos_num = int(position_value)
-                            formation_players_with_position.append({
-                                'position': pos_num,
-                                'name': f"{player['number']} - {player['surname']} {player['name']}"
-                            })
-                        except ValueError:
-                            pass
-            
-            # Sort by position number and extract names
-            formation_players_with_position.sort(key=lambda x: x['position'])
-            formation_players = [p['name'] for p in formation_players_with_position]
-            game[formation_key] = formation_players
+        formation_keys = ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line']
+        formations = build_formation_from_form(request.form, formation_keys, player_map)
+        for key, players in formations.items():
+            game[key] = players
         
         if 'result' not in game:
             game['result'] = {p: {"home": 0, "away": 0} for p in PERIODS}
@@ -410,12 +369,8 @@ def player_action(game_id, player):
         return "Game not found", 404
     
     # Track stats in dicts on the game object
-    for stat in ['plusminus', 'goals', 'assists', 'unforced_errors', 'shots_on_goal', 
-                 'penalties_taken', 'penalties_drawn']:
-        if stat not in game:
-            game[stat] = {}
-        if player not in game[stat]:
-            game[stat][player] = 0
+    ensure_game_stats(game)
+    ensure_player_stats(game, player)
     
     # Period result tracking
     period = game.get('current_period', '1')
@@ -522,12 +477,7 @@ def line_action(game_id, line_idx):
             game['opponent_goalie_goals_conceded']["Opponent Goalie"] += 1
     
     for player in game['lines'][line_idx]:
-        if player not in game['plusminus']:
-            game['plusminus'][player] = 0
-        if player not in game['goals']:
-            game['goals'][player] = 0
-        if player not in game['assists']:
-            game['assists'][player] = 0
+        ensure_player_stats(game, player)
         if action == 'plus':
             game['plusminus'][player] += 1
         elif action == 'minus':
@@ -666,12 +616,11 @@ def reset_game(game_id):
         return "Game not found", 404
     
     # Reset player stats
-    for stat in ['plusminus', 'goals', 'assists', 'unforced_errors', 'shots_on_goal', 
-                 'penalties_taken', 'penalties_drawn']:
-        if stat not in game:
-            game[stat] = {}
-        for line in game.get('lines', []):
-            for player in line:
+    ensure_game_stats(game)
+    for line in game.get('lines', []):
+        for player in line:
+            for stat in ['plusminus', 'goals', 'assists', 'unforced_errors', 'shots_on_goal', 
+                         'penalties_taken', 'penalties_drawn']:
                 game[stat][player] = 0
     
     # Reset goalie stats

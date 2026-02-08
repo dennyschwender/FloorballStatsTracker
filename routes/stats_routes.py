@@ -3,7 +3,7 @@ Statistics routes blueprint
 """
 from datetime import datetime
 from flask import Blueprint, request, render_template
-from services.game_service import load_games, save_games
+from services.game_service import load_games, save_games, ensure_game_stats
 from services.stats_service import calculate_stats_optimized
 from models.roster import get_all_seasons
 
@@ -16,20 +16,14 @@ def stats():
     # Data checking and defaulting for missing fields
     changed = False
     for game in games:
-        for stat in [
-            'plusminus',
-            'goals',
-            'assists',
-            'unforced_errors',
-            'shots_on_goal',
-            'penalties_taken',
-            'penalties_drawn',
-            'saves',
-            'goals_conceded'
-        ]:
-            if stat not in game or not isinstance(game[stat], dict):
-                game[stat] = {}
-                changed = True
+        old_changed = changed
+        ensure_game_stats(game)
+        # Check if game was modified
+        if not old_changed and any(stat not in game or not isinstance(game[stat], dict) 
+                                   for stat in ['plusminus', 'goals', 'assists', 'unforced_errors',
+                                               'shots_on_goal', 'penalties_taken', 'penalties_drawn',
+                                               'saves', 'goals_conceded']):
+            changed = True
         if 'lines' not in game or not isinstance(game['lines'], list):
             game['lines'] = []
             changed = True
