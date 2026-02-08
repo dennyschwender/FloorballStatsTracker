@@ -5,8 +5,10 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file in the same directory as this config file
+config_dir = os.path.dirname(os.path.abspath(__file__))
+dotenv_path = os.path.join(config_dir, '.env')
+load_dotenv(dotenv_path)
 
 # Security: Force FLOORBALL_PIN environment variable (no default allowed)
 REQUIRED_PIN = os.environ.get('FLOORBALL_PIN')

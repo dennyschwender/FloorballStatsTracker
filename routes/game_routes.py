@@ -20,20 +20,12 @@ def index():
     if not session.get('authenticated'):
         if request.method == 'POST':
             pin = request.form.get('pin', '')
-            # Debug logging (remove in production)
-            import sys
-            print(f"[DEBUG] PIN attempt: '{pin}' (len={len(pin)})", file=sys.stderr)
-            print(f"[DEBUG] Required: '{REQUIRED_PIN}' (len={len(REQUIRED_PIN)})", file=sys.stderr)
-            print(f"[DEBUG] PIN chars: {[ord(c) for c in pin]}", file=sys.stderr)
-            print(f"[DEBUG] Form data: {dict(request.form)}", file=sys.stderr)
             # Security: Use timing-safe comparison to prevent timing attacks
             if hmac.compare_digest(pin, REQUIRED_PIN):
-                print(f"[DEBUG] PIN MATCH - Authenticated", file=sys.stderr)
                 session['authenticated'] = True
                 session.permanent = True  # Enable session timeout
                 return redirect(url_for('game.index'))
             else:
-                print(f"[DEBUG] PIN MISMATCH - Authentication failed", file=sys.stderr)
                 return render_template('pin.html', error='Incorrect PIN')
         return render_template('pin.html')
     
