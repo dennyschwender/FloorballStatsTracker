@@ -132,7 +132,7 @@
 {% block content %}
 <div class="container mt-5">
     <h1 class="mb-4" style="font-size:1.2rem;">{{ g.t['modify_game'] if modify else g.t['create_new_game'] }}</h1>
-    <form method="post" action="{{ url_for('modify_game', game_id=game_id) if modify else '/create_game' }}"
+    <form method="post" action="{{ url_for('game.modify_game', game_id=game_id) if modify else url_for('game.create_game') }}"
         id="gameForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="mb-3">

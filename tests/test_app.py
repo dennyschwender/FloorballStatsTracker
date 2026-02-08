@@ -84,7 +84,7 @@ def test_roster_management(client):
         json.dump(roster_data, f)
     
     # Test roster loads correctly with season parameter - just check it returns 200
-    response = client.get(f'/roster?team=TestTeam&season={test_season}')
+    response = client.get(f'/roster/?category=TestTeam&season={test_season}')
     assert response.status_code == 200
     
     # Cleanup

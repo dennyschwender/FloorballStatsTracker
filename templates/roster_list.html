@@ -26,7 +26,7 @@
         <div class="row">
             {% for roster_cat in existing_rosters %}
             <div class="col-md-3 mb-3">
-                <a href="{{ url_for('roster_list', category=roster_cat, season=selected_season) }}" class="btn btn-outline-primary w-100 p-3"
+                <a href="{{ url_for('roster.roster_list', category=roster_cat, season=selected_season) }}" class="btn btn-outline-primary w-100 p-3"
                     style="font-size: 1.2rem;">
                     {{ roster_cat }}
                 </a>
@@ -86,7 +86,7 @@
             const seasonName = document.getElementById('newSeasonName').value.trim();
             const categoryName = document.getElementById('newCategoryName').value.trim();
             if (seasonName && categoryName) {
-                window.location.href = '{{ url_for("roster_list") }}?season=' + encodeURIComponent(seasonName) + '&category=' + encodeURIComponent(categoryName);
+                window.location.href = '{{ url_for("roster.roster_list") }}?season=' + encodeURIComponent(seasonName) + '&category=' + encodeURIComponent(categoryName);
             }
         }
 
@@ -113,14 +113,14 @@
             <button type="button" class="btn btn-outline-danger me-2" onclick="deleteEntireRoster()">
                 🗑️ Delete Roster
             </button>
-            <a href="{{ url_for('roster_list', season=selected_season) }}" class="btn btn-secondary">← Back to Rosters</a>
+            <a href="{{ url_for('roster.roster_list', season=selected_season) }}" class="btn btn-secondary">← Back to Rosters</a>
         </div>
     </div>
 
     <div class="mb-3">
-        <a href="{{ url_for('roster_add', category=selected_category, season=selected_season) }}" class="btn btn-primary">{{ g.t['add_player']
+        <a href="{{ url_for('roster.roster_add', category=selected_category, season=selected_season) }}" class="btn btn-primary">{{ g.t['add_player']
             }}</a>
-        <a href="{{ url_for('roster_bulk_import', category=selected_category, season=selected_season) }}" class="btn btn-success">{{
+        <a href="{{ url_for('roster.roster_bulk_import', category=selected_category, season=selected_season) }}" class="btn btn-success">{{
             g.t['bulk_import'] }}</a>
         <button type="button" class="btn btn-danger" id="bulkDeleteBtn" style="display:none;"
             onclick="bulkDeletePlayers()">
@@ -162,10 +162,10 @@
                         </td>
                         <td>{{ player.tesser }}</td>
                         <td>
-                            <a href="{{ url_for('roster_edit', player_id=player.id, category=selected_category, season=selected_season) }}"
+                            <a href="{{ url_for('roster.roster_edit', player_id=player.id, category=selected_category, season=selected_season) }}"
                                 class="btn btn-sm btn-warning">{{
                                 g.t['edit_player'] }}</a>
-                            <a href="{{ url_for('roster_delete', player_id=player.id, category=selected_category, season=selected_season) }}"
+                            <a href="{{ url_for('roster.roster_delete', player_id=player.id, category=selected_category, season=selected_season) }}"
                                 class="btn btn-sm btn-danger" data-confirm="{{ g.t['delete_confirm'] }}">{{
                                 g.t['delete_player'] }}</a>
                         </td>
@@ -267,7 +267,7 @@
             const playerIds = Array.from(checkedBoxes).map(cb => cb.value);
 
             // Send delete request
-            fetch('{{ url_for("roster_bulk_delete") }}', {
+            fetch('{{ url_for("roster.roster_bulk_delete") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -306,7 +306,7 @@
             }
 
             // First attempt - check for warnings
-            fetch('{{ url_for("delete_roster") }}', {
+            fetch('{{ url_for("roster.delete_roster") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -322,12 +322,12 @@
                     if (data.success) {
                         // Successfully deleted
                         alert('Roster deleted successfully');
-                        window.location.href = '{{ url_for("roster_list") }}';
+                        window.location.href = '{{ url_for("roster.roster_list") }}';
                     } else if (data.warning) {
                         // Warning about existing games
                         if (confirm(data.message + '\n\nDo you want to proceed with deletion?')) {
                             // User confirmed, delete with force
-                            fetch('{{ url_for("delete_roster") }}', {
+                            fetch('{{ url_for("roster.delete_roster") }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -342,7 +342,7 @@
                                 .then(data => {
                                     if (data.success) {
                                         alert('Roster deleted successfully');
-                                        window.location.href = '{{ url_for("roster_list") }}';
+                                        window.location.href = '{{ url_for("roster.roster_list") }}';
                                     } else {
                                         alert('Error: ' + data.error);
                                     }
@@ -360,6 +360,6 @@
     </script>
     {% endif %}
 
-    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">{{ g.t['back_to_home'] }}</a>
+    <a href="{{ url_for('game.index') }}" class="btn btn-secondary mt-3">{{ g.t['back_to_home'] }}</a>
 </div>
 {% endblock %}
