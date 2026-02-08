@@ -3,6 +3,10 @@ Configuration management for FloorballStatsTracker
 """
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Security: Force FLOORBALL_PIN environment variable (no default allowed)
 REQUIRED_PIN = os.environ.get('FLOORBALL_PIN')
