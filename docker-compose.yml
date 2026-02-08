@@ -7,6 +7,9 @@ services:
     volumes:
       - ./gamesFiles/:/app/gamesFiles/
       - ./rosters/:/app/rosters/
+      - ./logs/:/app/logs/
+    env_file:
+      - .env
     environment:
       - FLASK_APP=app.py
       - FLASK_RUN_HOST=0.0.0.0
