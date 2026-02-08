@@ -26,6 +26,10 @@ def create_app():
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
     
+    # Disable CSRF in testing mode for easier test execution
+    if app.config.get('TESTING', False):
+        app.config['WTF_CSRF_ENABLED'] = False
+    
     # Register template helpers
     app.jinja_env.globals['format_date'] = format_date
     
