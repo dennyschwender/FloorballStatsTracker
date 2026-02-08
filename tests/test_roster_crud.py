@@ -2,7 +2,7 @@
 import json
 import os
 import pytest
-from app import ROSTERS_DIR
+from config import ROSTERS_DIR
 
 
 def test_roster_add_player(client):

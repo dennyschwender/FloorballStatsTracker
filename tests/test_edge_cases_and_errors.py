@@ -1,7 +1,7 @@
 """Tests for edge cases, error handling, and additional functionality"""
 import json
 import os
-from app import GAMES_FILE, ROSTERS_DIR
+from config import GAMES_FILE, ROSTERS_DIR
 
 
 def test_roster_delete_entire_roster(client):

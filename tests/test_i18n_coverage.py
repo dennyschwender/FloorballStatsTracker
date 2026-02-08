@@ -1,5 +1,5 @@
 import pytest
-from app import TRANSLATIONS
+from config import TRANSLATIONS
 
 
 @pytest.mark.parametrize('lang', list(TRANSLATIONS.keys()))

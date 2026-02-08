@@ -1,7 +1,7 @@
 """Tests for advanced features and edge cases"""
 import json
 import os
-from app import GAMES_FILE, ROSTERS_DIR
+from config import GAMES_FILE, ROSTERS_DIR
 
 
 def create_test_roster(team='TestTeam'):

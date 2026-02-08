@@ -1,6 +1,6 @@
 import json
 import os
-from app import GAMES_FILE, ROSTERS_DIR
+from config import GAMES_FILE, ROSTERS_DIR
 
 
 def create_test_game(client, roster_data, home_team, away_team, team='U21', season='2024-25', date='2025-11-14', 

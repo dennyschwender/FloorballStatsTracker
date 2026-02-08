@@ -1,7 +1,7 @@
 """Test to verify goalie save percentage calculation"""
 import json
 import os
-from app import GAMES_FILE, ROSTERS_DIR
+from config import GAMES_FILE, ROSTERS_DIR
 
 
 def test_goalie_save_percentage_with_fallback(client):

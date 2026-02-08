@@ -7,7 +7,8 @@ Goalie GS formula: GS = (0.10 * Saves) - (0.25 * Goals Conceded)
 import json
 import pytest
 
-from app import GAMES_FILE, calculate_game_score, calculate_goalie_game_score
+from config import GAMES_FILE
+from services.stats_service import calculate_game_score, calculate_goalie_game_score
 
 
 def _read_games():

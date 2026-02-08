@@ -1,6 +1,6 @@
 import json
 import os
-from app import GAMES_FILE, ROSTERS_DIR
+from config import GAMES_FILE, ROSTERS_DIR
 
 
 def test_season_in_game_creation(client):

@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from app import GAMES_FILE
+from config import GAMES_FILE
 
 
 def _read_games():
