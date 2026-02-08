@@ -7,6 +7,7 @@
     <h1>{% if player %}{{ g.t['edit_player'] }}{% else %}{{ g.t['add_player'] }}{% endif %}</h1>
 
     <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <!-- Season and Category Selection (only show when adding new player) -->
         {% if not player %}
         <div class="mb-3">

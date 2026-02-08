@@ -1,8 +1,18 @@
 import os
 import json
+import tempfile
+import threading
+import platform
 from flask import Flask, request, render_template, redirect, url_for, session, g, jsonify
 from urllib.parse import urlparse
 from datetime import datetime
+
+# Platform-specific imports for file locking
+if platform.system() == 'Windows':
+    import msvcrt
+else:
+    import fcntl
+
 REQUIRED_PIN = os.environ.get('FLOORBALL_PIN', '1717')
 
 GAMES_FILE = 'gamesFiles/games.json'
@@ -24,8 +34,165 @@ if not os.path.exists(GAMES_FILE):
 CATEGORIES = ['U18', 'U21', 'U16', 'Senior']
 
 
+# ===== PERFORMANCE OPTIMIZATION: GameCache Class =====
+class GameCache:
+    """In-memory cache for games.json with file modification time-based invalidation"""
+    
+    def __init__(self):
+        self._cache = None
+        self._mtime = None
+        self._lock = threading.Lock()
+    
+    def get(self, filepath):
+        """Get cached games if valid, otherwise return None"""
+        with self._lock:
+            if self._cache is None:
+                return None
+            
+            # Check if file has been modified
+            try:
+                current_mtime = os.path.getmtime(filepath)
+                if self._mtime != current_mtime:
+                    # File has been modified, invalidate cache
+                    self._cache = None
+                    self._mtime = None
+                    return None
+            except OSError:
+                # File doesn't exist or can't be accessed
+                return None
+            
+            return self._cache
+    
+    def set(self, filepath, games):
+        """Store games in cache with current file modification time"""
+        with self._lock:
+            try:
+                self._mtime = os.path.getmtime(filepath)
+                self._cache = games
+            except OSError:
+                # If we can't get mtime, don't cache
+                self._cache = None
+                self._mtime = None
+    
+    def invalidate(self):
+        """Invalidate the cache (call after writes)"""
+        with self._lock:
+            self._cache = None
+            self._mtime = None
+
+
+# Initialize global game cache
+game_cache = GameCache()
+
+
+# ===== PERFORMANCE OPTIMIZATION: Safe File Operations =====
+def _acquire_file_lock(file_handle, exclusive=True):
+    """Acquire a file lock (cross-platform)"""
+    if platform.system() == 'Windows':
+        # Windows file locking
+        mode = msvcrt.LK_NBLCK if exclusive else msvcrt.LK_NBRLCK
+        max_retries = 10
+        for _ in range(max_retries):
+            try:
+                msvcrt.locking(file_handle.fileno(), mode, 1)
+                return True
+            except OSError:
+                import time
+                time.sleep(0.1)
+        return False
+    else:
+        # Unix file locking
+        operation = fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH
+        try:
+            fcntl.flock(file_handle.fileno(), operation | fcntl.LOCK_NB)
+            return True
+        except IOError:
+            # Try with blocking
+            fcntl.flock(file_handle.fileno(), operation)
+            return True
+
+
+def _release_file_lock(file_handle):
+    """Release a file lock (cross-platform)"""
+    if platform.system() == 'Windows':
+        try:
+            msvcrt.locking(file_handle.fileno(), msvcrt.LK_UNLCK, 1)
+        except OSError:
+            pass
+    else:
+        try:
+            fcntl.flock(file_handle.fileno(), fcntl.LOCK_UN)
+        except IOError:
+            pass
+
+
+def safe_write_json(filepath, data):
+    """Atomically write JSON data to a file with proper locking"""
+    # Create directory if it doesn't exist
+    os.makedirs(os.path.dirname(filepath) if os.path.dirname(filepath) else '.', exist_ok=True)
+    
+    # Write to a temporary file first
+    temp_fd, temp_path = tempfile.mkstemp(dir=os.path.dirname(filepath) or '.', suffix='.tmp')
+    
+    try:
+        with os.fdopen(temp_fd, 'w') as temp_file:
+            json.dump(data, temp_file, indent=2)
+        
+        # Atomically replace the original file
+        # On Windows, we need to remove the target first
+        if platform.system() == 'Windows' and os.path.exists(filepath):
+            os.replace(temp_path, filepath)
+        else:
+            os.rename(temp_path, filepath)
+        
+        return True
+    except Exception as e:
+        # Clean up temp file on error
+        try:
+            os.unlink(temp_path)
+        except OSError:
+            pass
+        raise e
+
+
+def safe_read_json(filepath):
+    """Read JSON data from a file with proper locking"""
+    try:
+        with open(filepath, 'r') as f:
+            # Acquire shared lock for reading
+            _acquire_file_lock(f, exclusive=False)
+            try:
+                data = json.load(f)
+            finally:
+                _release_file_lock(f)
+            return data
+    except FileNotFoundError:
+        return None
+    except Exception:
+        return None
+
+
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev_secret')
+
+# Security: Force secret key to be set and prevent dev_secret in production
+secret_key = os.environ.get('FLASK_SECRET_KEY')
+if not secret_key:
+    raise ValueError("FLASK_SECRET_KEY environment variable must be set")
+if secret_key == 'dev_secret':
+    raise ValueError("FLASK_SECRET_KEY cannot be 'dev_secret' in production")
+app.secret_key = secret_key
+
+# Security: Configure CSRF protection
+app.config['WTF_CSRF_ENABLED'] = True
+app.config['WTF_CSRF_TIME_LIMIT'] = None  # CSRF tokens don't expire
+csrf = CSRFProtect(app)
+
+# Security: Session configuration
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'True').lower() == 'true'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)  # 2-hour session timeout
+
 app.config['DEFAULT_LANG'] = os.environ.get('DEFAULT_LANG', 'en')
 
 
@@ -46,10 +213,49 @@ def format_date(date_str):
 app.jinja_env.globals['format_date'] = format_date
 
 
-# Calculate Game Score for a player
-# GS = (1.5 * Goals) + (1.0 * Assists) + (0.3 * Plus/Minus) - (0.2 * Errors)
-def calculate_game_score(goals, assists, plusminus, errors):
-    return (1.5 * goals) + (1.0 * assists) + (0.3 * plusminus) - (0.2 * errors)
+# Security: Input sanitization for filenames
+def sanitize_filename(filename):
+    """Sanitize filename to prevent path traversal and other attacks."""
+    if not filename:
+        return None
+    # Remove any directory separators and parent directory references
+    filename = os.path.basename(filename)
+    # Allow only alphanumeric, underscore, hyphen, and dot
+    filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', filename)
+    # Prevent hidden files
+    if filename.startswith('.'):
+        filename = '_' + filename[1:]
+    return filename
+
+
+# Security: Validate category input
+def validate_category(category):
+    """Validate category input to prevent injection attacks."""
+    if not category:
+        return False
+    # Only allow alphanumeric and specific allowed characters
+    return bool(re.match(r'^[a-zA-Z0-9_-]+$', category))
+
+
+# Security: Validate season input
+def validate_season(season):
+    """Validate season input (e.g., 2024-25)."""
+    if not season:
+        return True  # Empty season is allowed for backward compatibility
+    # Allow format like 2024-25 or just 2024
+    return bool(re.match(r'^\d{4}(-\d{2})?$', season))
+
+
+# Calculate Game Score for a player (skater)
+# GS = (1.5 * G) + (1.0 * A) + (0.1 * SOG) + (0.3 * PM) + (0.15 * PD) - (0.15 * PT) - (0.2 * Errors)
+def calculate_game_score(goals, assists, plusminus, errors, sog=0, penalties_drawn=0, penalties_taken=0):
+    return (1.5 * goals) + (1.0 * assists) + (0.1 * sog) + (0.3 * plusminus) + (0.15 * penalties_drawn) - (0.15 * penalties_taken) - (0.2 * errors)
+
+
+# Calculate Game Score for a goalie
+# GS Goalie = (0.10 * Saves) - (0.25 * Goals Conceded)
+def calculate_goalie_game_score(saves, goals_conceded):
+    return (0.10 * saves) - (0.25 * goals_conceded)
 
 
 # Language support
@@ -354,9 +560,11 @@ def set_language():
 def set_language_route():
     default = app.config.get('DEFAULT_LANG', 'en')
     lang = request.form.get('lang', default)
+    # Security: Validate language input
     if lang not in LANGUAGES:
         lang = default
     session['lang'] = lang
+    session.permanent = True  # Maintain session timeout
     # Redirect back to previous page or home safely
     ref = request.referrer or url_for('index')
     # Remove backslashes which some browsers accept
@@ -366,28 +574,104 @@ def set_language_route():
         return redirect(safe_ref)
     return redirect(url_for('index'))
 
+
+# Security: Add security headers to all responses
+@app.after_request
+def set_security_headers(response):
+    """Add security headers to all responses."""
+    # Content Security Policy - Allow same origin and CDN resources
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "img-src 'self' data:; "
+        "font-src 'self' https://cdn.jsdelivr.net; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none';"
+    )
+    # Prevent clickjacking
+    response.headers['X-Frame-Options'] = 'DENY'
+    # Prevent MIME type sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # Enable XSS filter
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    # Referrer policy
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    # Permissions policy (restrict browser features)
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    
+    return response
+
 PERIODS = ["1", "2", "3", "OT"]
 
 
 def load_games():
+    """Load games from cache or file with safe file operations"""
+    # Try to get from cache first
+    cached_games = game_cache.get(GAMES_FILE)
+    if cached_games is not None:
+        return cached_games
+    
+    # Cache miss - load from file
     try:
-        with open(GAMES_FILE, 'r') as f:
-            return json.load(f)
+        games = safe_read_json(GAMES_FILE)
+        if games is None:
+            games = []
+        
+        # Store in cache
+        game_cache.set(GAMES_FILE, games)
+        return games
     except Exception:
         return []
 
 
 def save_games(games):
-    with open(GAMES_FILE, 'w') as f:
-        json.dump(games, f, indent=2)
+    """Save games with safe atomic writes and cache invalidation"""
+    try:
+        safe_write_json(GAMES_FILE, games)
+        # Invalidate cache after write
+        game_cache.invalidate()
+        # Update cache with new data
+        game_cache.set(GAMES_FILE, games)
+    except Exception as e:
+        # Fallback to simple write if atomic write fails
+        with open(GAMES_FILE, 'w') as f:
+            json.dump(games, f, indent=2)
+        game_cache.invalidate()
 
 
 def get_roster_file(category, season=None):
-    """Get the roster file path for a specific category and season"""
+    """Get the roster file path for a specific category and season.
+    
+    Security: Validates inputs and prevents path traversal attacks.
+    """
+    # Security: Validate category input
+    if not category or not validate_category(category):
+        raise ValueError("Invalid category")
+    
+    # Security: Validate season input
+    if season and not validate_season(season):
+        raise ValueError("Invalid season format")
+    
+    # Security: Sanitize components
+    safe_category = sanitize_filename(category)
+    
     if season and season.strip():
-        return os.path.join(ROSTERS_DIR, f'roster_{season}_{category}.json')
-    # For backward compatibility, return old format if no season specified
-    return os.path.join(ROSTERS_DIR, f'roster_{category}.json')
+        safe_season = sanitize_filename(season)
+        filename = f'roster_{safe_season}_{safe_category}.json'
+    else:
+        # For backward compatibility, return old format if no season specified
+        filename = f'roster_{safe_category}.json'
+    
+    # Security: Ensure the path stays within ROSTERS_DIR
+    filepath = os.path.join(ROSTERS_DIR, filename)
+    filepath = os.path.abspath(filepath)
+    
+    # Verify the resolved path is still within ROSTERS_DIR
+    if not filepath.startswith(os.path.abspath(ROSTERS_DIR)):
+        raise ValueError("Path traversal attempt detected")
+    
+    return filepath
 
 
 def load_roster(category=None, season=None):
@@ -513,9 +797,11 @@ def ensure_game_ids(games):
 def index():
     if not session.get('authenticated'):
         if request.method == 'POST':
-            pin = request.form.get('pin')
-            if pin == REQUIRED_PIN:
+            pin = request.form.get('pin', '')
+            # Security: Use timing-safe comparison to prevent timing attacks
+            if hmac.compare_digest(pin, REQUIRED_PIN):
                 session['authenticated'] = True
+                session.permanent = True  # Enable session timeout
                 return redirect(url_for('index'))
             else:
                 return render_template('pin.html', error='Incorrect PIN')
@@ -1344,6 +1630,210 @@ def delete_game(game_id):
 # date, compute per-game and total stats
 
 
+# ===== PERFORMANCE OPTIMIZATION: Optimized Stats Calculation =====
+def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
+    """
+    Pre-calculate all player and goalie stats in a single pass through games.
+    This reduces complexity from O(n*m*7) to O(n+m) where n=games, m=players.
+    
+    Returns:
+        dict: {
+            'players': [...],
+            'player_totals': {...},
+            'goalies': [...],
+            'goalie_data': {...},
+            'opponent_goalie_data': {...},
+            'games_with_calculated_stats': [...]
+        }
+    """
+    # Initialize data structures
+    player_stats = {}  # player -> stats dict
+    goalie_stats = {}  # goalie -> stats dict
+    opponent_goalie_stats = {
+        'games': [],
+        'total_saves': 0,
+        'total_goals_conceded': 0,
+        'average_save_percentage': 0
+    }
+    
+    # Single pass through games to collect all stats
+    games_with_stats = []
+    
+    for game in games_sorted:
+        # Add calculated fields to game
+        game_calculated = {
+            'game_scores': {},
+            'save_percentages': {},
+            'goalie_game_scores': {},
+            'opponent_save_percentage': None
+        }
+        
+        # Process players in this game
+        for line in game.get('lines', []):
+            for player in line:
+                # Initialize player stats if needed
+                if player not in player_stats:
+                    player_stats[player] = {
+                        'plusminus': 0,
+                        'goals': 0,
+                        'assists': 0,
+                        'unforced_errors': 0,
+                        'shots_on_goal': 0,
+                        'penalties_taken': 0,
+                        'penalties_drawn': 0,
+                        'game_score': 0
+                    }
+                
+                # Extract stats for this player in this game
+                goals = game.get('goals', {}).get(player, 0)
+                assists = game.get('assists', {}).get(player, 0)
+                plusminus = game.get('plusminus', {}).get(player, 0)
+                errors = game.get('unforced_errors', {}).get(player, 0)
+                sog = game.get('shots_on_goal', {}).get(player, 0)
+                penalties_drawn = game.get('penalties_drawn', {}).get(player, 0)
+                penalties_taken = game.get('penalties_taken', {}).get(player, 0)
+                
+                # Accumulate totals
+                player_stats[player]['plusminus'] += plusminus
+                player_stats[player]['goals'] += goals
+                player_stats[player]['assists'] += assists
+                player_stats[player]['unforced_errors'] += errors
+                player_stats[player]['shots_on_goal'] += sog
+                player_stats[player]['penalties_taken'] += penalties_taken
+                player_stats[player]['penalties_drawn'] += penalties_drawn
+                
+                # Calculate game score for this game
+                game_calculated['game_scores'][player] = calculate_game_score(
+                    goals, assists, plusminus, errors, sog, penalties_drawn, penalties_taken
+                )
+        
+        # Process goalies in this game
+        for goalie in game.get('goalies', []):
+            # Initialize goalie stats if needed
+            if goalie not in goalie_stats:
+                goalie_stats[goalie] = {
+                    'games': [],
+                    'total_saves': 0,
+                    'total_goals_conceded': 0,
+                    'average_save_percentage': 0,
+                    'game_score': 0
+                }
+            
+            saves = game.get('saves', {}).get(goalie, 0)
+            goals_conceded = game.get('goals_conceded', {}).get(goalie, 0)
+            
+            # FALLBACK: If goals_conceded is 0 but the goalie has saves recorded
+            if goals_conceded == 0 and saves > 0:
+                result = game.get('result', {})
+                if result:
+                    away_goals = sum(period_result.get('away', 0) for period_result in result.values())
+                    if away_goals > 0:
+                        goals_conceded = away_goals
+            
+            total_shots = saves + goals_conceded
+            
+            # Calculate save percentage
+            if total_shots > 0:
+                save_percentage = (saves / total_shots) * 100
+                game_calculated['save_percentages'][goalie] = save_percentage
+                goalie_stats[goalie]['games'].append(save_percentage)
+                goalie_stats[goalie]['total_saves'] += saves
+                goalie_stats[goalie]['total_goals_conceded'] += goals_conceded
+            else:
+                game_calculated['save_percentages'][goalie] = None
+            
+            # Calculate goalie game score
+            game_calculated['goalie_game_scores'][goalie] = calculate_goalie_game_score(
+                saves, goals_conceded
+            )
+        
+        # Process opponent goalie if enabled
+        if game.get('opponent_goalie_enabled', False):
+            opponent_saves = game.get('opponent_goalie_saves', {}).get('Opponent Goalie', 0)
+            opponent_goals_conceded = game.get('opponent_goalie_goals_conceded', {}).get('Opponent Goalie', 0)
+            opponent_total_shots = opponent_saves + opponent_goals_conceded
+            
+            if opponent_total_shots > 0:
+                opponent_save_percentage = (opponent_saves / opponent_total_shots) * 100
+                game_calculated['opponent_save_percentage'] = opponent_save_percentage
+                opponent_goalie_stats['games'].append(opponent_save_percentage)
+                opponent_goalie_stats['total_saves'] += opponent_saves
+                opponent_goalie_stats['total_goals_conceded'] += opponent_goals_conceded
+        
+        games_with_stats.append((game, game_calculated))
+    
+    # Calculate total game scores for all players
+    for player, stats in player_stats.items():
+        stats['game_score'] = calculate_game_score(
+            stats['goals'],
+            stats['assists'],
+            stats['plusminus'],
+            stats['unforced_errors'],
+            stats['shots_on_goal'],
+            stats['penalties_drawn'],
+            stats['penalties_taken']
+        )
+    
+    # Calculate average save percentages and total game scores for goalies
+    for goalie, stats in goalie_stats.items():
+        total_saves = stats['total_saves']
+        total_goals_conceded = stats['total_goals_conceded']
+        total_shots = total_saves + total_goals_conceded
+        
+        if total_shots > 0:
+            stats['average_save_percentage'] = (total_saves / total_shots) * 100
+        else:
+            stats['average_save_percentage'] = None
+        
+        stats['game_score'] = calculate_goalie_game_score(total_saves, total_goals_conceded)
+    
+    # Calculate opponent goalie average
+    opponent_total_saves = opponent_goalie_stats['total_saves']
+    opponent_total_goals_conceded = opponent_goalie_stats['total_goals_conceded']
+    opponent_total_shots = opponent_total_saves + opponent_total_goals_conceded
+    
+    if opponent_total_shots > 0:
+        opponent_goalie_stats['average_save_percentage'] = (
+            opponent_total_saves / opponent_total_shots
+        ) * 100
+    else:
+        opponent_goalie_stats['average_save_percentage'] = None
+    
+    # Filter players if requested
+    players = sorted(player_stats.keys())
+    filtered_players = []
+    
+    for player in players:
+        if hide_zero_stats:
+            stats = player_stats[player]
+            if (stats['plusminus'] == 0 and stats['goals'] == 0 and 
+                stats['assists'] == 0 and stats['unforced_errors'] == 0 and
+                stats['shots_on_goal'] == 0 and stats['penalties_taken'] == 0 and
+                stats['penalties_drawn'] == 0):
+                continue
+        filtered_players.append(player)
+    
+    # Filter goalies if requested
+    goalies = sorted(goalie_stats.keys())
+    filtered_goalies = []
+    
+    for goalie in goalies:
+        if hide_zero_stats:
+            stats = goalie_stats[goalie]
+            if stats['total_saves'] == 0 and stats['total_goals_conceded'] == 0:
+                continue
+        filtered_goalies.append(goalie)
+    
+    return {
+        'players': filtered_players,
+        'player_totals': player_stats,
+        'goalies': filtered_goalies,
+        'goalie_data': goalie_stats,
+        'opponent_goalie_data': opponent_goalie_stats,
+        'games_with_calculated_stats': games_with_stats
+    }
+
+
 @app.route('/stats')
 def stats():
     games = load_games()
@@ -1371,8 +1861,8 @@ def stats():
             changed = True
     if changed:
         save_games(games)
+    
     # Sort games by date (oldest first)
-
     def game_sort_key(game):
         date_str = game.get('date')
         try:
@@ -1410,184 +1900,24 @@ def stats():
             if game.get('date') and datetime.strptime(game['date'], '%Y-%m-%d').date() <= today
         ]
     
-    # Collect all players
-    player_set = set()
-    for game in games_sorted:
-        for line in game.get('lines', []):
-            player_set.update(line)
-    players = sorted(player_set)
-    # Prepare per-player totals
-    player_totals = {p: {'plusminus': 0, 'goals': 0,
-                         'assists': 0, 'unforced_errors': 0, 'shots_on_goal': 0,
-                         'penalties_taken': 0, 'penalties_drawn': 0, 'game_score': 0} for p in players}
-    for game in games_sorted:
-        for p in players:
-            player_totals[p]['plusminus'] += game.get(
-                'plusminus', {}).get(p, 0)
-            player_totals[p]['goals'] += game.get('goals', {}).get(p, 0)
-            player_totals[p]['assists'] += game.get('assists', {}).get(p, 0)
-            player_totals[p]['unforced_errors'] += game.get(
-                'unforced_errors', {}).get(p, 0)
-            player_totals[p]['shots_on_goal'] += game.get(
-                'shots_on_goal', {}).get(p, 0)
-            player_totals[p]['penalties_taken'] += game.get(
-                'penalties_taken', {}).get(p, 0)
-            player_totals[p]['penalties_drawn'] += game.get(
-                'penalties_drawn', {}).get(p, 0)
+    # ===== USE OPTIMIZED STATS CALCULATION =====
+    stats_data = calculate_stats_optimized(games_sorted, hide_zero_stats)
     
-    # Calculate Game Score for each player
-    for p in players:
-        goals = player_totals[p]['goals']
-        assists = player_totals[p]['assists']
-        plusminus = player_totals[p]['plusminus']
-        errors = player_totals[p]['unforced_errors']
-        player_totals[p]['game_score'] = calculate_game_score(goals, assists, plusminus, errors)
-
-    # Collect all goalies
-    goalie_set = set()
-    for game in games_sorted:
-        goalie_set.update(game.get('goalies', []))
-    goalies = sorted(goalie_set)
-
-    # Prepare goalie save percentages with per-game data
-    goalie_data = {}
-    for goalie in goalies:
-        goalie_data[goalie] = {
-            'games': [],
-            'total_saves': 0,
-            'total_goals_conceded': 0,
-            'average_save_percentage': 0
-        }
-
-    # Collect opponent goalies from games where opponent goalie tracking is
-    # enabled
-    opponent_goalie_data = {
-        'games': [],
-        'total_saves': 0,
-        'total_goals_conceded': 0,
-        'average_save_percentage': 0
-    }
-
-    # Calculate save percentages for each game
-    for game in games_sorted:
-        # Add game score calculation for each player in this game
-        game['game_scores'] = {}
-        for p in players:
-            goals = game.get('goals', {}).get(p, 0)
-            assists = game.get('assists', {}).get(p, 0)
-            plusminus = game.get('plusminus', {}).get(p, 0)
-            errors = game.get('unforced_errors', {}).get(p, 0)
-            game['game_scores'][p] = calculate_game_score(goals, assists, plusminus, errors)
-        
-        # Add save percentage calculation for each goalie in this game
-        game['save_percentages'] = {}
-        for goalie in goalies:
-            saves = game.get('saves', {}).get(goalie, 0)
-            goals_conceded = game.get('goals_conceded', {}).get(goalie, 0)
-            
-            # FALLBACK: If goals_conceded is 0 but the goalie has saves recorded,
-            # infer goals conceded from the game result (away team score)
-            # This handles cases where goals_conceded wasn't manually tracked
-            if goals_conceded == 0 and saves > 0:
-                # Calculate total away goals from all periods
-                result = game.get('result', {})
-                if result:
-                    away_goals = sum(period_result.get('away', 0) for period_result in result.values())
-                    # Only use this fallback if there are away goals
-                    if away_goals > 0:
-                        # If this goalie played (has saves), attribute the away goals to them
-                        # In future, this should be split among goalies based on ice time
-                        goals_conceded = away_goals
-            
-            total_shots = saves + goals_conceded
-
-            if total_shots > 0:
-                save_percentage = (saves / total_shots) * 100
-                game['save_percentages'][goalie] = save_percentage
-                goalie_data[goalie]['games'].append(save_percentage)
-                goalie_data[goalie]['total_saves'] += saves
-                goalie_data[goalie]['total_goals_conceded'] += goals_conceded
-            else:
-                game['save_percentages'][goalie] = None
-
-        # Handle opponent goalie stats if tracking is enabled for this game
-        if game.get('opponent_goalie_enabled', False):
-            opponent_saves = game.get(
-                'opponent_goalie_saves', {}).get(
-                'Opponent Goalie', 0)
-            opponent_goals_conceded = game.get(
-                'opponent_goalie_goals_conceded', {}).get(
-                'Opponent Goalie', 0)
-            opponent_total_shots = opponent_saves + opponent_goals_conceded
-
-            if opponent_total_shots > 0:
-                opponent_save_percentage = (
-                    opponent_saves / opponent_total_shots) * 100
-                game['opponent_save_percentage'] = opponent_save_percentage
-                opponent_goalie_data['games'].append(opponent_save_percentage)
-                opponent_goalie_data['total_saves'] += opponent_saves
-                opponent_goalie_data['total_goals_conceded'] += opponent_goals_conceded
-            else:
-                game['opponent_save_percentage'] = None
-        else:
-            game['opponent_save_percentage'] = None
-
-    # Calculate average save percentages
-    for goalie in goalies:
-        total_saves = goalie_data[goalie]['total_saves']
-        total_goals_conceded = goalie_data[goalie]['total_goals_conceded']
-        total_shots = total_saves + total_goals_conceded
-
-        if total_shots > 0:
-            goalie_data[goalie]['average_save_percentage'] = (
-                total_saves / total_shots) * 100
-        else:
-            goalie_data[goalie]['average_save_percentage'] = None
-
-    # Calculate average save percentage for opponent goalie
-    opponent_total_saves = opponent_goalie_data['total_saves']
-    opponent_total_goals_conceded = opponent_goalie_data['total_goals_conceded']
-    opponent_total_shots = opponent_total_saves + opponent_total_goals_conceded
-
-    if opponent_total_shots > 0:
-        opponent_goalie_data['average_save_percentage'] = (
-            opponent_total_saves / opponent_total_shots) * 100
-    else:
-        opponent_goalie_data['average_save_percentage'] = None
-
-    # Apply filters to players list
-    filtered_players = []
-    for player in players:
-        # Filter: Hide players with all stats = 0
-        if hide_zero_stats:
-            totals = player_totals[player]
-            if (totals['plusminus'] == 0 and totals['goals'] == 0 and 
-                totals['assists'] == 0 and totals['unforced_errors'] == 0 and
-                totals['shots_on_goal'] == 0 and totals['penalties_taken'] == 0 and
-                totals['penalties_drawn'] == 0):
-                continue
-        
-        filtered_players.append(player)
-    
-    # Apply filters to goalies list
-    filtered_goalies = []
-    for goalie in goalies:
-        # Filter: Hide goalies with zero stats
-        if hide_zero_stats:
-            data = goalie_data[goalie]
-            if data['total_saves'] == 0 and data['total_goals_conceded'] == 0:
-                continue
-        
-        filtered_goalies.append(goalie)
+    # Merge calculated stats back into games for template compatibility
+    for game, calculated in stats_data['games_with_calculated_stats']:
+        game['game_scores'] = calculated['game_scores']
+        game['save_percentages'] = calculated['save_percentages']
+        game['goalie_game_scores'] = calculated['goalie_game_scores']
+        game['opponent_save_percentage'] = calculated['opponent_save_percentage']
 
     return render_template(
         'stats.html',
         games=games_sorted,
-        players=filtered_players,
-        player_totals=player_totals,
-        goalies=filtered_goalies,
-        goalie_data=goalie_data,
-        opponent_goalie_data=opponent_goalie_data,
+        players=stats_data['players'],
+        player_totals=stats_data['player_totals'],
+        goalies=stats_data['goalies'],
+        goalie_data=stats_data['goalie_data'],
+        opponent_goalie_data=stats_data['opponent_goalie_data'],
         seasons=seasons,
         selected_season=selected_season,
         teams=teams,

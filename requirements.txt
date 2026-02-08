@@ -3,5 +3,6 @@
 # If you prefer exact pins, run `pip freeze > requirements.txt` in a reproducible env.
 
 Flask>=2.2,<3.0
+Flask-WTF>=1.0,<2.0
 python-dotenv>=1.0,<2.0
 gunicorn>=20.1.0,<21.0

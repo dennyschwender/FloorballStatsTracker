@@ -16,6 +16,7 @@
     </div>
     
     <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="mb-3">
             <label for="json_data" class="form-label">Game Data (JSON format)</label>
             <textarea 

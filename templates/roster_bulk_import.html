@@ -78,6 +78,7 @@
     </div>
 
     <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="season" id="seasonField" value="{{ season if season else '' }}">
         <input type="hidden" name="category" id="categoryField" value="{{ category if category else '' }}">
 

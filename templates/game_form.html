@@ -134,6 +134,7 @@
     <h1 class="mb-4" style="font-size:1.2rem;">{{ g.t['modify_game'] if modify else g.t['create_new_game'] }}</h1>
     <form method="post" action="{{ url_for('modify_game', game_id=game_id) if modify else '/create_game' }}"
         id="gameForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="mb-3">
             <label for="season" class="form-label">{{ g.t['season'] }}</label>
             {% if modify %}
@@ -346,6 +347,7 @@
     </form>
     {% if modify %}
     <form id="delete-game-form" method="post" action="/delete_game/{{ game_id }}" class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <button type="submit" class="btn btn-danger btn-sm">{{ g.t['delete_game'] }}</button>
     </form>
     {% endif %}

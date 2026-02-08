@@ -88,6 +88,7 @@
                     <li class="nav-item"><a class="nav-link" href="/roster">{{ g.t['roster'] }}</a></li>
                 </ul>
                 <form class="d-flex order-2 order-lg-1" method="post" action="/set_language">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <select name="lang" class="form-select me-2" aria-label="Change language"
                         onchange="this.form.submit()">
                         <option value="en" {% if g.get('lang', 'en' )=='en' %}selected{% endif %}>{{ g.t['lang_en'] }}

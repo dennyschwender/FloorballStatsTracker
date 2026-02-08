@@ -1,12 +1,13 @@
 """
 Tests for Game Score (GS) calculation and display.
 
-Game Score formula: GS = (1.5 * Goals) + (1.0 * Assists) + (0.3 * Plus/Minus) - (0.2 * Errors)
+Game Score formula: GS = (1.5 * G) + (1.0 * A) + (0.1 * SOG) + (0.3 * PM) + (0.15 * PD) - (0.15 * PT) - (0.2 * Errors)
+Goalie GS formula: GS = (0.10 * Saves) - (0.25 * Goals Conceded)
 """
 import json
 import pytest
 
-from app import GAMES_FILE, calculate_game_score
+from app import GAMES_FILE, calculate_game_score, calculate_goalie_game_score
 
 
 def _read_games():
@@ -52,10 +53,10 @@ class TestGameScoreCalculation:
 
     def test_basic_calculation(self):
         """Test basic Game Score calculation with positive values."""
-        # GS = (1.5 * 2) + (1.0 * 3) + (0.3 * 5) - (0.2 * 1)
-        # GS = 3.0 + 3.0 + 1.5 - 0.2 = 7.3
-        result = calculate_game_score(goals=2, assists=3, plusminus=5, errors=1)
-        assert result == 7.3
+        # GS = (1.5 * 2) + (1.0 * 3) + (0.1 * 5) + (0.3 * 5) + (0.15 * 2) - (0.15 * 1) - (0.2 * 1)
+        # GS = 3.0 + 3.0 + 0.5 + 1.5 + 0.3 - 0.15 - 0.2 = 7.95
+        result = calculate_game_score(goals=2, assists=3, plusminus=5, errors=1, sog=5, penalties_drawn=2, penalties_taken=1)
+        assert round(result, 2) == 7.95
 
     def test_zero_values(self):
         """Test Game Score calculation with all zeros."""
@@ -64,17 +65,17 @@ class TestGameScoreCalculation:
 
     def test_negative_plusminus(self):
         """Test Game Score calculation with negative plus/minus."""
-        # GS = (1.5 * 1) + (1.0 * 1) + (0.3 * -3) - (0.2 * 2)
-        # GS = 1.5 + 1.0 - 0.9 - 0.4 = 1.2
-        result = calculate_game_score(goals=1, assists=1, plusminus=-3, errors=2)
-        assert round(result, 1) == 1.2
+        # GS = (1.5 * 1) + (1.0 * 1) + (0.1 * 3) + (0.3 * -3) + (0.15 * 1) - (0.15 * 2) - (0.2 * 2)
+        # GS = 1.5 + 1.0 + 0.3 - 0.9 + 0.15 - 0.3 - 0.4 = 1.35
+        result = calculate_game_score(goals=1, assists=1, plusminus=-3, errors=2, sog=3, penalties_drawn=1, penalties_taken=2)
+        assert round(result, 2) == 1.35
 
     def test_high_errors_negative_score(self):
-        """Test Game Score calculation where errors result in negative score."""
-        # GS = (1.5 * 0) + (1.0 * 0) + (0.3 * -2) - (0.2 * 5)
-        # GS = 0 + 0 - 0.6 - 1.0 = -1.6
-        result = calculate_game_score(goals=0, assists=0, plusminus=-2, errors=5)
-        assert result == -1.6
+        """Test Game Score calculation where errors and penalties result in negative score."""
+        # GS = (1.5 * 0) + (1.0 * 0) + (0.1 * 0) + (0.3 * -2) + (0.15 * 0) - (0.15 * 3) - (0.2 * 5)
+        # GS = 0 + 0 + 0 - 0.6 + 0 - 0.45 - 1.0 = -2.05
+        result = calculate_game_score(goals=0, assists=0, plusminus=-2, errors=5, sog=0, penalties_drawn=0, penalties_taken=3)
+        assert round(result, 2) == -2.05
 
     def test_only_goals(self):
         """Test Game Score calculation with only goals."""
@@ -90,11 +91,72 @@ class TestGameScoreCalculation:
 
     def test_realistic_example(self):
         """Test with realistic game data."""
-        # Player with 2 goals, 1 assist, +2, 1 error
-        # GS = (1.5 * 2) + (1.0 * 1) + (0.3 * 2) - (0.2 * 1)
-        # GS = 3.0 + 1.0 + 0.6 - 0.2 = 4.4
-        result = calculate_game_score(goals=2, assists=1, plusminus=2, errors=1)
-        assert round(result, 1) == 4.4
+        # Player with 2 goals, 1 assist, +2, 1 error, 4 SOG, 1 PD, 0 PT
+        # GS = (1.5 * 2) + (1.0 * 1) + (0.1 * 4) + (0.3 * 2) + (0.15 * 1) - (0.15 * 0) - (0.2 * 1)
+        # GS = 3.0 + 1.0 + 0.4 + 0.6 + 0.15 - 0 - 0.2 = 4.95
+        result = calculate_game_score(goals=2, assists=1, plusminus=2, errors=1, sog=4, penalties_drawn=1, penalties_taken=0)
+        assert round(result, 2) == 4.95
+
+    def test_only_sog(self):
+        """Test Game Score calculation with only SOG."""
+        # GS = 0 + 0 + (0.1 * 10) + 0 + 0 - 0 - 0 = 1.0
+        result = calculate_game_score(goals=0, assists=0, plusminus=0, errors=0, sog=10, penalties_drawn=0, penalties_taken=0)
+        assert result == 1.0
+
+    def test_penalties_drawn_vs_taken(self):
+        """Test that penalties drawn increase GS and penalties taken decrease it."""
+        # GS with penalties drawn = (0.15 * 3) = 0.45
+        result1 = calculate_game_score(goals=0, assists=0, plusminus=0, errors=0, sog=0, penalties_drawn=3, penalties_taken=0)
+        assert round(result1, 2) == 0.45
+        
+        # GS with penalties taken = -(0.15 * 3) = -0.45
+        result2 = calculate_game_score(goals=0, assists=0, plusminus=0, errors=0, sog=0, penalties_drawn=0, penalties_taken=3)
+        assert round(result2, 2) == -0.45
+
+    def test_default_values(self):
+        """Test that function works with default values (backward compatibility)."""
+        # Only required params, others default to 0
+        result = calculate_game_score(goals=2, assists=1, plusminus=1, errors=0)
+        # GS = (1.5 * 2) + (1.0 * 1) + (0.1 * 0) + (0.3 * 1) + (0.15 * 0) - (0.15 * 0) - (0.2 * 0)
+        # GS = 3.0 + 1.0 + 0 + 0.3 + 0 - 0 - 0 = 4.3
+        assert result == 4.3
+
+
+class TestGoalieGameScore:
+    """Test the calculate_goalie_game_score() helper function."""
+
+    def test_basic_goalie_calculation(self):
+        """Test basic goalie Game Score calculation."""
+        # GS = (0.10 * 30) - (0.25 * 2)
+        # GS = 3.0 - 0.5 = 2.5
+        result = calculate_goalie_game_score(saves=30, goals_conceded=2)
+        assert result == 2.5
+
+    def test_goalie_zero_values(self):
+        """Test goalie Game Score with no activity."""
+        result = calculate_goalie_game_score(saves=0, goals_conceded=0)
+        assert result == 0.0
+
+    def test_goalie_shutout(self):
+        """Test goalie Game Score for a shutout."""
+        # GS = (0.10 * 40) - (0.25 * 0) = 4.0
+        result = calculate_goalie_game_score(saves=40, goals_conceded=0)
+        assert result == 4.0
+
+    def test_goalie_bad_game(self):
+        """Test goalie Game Score for a bad performance."""
+        # GS = (0.10 * 10) - (0.25 * 8)
+        # GS = 1.0 - 2.0 = -1.0
+        result = calculate_goalie_game_score(saves=10, goals_conceded=8)
+        assert result == -1.0
+
+    def test_goalie_realistic_example(self):
+        """Test with realistic goalie data."""
+        # Goalie with 25 saves, 3 goals conceded
+        # GS = (0.10 * 25) - (0.25 * 3)
+        # GS = 2.5 - 0.75 = 1.75
+        result = calculate_goalie_game_score(saves=25, goals_conceded=3)
+        assert result == 1.75
 
 
 class TestGameScorePerGame:
@@ -107,6 +169,9 @@ class TestGameScorePerGame:
         game['assists'] = {'Player1': 1, 'Player2': 1}
         game['plusminus'] = {'Player1': 2, 'Player2': -1}
         game['unforced_errors'] = {'Player1': 1, 'Player2': 2}
+        game['shots_on_goal'] = {'Player1': 5, 'Player2': 3}
+        game['penalties_drawn'] = {'Player1': 1, 'Player2': 0}
+        game['penalties_taken'] = {'Player1': 0, 'Player2': 1}
         
         _write_games([game])
 
@@ -117,11 +182,11 @@ class TestGameScorePerGame:
         # Check that Game Score section exists
         assert 'Game Score' in data
         
-        # Player1: (1.5 * 2) + (1.0 * 1) + (0.3 * 2) - (0.2 * 1) = 4.4
-        assert '4.4' in data
+        # Player1: (1.5*2) + (1.0*1) + (0.1*5) + (0.3*2) + (0.15*1) - (0.15*0) - (0.2*1) = 5.05
+        assert '5.0' in data or '5.1' in data
         
-        # Player2: (1.5 * 0) + (1.0 * 1) + (0.3 * -1) - (0.2 * 2) = 0.3
-        assert '0.3' in data
+        # Player2: (1.5*0) + (1.0*1) + (0.1*3) + (0.3*-1) + (0.15*0) - (0.15*1) - (0.2*2) = 0.45
+        assert '0.4' in data or '0.5' in data
 
     def test_game_score_with_multiple_games(self, client):
         """Test that Game Score aggregates correctly across multiple games."""
@@ -133,6 +198,9 @@ class TestGameScorePerGame:
         game1['assists'] = {'Player1': 0, 'Player2': 1}
         game1['plusminus'] = {'Player1': 1, 'Player2': 0}
         game1['unforced_errors'] = {'Player1': 0, 'Player2': 1}
+        game1['shots_on_goal'] = {'Player1': 2, 'Player2': 1}
+        game1['penalties_drawn'] = {'Player1': 0, 'Player2': 1}
+        game1['penalties_taken'] = {'Player1': 0, 'Player2': 0}
         
         game2 = make_sample_game()
         game2['date'] = '2024-11-22'
@@ -140,6 +208,9 @@ class TestGameScorePerGame:
         game2['assists'] = {'Player1': 1, 'Player2': 0}
         game2['plusminus'] = {'Player1': 1, 'Player2': 1}
         game2['unforced_errors'] = {'Player1': 1, 'Player2': 0}
+        game2['shots_on_goal'] = {'Player1': 4, 'Player2': 2}
+        game2['penalties_drawn'] = {'Player1': 1, 'Player2': 0}
+        game2['penalties_taken'] = {'Player1': 0, 'Player2': 1}
         
         games = [game1, game2]
         ensure_game_ids(games)
@@ -149,15 +220,15 @@ class TestGameScorePerGame:
         assert rv.status_code == 200
         data = rv.data.decode('utf-8')
         
-        # Player1 total: Game1 (1.5*1 + 1.0*0 + 0.3*1 - 0.2*0 = 1.8)
-        #                + Game2 (1.5*2 + 1.0*1 + 0.3*1 - 0.2*1 = 4.1)
-        #                = 5.9
-        assert '5.9' in data
+        # Player1 total: Game1 (1.5*1 + 1.0*0 + 0.1*2 + 0.3*1 + 0.15*0 - 0.15*0 - 0.2*0 = 2.0)
+        #                + Game2 (1.5*2 + 1.0*1 + 0.1*4 + 0.3*1 + 0.15*1 - 0.15*0 - 0.2*1 = 4.65)
+        #                = 6.65 (rounded to 6.6 or 6.7)
+        assert '6.6' in data or '6.7' in data
         
-        # Player2 total: Game1 (1.5*0 + 1.0*1 + 0.3*0 - 0.2*1 = 0.8)
-        #                + Game2 (1.5*1 + 1.0*0 + 0.3*1 - 0.2*0 = 1.8)
-        #                = 2.6
-        assert '2.6' in data
+        # Player2 total: Game1 (1.5*0 + 1.0*1 + 0.1*1 + 0.3*0 + 0.15*1 - 0.15*0 - 0.2*1 = 1.05)
+        #                + Game2 (1.5*1 + 1.0*0 + 0.1*2 + 0.3*1 + 0.15*0 - 0.15*1 - 0.2*0 = 1.85)
+        #                = 2.9
+        assert '2.9' in data
 
 
 class TestGameScoreDisplay:
@@ -220,7 +291,10 @@ class TestGameScoreDisplay:
         game['assists'] = {'Player1': 1}
         game['plusminus'] = {'Player1': 1}
         game['unforced_errors'] = {'Player1': 1}
-        # GS = 1.5 + 1.0 + 0.3 - 0.2 = 2.6
+        game['shots_on_goal'] = {'Player1': 2}
+        game['penalties_drawn'] = {'Player1': 1}
+        game['penalties_taken'] = {'Player1': 0}
+        # GS = 1.5 + 1.0 + 0.2 + 0.3 + 0.15 - 0 - 0.2 = 2.95 (displayed as 2.9 or 3.0)
         
         _write_games([game])
 
@@ -228,8 +302,8 @@ class TestGameScoreDisplay:
         assert rv.status_code == 200
         data = rv.data.decode('utf-8')
         
-        # Should show 2.6, not 2.60 or 2.600000
-        assert '2.6' in data
+        # Should show rounded value
+        assert '2.9' in data or '3.0' in data
 
 
 class TestGameScoreEdgeCases:
@@ -268,6 +342,9 @@ class TestGameScoreEdgeCases:
         game['assists'] = {'Player1': 1, 'Player2': 0}
         game['plusminus'] = {'Player1': 1, 'Player2': 0}
         game['unforced_errors'] = {'Player1': 0, 'Player2': 0}
+        game['shots_on_goal'] = {'Player1': 3, 'Player2': 0}
+        game['penalties_drawn'] = {'Player1': 0, 'Player2': 0}
+        game['penalties_taken'] = {'Player1': 0, 'Player2': 0}
         # Player1 has non-zero Game Score, Player2 has zero
         
         _write_games([game])
@@ -287,8 +364,11 @@ class TestGameScoreEdgeCases:
         game['assists'] = {'Player1': 15}
         game['plusminus'] = {'Player1': 20}
         game['unforced_errors'] = {'Player1': 5}
-        # GS = (1.5 * 10) + (1.0 * 15) + (0.3 * 20) - (0.2 * 5)
-        # GS = 15 + 15 + 6 - 1 = 35.0
+        game['shots_on_goal'] = {'Player1': 25}
+        game['penalties_drawn'] = {'Player1': 3}
+        game['penalties_taken'] = {'Player1': 1}
+        # GS = (1.5 * 10) + (1.0 * 15) + (0.1 * 25) + (0.3 * 20) + (0.15 * 3) - (0.15 * 1) - (0.2 * 5)
+        # GS = 15 + 15 + 2.5 + 6 + 0.45 - 0.15 - 1 = 37.8
         
         _write_games([game])
 
@@ -297,7 +377,7 @@ class TestGameScoreEdgeCases:
         data = rv.data.decode('utf-8')
         
         # Should handle large numbers correctly
-        assert '35.0' in data
+        assert '37.8' in data or '37.9' in data
 
     def test_game_score_player_not_in_lines(self, client):
         """Test that players not in any line get dash (-) for Game Score."""
