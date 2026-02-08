@@ -3,9 +3,12 @@ import json
 import tempfile
 import threading
 import platform
+import re
+import hmac
 from flask import Flask, request, render_template, redirect, url_for, session, g, jsonify
+from flask_wtf.csrf import CSRFProtect
 from urllib.parse import urlparse
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Platform-specific imports for file locking
 if platform.system() == 'Windows':
@@ -13,7 +16,12 @@ if platform.system() == 'Windows':
 else:
     import fcntl
 
-REQUIRED_PIN = os.environ.get('FLOORBALL_PIN', '1717')
+# Security: Force FLOORBALL_PIN environment variable (no default allowed)
+REQUIRED_PIN = os.environ.get('FLOORBALL_PIN')
+if not REQUIRED_PIN:
+    raise ValueError("FLOORBALL_PIN environment variable must be set. No default allowed for security.")
+if len(REQUIRED_PIN) < 6:
+    raise ValueError("FLOORBALL_PIN must be at least 6 characters for security.")
 
 GAMES_FILE = 'gamesFiles/games.json'
 # Get the directory where app.py is located

@@ -77,6 +77,11 @@
     </div>
 
     <script>
+        // Helper function to get CSRF token
+        function getCsrfToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
         function createNewRoster() {
             const seasonName = document.getElementById('newSeasonName').value.trim();
             const categoryName = document.getElementById('newCategoryName').value.trim();
@@ -266,6 +271,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
                 },
                 body: JSON.stringify({
                     category: '{{ selected_category }}',
@@ -304,6 +310,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
                 },
                 body: JSON.stringify({
                     category: category,
@@ -324,6 +331,7 @@
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCsrfToken()
                                 },
                                 body: JSON.stringify({
                                     category: category,
