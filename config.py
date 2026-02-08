@@ -58,6 +58,12 @@ LANGUAGES = ['en', 'it']
 TRANSLATIONS = {
     'en': {
         'brand': 'Floorball Stats',
+        'enter_access_pin': 'Enter Access PIN',
+        'pin_placeholder': 'Enter PIN',
+        'enter': 'Enter',
+        'lang_en': 'English',
+        'lang_it': 'Italian',
+        'change': 'Change',
         'create_game': 'Create Game',
         'stats': 'Statistics',
         'create_new_game': 'Create New Game',
@@ -162,6 +168,12 @@ TRANSLATIONS = {
     },
     'it': {
         'brand': 'Floorball Stats',
+        'enter_access_pin': 'Inserisci PIN di Accesso',
+        'pin_placeholder': 'Inserisci PIN',
+        'enter': 'Entra',
+        'lang_en': 'Inglese',
+        'lang_it': 'Italiano',
+        'change': 'Cambia',
         'create_game': 'Crea Partita',
         'stats': 'Statistiche',
         'create_new_game': 'Crea Nuova Partita',
