@@ -237,7 +237,7 @@ def test_stats_totals_aggregation(client):
         make_sample_game(),
     ]
     # Ensure unique IDs
-    from app import ensure_game_ids
+    from services.game_service import ensure_game_ids
     ensure_game_ids(games)
     
     # Set different stats for each game

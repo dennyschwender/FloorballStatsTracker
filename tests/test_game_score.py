@@ -191,7 +191,7 @@ class TestGameScorePerGame:
 
     def test_game_score_with_multiple_games(self, client):
         """Test that Game Score aggregates correctly across multiple games."""
-        from app import ensure_game_ids
+        from services.game_service import ensure_game_ids
         
         game1 = make_sample_game()
         game1['date'] = '2024-11-15'

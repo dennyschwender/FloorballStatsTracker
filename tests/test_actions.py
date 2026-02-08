@@ -127,7 +127,7 @@ def test_goalie_and_opponent_goalie_actions(client):
 def test_reset_and_delete_game(client):
     games = [make_sample_game(opponent_goalie_enabled=True), make_sample_game()]
     # Ensure unique IDs
-    from app import ensure_game_ids, save_games
+    from services.game_service import ensure_game_ids, save_games
     ensure_game_ids(games)
     _write_games(games)
 
