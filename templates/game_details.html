@@ -2,6 +2,77 @@
 
 {% block title %}{{ g.t['view'] if g.t is defined else 'Game Details' }}{% endblock %}
 
+{% block head %}
+<style>
+    /* Quick action buttons - ensure minimum touch target size for mobile */
+    .quick-action-btn {
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 1.2rem;
+        padding: 0.375rem 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Ensure button groups don't wrap */
+    .action-buttons,
+    .goalie-action-buttons {
+        white-space: nowrap;
+        flex-wrap: nowrap;
+    }
+    
+    /* Dropdown toggle for more actions */
+    .action-buttons .dropdown-toggle,
+    .goalie-action-buttons .dropdown-toggle {
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 1.2rem;
+        padding: 0.375rem 0.5rem;
+    }
+    
+    /* Dropdown menu buttons in grid layout */
+    .dropdown-menu .d-flex {
+        gap: 0.25rem;
+    }
+    
+    .dropdown-menu .flex-fill {
+        flex: 1;
+        min-height: 36px;
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .quick-action-btn {
+            min-width: 48px;
+            min-height: 48px;
+            font-size: 1.3rem;
+        }
+        
+        .action-buttons .dropdown-toggle,
+        .goalie-action-buttons .dropdown-toggle {
+            min-width: 48px;
+            min-height: 48px;
+        }
+        
+        /* Ensure dropdown menus are readable on smaller screens */
+        .dropdown-menu {
+            font-size: 0.95rem;
+        }
+        
+        .dropdown-menu .flex-fill {
+            min-height: 40px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4 mb-4">
     {% if game.team %}
@@ -83,6 +154,29 @@
     <div class="alert alert-info mb-3" role="alert">
         <strong>{{ g.t.get('plusminus_rules_title', 'Plus/Minus Rules') }}:</strong> {{ g.t.get('plusminus_rules_text', 'A player gets +1 for each even-strength or shorthanded goal their team scores while on the ice, and -1 for each such goal by the opposing team. Power-play goals and penalty shots do not affect plus/minus. Goalies do not have a plus/minus rating.') }}
     </div>
+    <div class="alert alert-info mb-3" role="alert">
+        <h6 class="alert-heading mb-2"><i class="bi bi-info-circle"></i> {{ g.t.get('quick_actions_help_title', 'Quick Actions Guide') }}</h6>
+        <p class="mb-1 small">{{ g.t.get('quick_actions_help_text', 'Use the quick action buttons for fast stat entry during the game:') }}</p>
+        <div class="row">
+            <div class="col-md-6">
+                <strong class="small">{{ g.t.get('players', 'Players') }}:</strong>
+                <ul class="mb-2 small">
+                    <li><strong>⚽ {{ g.t['goal'] }}</strong> - Record a goal</li>
+                    <li><strong>🎯 {{ g.t['sog'] }}</strong> - Record a shot on goal</li>
+                    <li><strong>👍 {{ g.t['assists'] }}</strong> - Record an assist</li>
+                    <li><strong>⋮ {{ g.t.get('more_actions', 'More') }}</strong> - Access all other actions (+1, -1, errors, penalties, etc.)</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <strong class="small">{{ g.t['goalies'] }}:</strong>
+                <ul class="mb-0 small">
+                    <li><strong>🧤 {{ g.t['goalie_save'] }}</strong> - Record a save</li>
+                    <li><strong>⛔ {{ g.t['goals_conceded'] }}</strong> - Record a goal conceded</li>
+                    <li><strong>⋮ {{ g.t.get('more_actions', 'More') }}</strong> - Access minus actions and assists</li>
+                </ul>
+            </div>
+        </div>
+    </div>
     {% endif %}
 
     <div class="table-responsive-sm mb-4 mx-lg-5">
@@ -139,45 +233,60 @@
                     <td class="text-center"><span class="fw-bold">{{ game.penalties_drawn[player] if
                             game.penalties_drawn and player in game.penalties_drawn else 0 }}</span></td>
                     <td class="actions-col d-none">
-                        <div class="dropdown text-center action-dropdown d-none">
-                            <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">{{ g.t['actions'] }}</button>
-                            <div class="dropdown-menu p-2 text-center"
-                                style="min-width: 140px; overflow: visible; max-height: none;">
-                                <a href="/action/{{ game_id }}/{{ player }}?action=plus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-success btn-sm my-1">+1</a>
-                                <a href="/action/{{ game_id }}/{{ player }}?action=minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-danger btn-sm my-1">-1</a>
-                                <hr class="dropdown-divider">
-                                <a href="/action/{{ game_id }}/{{ player }}?action=goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-primary btn-sm my-1">{{ g.t['goal'] }}</a>
-                                <a href="/action/{{ game_id }}/{{ player }}?action=goal_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-primary btn-sm my-1">-{{ g.t['goal'] }}</a>
-                                <hr class="dropdown-divider">
-                                <a href="/action/{{ game_id }}/{{ player }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn_info btn-sm my-1">{{ g.t['assists'] }}</a>
-                                <a href="/action/{{ game_id }}/{{ player }}?action=assist_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-info btn-sm my-1">-{{ g.t['assists'] }}</a>
-                                <hr class="dropdown-divider">
-                                <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-warning btn-sm my-1">{{ g.t['errors'] }}</a>
-                                <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-warning btn-sm my-1">-{{ g.t['errors'] }}</a>
-                                <hr class="dropdown-divider">
-                                <a href="/action/{{ game_id }}/{{ player }}?action=shot_on_goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-info btn-sm my-1">{{ g.t['sog'] }}</a>
-                                <a href="/action/{{ game_id }}/{{ player }}?action=shot_on_goal_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-info btn-sm my-1">-{{ g.t['sog'] }}</a>
-                                <hr class="dropdown-divider">
-                                <a href="/action/{{ game_id }}/{{ player }}?action=penalty_taken{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-danger btn-sm my-1">{{ g.t['penalty_taken'] }}</a>
-                                <a href="/action/{{ game_id }}/{{ player }}?action=penalty_taken_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-danger btn-sm my-1">-{{ g.t['penalty_taken'] }}</a>
-                                <hr class="dropdown-divider">
-                                <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-success btn-sm my-1">{{ g.t['penalty_drawn'] }}</a>
-                                <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-success btn-sm my-1">-{{ g.t['penalty_drawn'] }}</a>
+                        <div class="btn-group btn-group-sm action-buttons d-none" role="group">
+                            <!-- Quick action buttons always visible -->
+                            <a href="/action/{{ game_id }}/{{ player }}?action=goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                class="btn btn-primary quick-action-btn" title="{{ g.t['goal'] }}">⚽</a>
+                            <a href="/action/{{ game_id }}/{{ player }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                class="btn btn-info quick-action-btn" title="{{ g.t['assists'] }}">👍</a>
+                            <a href="/action/{{ game_id }}/{{ player }}?action=shot_on_goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                class="btn btn-success quick-action-btn" title="{{ g.t['sog'] }}">🎯</a>
+                            
+                            <!-- Dropdown for additional actions -->
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button class="btn btn-secondary dropdown-toggle" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false" title="{{ g.t['more_actions'] if g.t.get('more_actions') else 'More' }}">
+                                    ⋮
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end p-2"
+                                    style="min-width: 160px; overflow: visible; max-height: none;">
+                                    <div class="d-flex gap-1 mb-2">
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=plus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-success btn-sm flex-fill">+1</a>
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-danger btn-sm flex-fill">-1</a>
+                                    </div>
+                                    <hr class="dropdown-divider my-1">
+                                    <div class="d-flex gap-1 mb-2">
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-warning btn-sm flex-fill">{{ g.t['errors'] }}</a>
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-warning btn-sm flex-fill">-{{ g.t['errors'] }}</a>
+                                    </div>
+                                    <div class="d-flex gap-1 mb-2">
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=assist_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-info btn-sm flex-fill">-{{ g.t['assists'] }}</a>
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=shot_on_goal_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-success btn-sm flex-fill">-{{ g.t['sog'] }}</a>
+                                    </div>
+                                    <div class="d-flex gap-1 mb-2">
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=goal_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-primary btn-sm flex-fill">-{{ g.t['goal'] }}</a>
+                                    </div>
+                                    <hr class="dropdown-divider my-1">
+                                    <div class="d-flex gap-1 mb-1">
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=penalty_taken{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-danger btn-sm flex-fill">{{ g.t['penalty_taken'] }}</a>
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=penalty_taken_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-danger btn-sm flex-fill">-P.T.</a>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-success btn-sm flex-fill">{{ g.t['penalty_drawn'] }}</a>
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-success btn-sm flex-fill">-P.D.</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </td>
@@ -237,26 +346,35 @@
                         {% endif %}
                     </td>
                     <td colspan="8" class="actions-col d-none">
-                        <div class="dropdown dropup text-center goalie-action-dropdown d-none">
-                            <button class="btn btn-secondary btn-sm dropdown-toggle w-100" type="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">{{ g.t['actions'] }}</button>
-                            <div class="dropdown-menu dropdown-menu-end p-2 text-center"
-                                style="min-width: 140px; overflow: visible; max-height: none;">
-                                <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-info btn-sm my-1">{{ '+' ~ g.t['assists'] }}</a>
-                                <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=assist_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-info btn-sm my-1">{{ '-' ~ g.t['assists'] }}</a>
-                                <hr class="dropdown-divider">
-                                <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-primary btn-sm my-1">{{ g.t['save'] }}</a>
-                                <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-primary btn-sm my-1">{{ '-' ~ g.t['save'] }}</a>
-                                <hr class="dropdown-divider">
-                                <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-danger btn-sm my-1">{{ g.t['goals_conceded'] }}</a>
-                                <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-danger btn-sm my-1">{{ '-' ~ g.t['goals_conceded']
-                                    }}</a>
+                        <div class="btn-group btn-group-sm goalie-action-buttons d-none" role="group">
+                            <!-- Quick action buttons for goalies -->
+                            <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                class="btn btn-primary quick-action-btn" title="{{ g.t['goalie_save'] }}">🧤</a>
+                            <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                class="btn btn-danger quick-action-btn" title="{{ g.t['goals_conceded'] }}">⛔</a>
+                            
+                            <!-- Dropdown for additional actions -->
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button class="btn btn-secondary dropdown-toggle" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false" title="{{ g.t['more_actions'] if g.t.get('more_actions') else 'More' }}">
+                                    ⋮
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end p-2"
+                                    style="min-width: 160px; overflow: visible; max-height: none;">
+                                    <div class="d-flex gap-1 mb-2">
+                                        <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-primary btn-sm flex-fill">-{{ g.t['goalie_save'] }}</a>
+                                        <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-danger btn-sm flex-fill">-{{ g.t['goals_conceded'] }}</a>
+                                    </div>
+                                    <hr class="dropdown-divider my-1">
+                                    <div class="d-flex gap-1">
+                                        <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-info btn-sm flex-fill">{{ g.t['assists'] }}</a>
+                                        <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=assist_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-info btn-sm flex-fill">-{{ g.t['assists'] }}</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </td>
@@ -309,9 +427,9 @@
                             <div class="dropdown-menu dropdown-menu-end p-2 text-center"
                                 style="min-width: 140px; overflow: visible; max-height: none;">
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=save{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-primary btn-sm my-1">{{ g.t['save'] }}</a>
+                                    class="btn btn-primary btn-sm my-1">{{ g.t['goalie_save'] }}</a>
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=save_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-primary btn-sm my-1">-{{ g.t['save'] }}</a>
+                                    class="btn btn-outline-primary btn-sm my-1">-{{ g.t['goalie_save'] }}</a>
                                 <hr class="dropdown-divider">
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=goal_conceded{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
                                     class="btn btn-danger btn-sm my-1">{{ g.t['goals_conceded'] }}</a>
@@ -350,9 +468,9 @@
         }
     });
     function setEditMode(on) {
-        document.querySelectorAll('.action-dropdown').forEach(el => el.classList.toggle('d-none', !on));
+        document.querySelectorAll('.action-buttons').forEach(el => el.classList.toggle('d-none', !on));
         document.querySelectorAll('.line-action').forEach(el => el.classList.toggle('d-none', !on));
-        document.querySelectorAll('.goalie-action-dropdown').forEach(el => el.classList.toggle('d-none', !on));
+        document.querySelectorAll('.goalie-action-buttons').forEach(el => el.classList.toggle('d-none', !on));
         document.querySelectorAll('.opponent-goalie-action-dropdown').forEach(el => el.classList.toggle('d-none', !on));
         document.querySelectorAll('.actions-col').forEach(el => el.classList.toggle('d-none', !on));
     }

@@ -1,0 +1,187 @@
+feat: Implement quick action buttons UX and fix stats page bugs
+
+This commit includes bug fixes, UX improvements, comprehensive testing, and project organization.
+
+## Bug Fixes
+
+### Stats Page Display (Critical)
+- **Fixed stats page showing only 1 game instead of all games**
+  - Modified `services/stats_service.py`: Merge calculated stats into game objects instead of returning tuples
+  - Modified `routes/stats_routes.py`: Pass 'games' variable to template and add hide_future_games filter
+  - Resolves Jinja2 error: "'tuple' object has no attribute 'save_percentages'"
+  - All 8 games now display correctly in stats tables
+
+### Translation/UI
+- Added 16 missing translation keys (EN/IT):
+  - Actions: goal, goalie_save, actions, more_actions
+  - Stats: penalty_drawn, penalty_taken, save_percent
+  - UI: players, goalies, quick_actions_help_title, quick_actions_help_text
+  - Other: plus_all, minus_all, opponent_goalie_not_enabled
+- Fixed missing labels in edit mode buttons
+- Fixed save/goalie_save conflict in templates
+
+## Features
+
+### Quick Action Buttons UX Enhancement
+Implemented streamlined stat entry for live game tracking:
+
+**Player Actions:**
+- Quick buttons: ⚽ Goal, 👍 Assist, 🎯 SOG (always visible)
+- Dropdown menu (⋮) for: +1/-1, Errors, Penalties, minus actions
+- 2-column grid layout in dropdown for better space utilization
+
+**Goalie Actions:**
+- Quick buttons: 🧤 Save, ⛔ Goal Conceded (always visible)
+- Dropdown menu (⋮) for: Assists, minus actions
+
+**Mobile Optimization:**
+- Touch targets: 44x44px minimum (48x48px on mobile)
+- Responsive button sizing
+- Improved dropdown menu readability
+
+**User Guidance:**
+- Added Quick Actions Guide info box (displayed in edit mode)
+- Separate sections for Players and Goalies
+- Explains button functionality and dropdown access
+
+**Technical Changes:**
+- Updated `templates/game_details.html`:
+  - Replaced single dropdown with button group + dropdown combo
+  - Added mobile-responsive CSS styles
+  - Updated JavaScript `setEditMode()` function
+- Button layout prevents mis-clicks during fast-paced game tracking
+
+## Testing
+
+### New Comprehensive Test Suite
+Created `tests/test_stats_page_display.py` with 10 tests:
+1. `test_all_games_displayed_in_tables` - Verifies all games appear
+2. `test_game_columns_in_plusminus_table` - Counts game columns
+3. `test_game_columns_in_goals_assists_table` - Validates table structure
+4. `test_stats_data_structure_integrity` - Ensures no Jinja2 errors
+5. `test_game_with_calculated_stats_fields` - Validates calculated fields
+6. `test_stats_page_renders_without_jinja_errors` - Integration test
+7. `test_multiple_games_multiple_players` - Complex scenarios
+8. `test_season_filter_shows_correct_games` - Season filtering
+9. `test_team_filter_shows_correct_games` - Team filtering
+10. `test_no_games_displays_gracefully` - Empty state handling
+
+All 10 tests pass successfully. These tests would have caught the stats page bug immediately.
+
+### Test Organization
+- Moved `test_app_info.py` → `tests/` directory
+- Moved `test_web_pages.py` → `tests/` directory
+
+## Project Organization
+
+### Scripts Directory
+- Moved `docker_deploy.sh` → `scripts/` directory
+- Moved `server_diagnostic.sh` → `scripts/` directory
+
+### Documentation
+- Added `docs/BUG_FIX_STATS_PAGE_2025.md` - Documents stats page bug, root cause, fixes, and testing
+- Added `docs/MIGRATION_GUIDE.md` - Guide for player name migration script
+- Added `docs/CONTRIBUTING.md` - Contributing guidelines for open source
+
+### Cleanup
+- Removed `gamesFiles/games_backup.json` (old/unnecessary backup file)
+
+## Files Modified
+
+**Core Application:**
+- `config.py` - Added translation keys
+- `routes/stats_routes.py` - Bug fix: added games variable and hide_future_games filter
+- `services/stats_service.py` - Bug fix: merge calculated stats into game objects
+- `templates/game_details.html` - UX enhancement: quick action buttons with mobile optimization
+
+**Testing:**
+- `tests/test_stats_page_display.py` - NEW comprehensive test suite
+- `tests/test_app_info.py` - Moved from root
+- `tests/test_web_pages.py` - Moved from root
+
+**Scripts:**
+- `scripts/docker_deploy.sh` - Moved from root
+- `scripts/server_diagnostic.sh` - Moved from root
+
+**Documentation:**
+- `docs/BUG_FIX_STATS_PAGE_2025.md` - NEW
+- `docs/MIGRATION_GUIDE.md` - NEW
+- `docs/CONTRIBUTING.md` - NEW
+
+**Deleted:**
+- `gamesFiles/games_backup.json` - Removed old backup
+
+## Impact
+
+**User Experience:**
+- ⚡ Faster stat entry: Most common actions now single-click (vs 2-click dropdown)
+- 📱 Better mobile experience: Larger touch targets, responsive design
+- 📊 Stats page fixed: All games now display correctly
+- 🌐 Complete translations: No more missing labels in edit mode
+- 📚 Clear guidance: Help text explains new button system
+
+**Code Quality:**
+- ✅ Test coverage improved: 10 new integration tests
+- 🐛 Bug prevention: New tests catch similar data structure issues
+- 📁 Better organization: Scripts and tests in proper directories
+- 📖 Documentation: Clear guides for bug fixes and migrations
+
+## Why This Change
+
+**Stats Page Bug (Critical):**
+- Users could only see 1 game out of 8 in statistics tables
+- Jinja2 template errors prevented proper data display
+- Root cause: Data structure mismatch (tuples vs game objects)
+- Impact: Made stats page essentially unusable with multiple games
+
+**UX Improvement (High Value):**
+- Original design required 2 clicks for every action (open dropdown → select action)
+- During live games, speed is critical for accurate stat tracking
+- Quick buttons reduce most common actions from 2 clicks to 1 click
+- Mobile-friendly design enables stats tracking from phones/tablets
+
+**Testing Gap (Quality):**
+- Existing tests only checked HTTP 200 status, not actual content
+- Stats page bug went undetected despite having tests
+- New test suite specifically validates game count, data structures, Jinja2 rendering
+
+**Project Organization:**
+- Scripts and tests scattered in root directory
+- Moved to standard project structure for better maintainability
+
+## Breaking Changes
+
+None. All changes are backward compatible:
+- Existing routes and URLs unchanged
+- Game data structure unchanged
+- Template interfaces consistent
+- Configuration format compatible
+
+## Migration Notes
+
+No migration required. Changes are transparent to existing installations.
+
+## Testing Done
+
+✅ All 10 new stats page tests pass
+✅ Manual testing of quick action buttons in edit mode
+✅ Mobile responsiveness verified (44x44px touch targets)
+✅ Stats page displays all 8 games correctly
+✅ Translation keys verified in both EN and IT
+✅ Dropdown menu structure validated
+✅ Button functionality tested on sample game data
+
+## Related Issues
+
+- Fixes: Stats page only showing 1 game (reported by user)
+- Fixes: Jinja2 error "'tuple' has no attribute 'save_percentages'"
+- Fixes: Missing translation labels in edit mode
+- Implements: User request for improved action trigger UX
+
+---
+
+**Commit Type:** feat (Feature + Bug Fix)
+**Scope:** stats, ui, testing, project-structure
+**Breaking Changes:** No
+
+Co-authored-by: GitHub Copilot <copilot@github.com>

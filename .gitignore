@@ -2,6 +2,7 @@
 games.json
 team_roster.json
 games_backup*.json
+games_backup.json
 migration_report*.json
 
 # Byte-compiled / optimized / DLL files

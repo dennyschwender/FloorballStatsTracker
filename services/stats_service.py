@@ -150,7 +150,12 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
                 opponent_goalie_stats['total_saves'] += opponent_saves
                 opponent_goalie_stats['total_goals_conceded'] += opponent_goals_conceded
         
-        games_with_stats.append((game, game_calculated))
+        # Merge calculated stats into game object
+        game['game_scores'] = game_calculated['game_scores']
+        game['save_percentages'] = game_calculated['save_percentages']
+        game['goalie_game_scores'] = game_calculated['goalie_game_scores']
+        game['opponent_save_percentage'] = game_calculated['opponent_save_percentage']
+        games_with_stats.append(game)
     
     # Calculate total game scores for all players
     for player, stats in player_stats.items():

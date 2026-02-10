@@ -62,6 +62,7 @@ def stats():
     
     # Get filter parameters
     hide_zero_stats = request.args.get('hide_zero_stats', 'false') == 'true'
+    hide_future_games = request.args.get('hide_future_games', 'false') == 'true'
     
     # Calculate stats using optimized function
     stats_data = calculate_stats_optimized(games_sorted, hide_zero_stats)
@@ -73,10 +74,12 @@ def stats():
         goalies=stats_data['goalies'],
         goalie_data=stats_data['goalie_data'],
         opponent_goalie_data=stats_data['opponent_goalie_data'],
+        games=stats_data['games_with_calculated_stats'],
         games_with_calculated_stats=stats_data['games_with_calculated_stats'],
         teams=teams,
         selected_team=selected_team,
         seasons=seasons,
         selected_season=selected_season,
-        hide_zero_stats=hide_zero_stats
+        hide_zero_stats=hide_zero_stats,
+        hide_future_games=hide_future_games
     )
