@@ -75,7 +75,12 @@
                     {% endif %}
                     <td>{{ game.date if game.date else '' }}</td>
                     <td>{{ game.home_team }}</td>
-                    <td>{{ game.away_team }}</td>
+                    <td>
+                        {{ game.away_team }}
+                        {% if game.exclude_from_stats %}
+                        <span class="badge bg-warning text-dark ms-1" title="{{ g.t['exclude_from_stats'] if g.t is defined else 'Excluded from statistics' }}">🚫</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <a href="/game/{{ game.id }}" class="btn btn-outline-secondary btn-sm">{{ g.t['view'] if g.t is defined else 'View' }}</a>
                     </td>

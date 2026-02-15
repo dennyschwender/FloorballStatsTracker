@@ -218,6 +218,9 @@ def create_game():
 
         # Check if opponent goalie tracking should be enabled
         enable_opponent_goalie = request.form.get('enable_opponent_goalie') == 'on'
+        
+        # Check if game should be excluded from statistics
+        exclude_from_stats = request.form.get('exclude_from_stats') == 'on'
 
         # Initialize period results
         result = {p: {"home": 0, "away": 0} for p in PERIODS}
@@ -240,6 +243,7 @@ def create_game():
             'lines': lines,
             'goalies': goalies,
             'opponent_goalie_enabled': enable_opponent_goalie,
+            'exclude_from_stats': exclude_from_stats,
             'result': result,
             'current_period': '1',
         }
@@ -317,6 +321,9 @@ def modify_game(game_id):
             'opponent_goalie_saves' in game and game['opponent_goalie_saves']) or (
             'opponent_goalie_goals_conceded' in game and game['opponent_goalie_goals_conceded'])
         enable_opponent_goalie = request.form.get('enable_opponent_goalie') == 'on' or has_opponent_stats
+        
+        # Check if game should be excluded from statistics
+        exclude_from_stats = request.form.get('exclude_from_stats') == 'on'
 
         game['season'] = season
         game['team'] = team
@@ -328,6 +335,7 @@ def modify_game(game_id):
         game['lines'] = lines
         game['goalies'] = goalies
         game['opponent_goalie_enabled'] = enable_opponent_goalie
+        game['exclude_from_stats'] = exclude_from_stats
         
         # Store formations from direct form entry with position numbers
         formation_keys = ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line']

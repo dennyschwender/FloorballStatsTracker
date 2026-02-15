@@ -50,6 +50,10 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
     games_with_stats = []
     
     for game in games_sorted:
+        # Skip games excluded from statistics
+        if game.get('exclude_from_stats', False):
+            continue
+            
         # Add calculated fields to game
         game_calculated = {
             'game_scores': {},
