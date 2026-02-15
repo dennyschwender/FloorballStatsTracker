@@ -10,6 +10,7 @@ from services.game_service import (
     load_games, save_games, find_game_by_id, ensure_game_ids,
     ensure_game_stats, ensure_player_stats, build_formation_from_form
 )
+from services.stats_service import recalculate_game_scores
 from models.roster import load_roster, get_all_seasons
 
 game_bp = Blueprint('game', __name__)
@@ -158,6 +159,16 @@ def game_details(game_id):
                 break
         save_games(games)
     # --- End error management ---
+    
+    # Ensure game scores are calculated (for backward compatibility with old games)
+    if 'game_scores' not in game or 'goalie_game_scores' not in game:
+        recalculate_game_scores(game)
+        # Save the updated game with calculated scores
+        for i, game_item in enumerate(games):
+            if game_item.get('id') == game_id:
+                games[i] = game
+                break
+        save_games(games)
     
     return render_template(
         'game_details.html',
@@ -442,6 +453,9 @@ def player_action(game_id, player):
         if game_item.get('id') == game_id:
             games[i] = game
             break
+    
+    # Recalculate game scores after stat changes
+    recalculate_game_scores(game)
     save_games(games)
     
     # Preserve edit mode if present
@@ -500,6 +514,9 @@ def line_action(game_id, line_idx):
         if game_item.get('id') == game_id:
             games[i] = game
             break
+    
+    # Recalculate game scores after stat changes
+    recalculate_game_scores(game)
     save_games(games)
     
     if request.args.get('edit') == '1':
@@ -556,6 +573,9 @@ def goalie_action(game_id, goalie):
         if game_item.get('id') == game_id:
             games[i] = game
             break
+    
+    # Recalculate game scores after stat changes
+    recalculate_game_scores(game)
     save_games(games)
     
     if request.args.get('edit') == '1':
@@ -609,6 +629,9 @@ def opponent_goalie_action(game_id):
         if game_item.get('id') == game_id:
             games[i] = game
             break
+    
+    # Recalculate game scores after stat changes
+    recalculate_game_scores(game)
     save_games(games)
     
     if request.args.get('edit') == '1':
@@ -657,6 +680,9 @@ def reset_game(game_id):
         if game_item.get('id') == game_id:
             games[i] = game
             break
+    
+    # Recalculate game scores after reset
+    recalculate_game_scores(game)
     save_games(games)
     
     if request.args.get('edit') == '1':

@@ -21,6 +21,43 @@ def calculate_goalie_game_score(saves, goals_conceded):
     return (0.10 * saves) - (0.25 * goals_conceded)
 
 
+def recalculate_game_scores(game):
+    """
+    Recalculate game scores for all players and goalies in a single game.
+    Updates the game dict in-place with 'game_scores' and 'goalie_game_scores' fields.
+    
+    Args:
+        game: Game dictionary to recalculate scores for
+    """
+    # Initialize game score dictionaries if they don't exist
+    if 'game_scores' not in game:
+        game['game_scores'] = {}
+    if 'goalie_game_scores' not in game:
+        game['goalie_game_scores'] = {}
+    
+    # Calculate game scores for all players in all lines
+    for line in game.get('lines', []):
+        for player in line:
+            goals = game.get('goals', {}).get(player, 0)
+            assists = game.get('assists', {}).get(player, 0)
+            plusminus = game.get('plusminus', {}).get(player, 0)
+            errors = game.get('unforced_errors', {}).get(player, 0)
+            sog = game.get('shots_on_goal', {}).get(player, 0)
+            penalties_drawn = game.get('penalties_drawn', {}).get(player, 0)
+            penalties_taken = game.get('penalties_taken', {}).get(player, 0)
+            
+            game['game_scores'][player] = calculate_game_score(
+                goals, assists, plusminus, errors, sog, penalties_drawn, penalties_taken
+            )
+    
+    # Calculate game scores for all goalies
+    for goalie in game.get('goalies', []):
+        saves = game.get('saves', {}).get(goalie, 0)
+        goals_conceded = game.get('goals_conceded', {}).get(goalie, 0)
+        
+        game['goalie_game_scores'][goalie] = calculate_goalie_game_score(saves, goals_conceded)
+
+
 def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
     """
     Pre-calculate all player and goalie stats in a single pass through games.

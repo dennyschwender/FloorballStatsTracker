@@ -192,6 +192,7 @@
                     <th class="text-center">{{ g.t['sog'] }}</th>
                     <th class="text-center">{{ g.t['penalty_taken'] }}</th>
                     <th class="text-center">{{ g.t['penalty_drawn'] }}</th>
+                    <th class="text-center view-mode-col">{{ g.t['game_score'] if g.t and 'game_score' in g.t else 'Game Score' }}</th>
                     <th class="actions-col d-none">{{ g.t['actions'] }}</th>
                 </tr>
             </thead>
@@ -232,6 +233,13 @@
                             game.penalties_taken and player in game.penalties_taken else 0 }}</span></td>
                     <td class="text-center"><span class="fw-bold">{{ game.penalties_drawn[player] if
                             game.penalties_drawn and player in game.penalties_drawn else 0 }}</span></td>
+                    <td class="text-center view-mode-col">
+                        {% if game.game_scores and player in game.game_scores %}
+                        <span class="fw-bold" style="color: {{ '#28a745' if game.game_scores[player] > 0 else ('#dc3545' if game.game_scores[player] < 0 else '#6c757d') }}">{{ game.game_scores[player] | round(1) }}</span>
+                        {% else %}
+                        <span class="text-muted">0.0</span>
+                        {% endif %}
+                    </td>
                     <td class="actions-col d-none">
                         <div class="btn-group btn-group-sm action-buttons d-none" role="group">
                             <!-- Quick action buttons always visible -->
@@ -307,6 +315,7 @@
                     <th class="text-center">{{ g.t['saves'] }}</th>
                     <th class="text-center">{{ g.t['goals_conceded'] }}</th>
                     <th class="text-center">{{ g.t['save_percent'] }}</th>
+                    <th class="text-center view-mode-col">{{ g.t['game_score'] if g.t and 'game_score' in g.t else 'Game Score' }}</th>
                     <th colspan="8" class="actions-col d-none">{{ g.t['actions'] }}</th>
                 </tr>
             </thead>
@@ -343,6 +352,13 @@
                         <span class="fw-bold">{{ ((saves / total) * 100) | round(1) }}%</span>
                         {% else %}
                         <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center view-mode-col">
+                        {% if game.goalie_game_scores and goalie in game.goalie_game_scores %}
+                        <span class="fw-bold" style="color: {{ '#28a745' if game.goalie_game_scores[goalie] > 0 else ('#dc3545' if game.goalie_game_scores[goalie] < 0 else '#6c757d') }}">{{ game.goalie_game_scores[goalie] | round(1) }}</span>
+                        {% else %}
+                        <span class="text-muted">0.0</span>
                         {% endif %}
                     </td>
                     <td colspan="8" class="actions-col d-none">
@@ -473,6 +489,7 @@
         document.querySelectorAll('.goalie-action-buttons').forEach(el => el.classList.toggle('d-none', !on));
         document.querySelectorAll('.opponent-goalie-action-dropdown').forEach(el => el.classList.toggle('d-none', !on));
         document.querySelectorAll('.actions-col').forEach(el => el.classList.toggle('d-none', !on));
+        document.querySelectorAll('.view-mode-col').forEach(el => el.classList.toggle('d-none', on));
     }
     function toggleModify(e) {
         e.preventDefault();
