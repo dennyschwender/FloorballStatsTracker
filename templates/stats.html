@@ -25,6 +25,10 @@
         align-items: center;
         justify-content: center;
     }
+    
+    th.rotate .sort-icon::after {
+        margin-left: 3px;
+    }
 
     td,
     th {
@@ -89,6 +93,21 @@
         content: '↓';
         opacity: 1;
     }
+    
+    .stat-info-box {
+        background-color: #e7f3ff;
+        border-left: 4px solid #0d6efd;
+        padding: 0.6rem 0.8rem;
+        margin-bottom: 0.7rem;
+        font-size: 0.88em;
+        border-radius: 4px;
+        color: #084298;
+    }
+    
+    .stat-info-box i {
+        margin-right: 0.4rem;
+        font-size: 0.95em;
+    }
 </style>
 {% macro format_date(date_str) %}
 {%- set d = date_str.split('-') if date_str else None -%}
@@ -130,7 +149,7 @@
                     <input class="form-check-input" type="checkbox" id="hide_zero_stats" name="hide_zero_stats" 
                            value="true" {% if hide_zero_stats %}checked{% endif %} onchange="this.form.submit()">
                     <label class="form-check-label" for="hide_zero_stats">
-                        Hide zeros
+                        {{ g.t['hide_zeros'] }}
                     </label>
                 </div>
             </div>
@@ -139,21 +158,24 @@
                     <input class="form-check-input" type="checkbox" id="hide_future_games" name="hide_future_games" 
                            value="true" {% if hide_future_games %}checked{% endif %} onchange="this.form.submit()">
                     <label class="form-check-label" for="hide_future_games">
-                        Hide future games
+                        {{ g.t['hide_future_games'] }}
                     </label>
                 </div>
             </div>
         </div>
     </form>
     <h3>{{ g.t['plus_minus'] }}</h3>
+    <div class="stat-info-box">
+        <i class="bi bi-info-circle"></i>{{ g.t['plus_minus_explanation'] }}
+    </div>
     <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" id="plusMinusTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('plusMinusTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate">
-                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }}</div>
+                    <th class="rotate sortable" onclick="sortStatsTable('plusMinusTable', {{ loop.index }})" style="cursor: pointer;">
+                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('plusMinusTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
@@ -179,14 +201,17 @@
         </table>
     </div>
     <h3>{{ g.t['goals_assists'] }}</h3>
+    <div class="stat-info-box">
+        <i class="bi bi-info-circle"></i>{{ g.t['goals_assists_explanation'] }}
+    </div>
     <div class="table-responsive-sm">
         <table class="table table-bordered align-middle text-center" id="goalsAssistsTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate">
-                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }}</div>
+                    <th class="rotate sortable" onclick="sortStatsTable('goalsAssistsTable', {{ loop.index }})" style="cursor: pointer;">
+                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
@@ -216,14 +241,17 @@
     </div>
 
     <h3>{{ g.t['game_score'] }}</h3>
+    <div class="stat-info-box">
+        <i class="bi bi-info-circle"></i>{{ g.t['game_score_explanation'] }}
+    </div>
     <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" id="gameScoreTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('gameScoreTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate">
-                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }}</div>
+                    <th class="rotate sortable" onclick="sortStatsTable('gameScoreTable', {{ loop.index }})" style="cursor: pointer;">
+                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
@@ -250,14 +278,17 @@
     </div>
 
     <h3>{{ g.t['unforced_errors'] }}</h3>
+    <div class="stat-info-box">
+        <i class="bi bi-info-circle"></i>{{ g.t['unforced_errors_explanation'] }}
+    </div>
     <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" id="unforcedErrorsTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate">
-                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }}</div>
+                    <th class="rotate sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ loop.index }})" style="cursor: pointer;">
+                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
@@ -284,14 +315,17 @@
     </div>
 
     <h3>{{ g.t['shots_on_goal'] }}</h3>
+    <div class="stat-info-box">
+        <i class="bi bi-info-circle"></i>{{ g.t['shots_on_goal_explanation'] }}
+    </div>
     <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" id="shotsOnGoalTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate">
-                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }}</div>
+                    <th class="rotate sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ loop.index }})" style="cursor: pointer;">
+                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
@@ -318,14 +352,17 @@
     </div>
 
     <h3>{{ g.t['penalties_taken'] }}</h3>
+    <div class="stat-info-box">
+        <i class="bi bi-info-circle"></i>{{ g.t['penalties_taken_explanation'] }}
+    </div>
     <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" id="penaltiesTakenTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate">
-                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }}</div>
+                    <th class="rotate sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ loop.index }})" style="cursor: pointer;">
+                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
@@ -352,14 +389,17 @@
     </div>
 
     <h3>{{ g.t['penalties_drawn'] }}</h3>
+    <div class="stat-info-box">
+        <i class="bi bi-info-circle"></i>{{ g.t['penalties_drawn_explanation'] }}
+    </div>
     <div class="table-responsive-sm mb-4">
         <table class="table table-bordered align-middle text-center" id="penaltiesDrawnTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate">
-                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }}</div>
+                    <th class="rotate sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ loop.index }})" style="cursor: pointer;">
+                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
@@ -387,14 +427,17 @@
 
     {% if goalies or (opponent_goalie_data.total_saves > 0 or opponent_goalie_data.total_goals_conceded > 0) %}
     <h3>{{ g.t['goalie_save_percent'] }}</h3>
+    <div class="stat-info-box">
+        <i class="bi bi-info-circle"></i>{{ g.t['goalie_save_percent_explanation'] }}
+    </div>
     <div class="table-responsive-sm">
         <table class="table table-bordered align-middle text-center" id="goalieTable" style="table-layout: auto;">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortStatsTable('goalieTable', 0)" style="cursor: pointer;">{{ g.t['goalie'] if g.t is defined else 'Goalie' }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate">
-                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }}</div>
+                    <th class="rotate sortable" onclick="sortStatsTable('goalieTable', {{ loop.index }})" style="cursor: pointer;">
+                        <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('goalieTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['average'] }} <span class="sort-icon"></span></th>
@@ -493,8 +536,21 @@
             if (aCell.includes('=')) {
                 aCell = parseFloat(aCell.split('=')[1].trim());
                 bCell = parseFloat(bCell.split('=')[1].trim());
+                return isAsc ? aCell - bCell : bCell - aNum;
+            }
+            
+            // Handle combined stats like "2 + 3" (goals + assists in game cells)
+            if (aCell.includes('+')) {
+                const aParts = aCell.split('+').map(s => parseFloat(s.trim()));
+                const bParts = bCell.split('+').map(s => parseFloat(s.trim()));
+                aCell = aParts.reduce((sum, val) => sum + (isNaN(val) ? 0 : val), 0);
+                bCell = bParts.reduce((sum, val) => sum + (isNaN(val) ? 0 : val), 0);
                 return isAsc ? aCell - bCell : bCell - aCell;
             }
+            
+            // Handle '-' as lowest value for numeric columns
+            if (aCell === '-') aCell = '-Infinity';
+            if (bCell === '-') bCell = '-Infinity';
             
             // Try to parse as number
             const aNum = parseFloat(aCell);
