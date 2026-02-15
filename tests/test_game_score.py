@@ -2,7 +2,7 @@
 Tests for Game Score (GS) calculation and display.
 
 Game Score formula: GS = (1.5 * G) + (1.0 * A) + (0.1 * SOG) + (0.3 * PM) + (0.15 * PD) - (0.15 * PT) - (0.2 * Errors)
-Goalie GS formula: GS = (0.10 * Saves) - (0.25 * Goals Conceded)
+Goalie GS formula: GS = (0.15 * Saves) - (0.40 * Goals Conceded)
 """
 import json
 import pytest
@@ -128,10 +128,10 @@ class TestGoalieGameScore:
 
     def test_basic_goalie_calculation(self):
         """Test basic goalie Game Score calculation."""
-        # GS = (0.10 * 30) - (0.25 * 2)
-        # GS = 3.0 - 0.5 = 2.5
+        # GS = (0.15 * 30) - (0.40 * 2)
+        # GS = 4.5 - 0.8 = 3.7
         result = calculate_goalie_game_score(saves=30, goals_conceded=2)
-        assert result == 2.5
+        assert result == 3.7
 
     def test_goalie_zero_values(self):
         """Test goalie Game Score with no activity."""
@@ -140,24 +140,24 @@ class TestGoalieGameScore:
 
     def test_goalie_shutout(self):
         """Test goalie Game Score for a shutout."""
-        # GS = (0.10 * 40) - (0.25 * 0) = 4.0
+        # GS = (0.15 * 40) - (0.40 * 0) = 6.0
         result = calculate_goalie_game_score(saves=40, goals_conceded=0)
-        assert result == 4.0
+        assert result == 6.0
 
     def test_goalie_bad_game(self):
         """Test goalie Game Score for a bad performance."""
-        # GS = (0.10 * 10) - (0.25 * 8)
-        # GS = 1.0 - 2.0 = -1.0
+        # GS = (0.15 * 10) - (0.40 * 8)
+        # GS = 1.5 - 3.2 = -1.7
         result = calculate_goalie_game_score(saves=10, goals_conceded=8)
-        assert result == -1.0
+        assert result == -1.7
 
     def test_goalie_realistic_example(self):
         """Test with realistic goalie data."""
         # Goalie with 25 saves, 3 goals conceded
-        # GS = (0.10 * 25) - (0.25 * 3)
-        # GS = 2.5 - 0.75 = 1.75
+        # GS = (0.15 * 25) - (0.40 * 3)
+        # GS = 3.75 - 1.2 = 2.55
         result = calculate_goalie_game_score(saves=25, goals_conceded=3)
-        assert result == 1.75
+        assert result == 2.55
 
 
 class TestGameScorePerGame:

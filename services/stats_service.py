@@ -16,9 +16,9 @@ def calculate_game_score(goals, assists, plusminus, errors, sog=0, penalties_dra
 def calculate_goalie_game_score(saves, goals_conceded):
     """
     Calculate Game Score for a goalie
-    GS Goalie = (0.10 * Saves) - (0.25 * Goals Conceded)
+    GS Goalie = (0.15 * Saves) - (0.40 * Goals Conceded)
     """
-    return (0.10 * saves) - (0.25 * goals_conceded)
+    return (0.15 * saves) - (0.40 * goals_conceded)
 
 
 def recalculate_game_scores(game):
