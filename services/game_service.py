@@ -91,7 +91,7 @@ def ensure_game_stats(game):
     """
     stat_keys = ['plusminus', 'goals', 'assists', 'unforced_errors', 
                  'shots_on_goal', 'penalties_taken', 'penalties_drawn',
-                 'saves', 'goals_conceded']
+                 'saves', 'goals_conceded', 'game_scores', 'goalie_game_scores']
     for stat in stat_keys:
         if stat not in game or not isinstance(game[stat], dict):
             game[stat] = {}
