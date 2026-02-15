@@ -8,6 +8,7 @@ from models.roster import (
     load_roster, 
     save_roster, 
     get_all_categories_with_rosters,
+    get_all_seasons,
     get_all_tesser_values,
     get_roster_file
 )
@@ -48,9 +49,10 @@ def roster_list():
         roster=roster_sorted,
         by_position=by_position,
         by_category=by_category,
-        categories=all_categories,
-        category=category,
-        season=season
+        existing_rosters=all_categories,
+        selected_category=category,
+        selected_season=season,
+        all_seasons=get_all_seasons()
     )
 
 

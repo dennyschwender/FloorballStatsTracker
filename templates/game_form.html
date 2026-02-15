@@ -3,6 +3,44 @@
 
 {% block head %}
 <style>
+    /* Prevent horizontal scroll - critical for mobile */
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100vw;
+        position: relative;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    #gameForm {
+        max-width: 100%;
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    /* Fix Bootstrap row negative margins on mobile */
+    @media (max-width: 575.98px) {
+        .row {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            --bs-gutter-x: 0 !important;
+        }
+        
+        .row > * {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        
+        /* Override g-2 class on mobile */
+        .g-2 {
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: 0.75rem !important;
+        }
+    }
+
     .manual-entry-section {
         border: 1px solid #dee2e6;
         border-radius: 8px;
@@ -20,8 +58,8 @@
 
     .position-columns {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
+        grid-template-columns: 1fr;
+        gap: 10px;
         margin-bottom: 20px;
     }
 
@@ -39,6 +77,38 @@
         font-size: 0.9rem;
     }
 
+    /* Responsive position columns */
+    @media (min-width: 576px) {
+        .position-columns {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .position-columns {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        /* 4 columns only for main convocato section on tablet+ */
+        .mb-4 > .position-columns {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    @media (min-width: 992px) {
+        .position-columns {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        /* 4 columns only for main convocato section on desktop */
+        .mb-4 > .position-columns {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
     .formation-section {
         border: 1px solid #dee2e6;
         border-radius: 5px;
@@ -51,6 +121,148 @@
         font-size: 1rem;
         color: #0d6efd;
         margin-bottom: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+    }
+
+    .formation-section h5:hover {
+        background-color: #f8f9fa;
+        padding: 5px;
+        margin: -5px;
+        border-radius: 5px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+    }
+
+    .completion-badge {
+        font-size: 0.8rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        background-color: #6c757d;
+        color: white;
+        margin-left: 10px;
+    }
+
+    .completion-badge.complete {
+        background-color: #28a745;
+    }
+
+    .completion-badge.partial {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .collapse-icon {
+        transition: transform 0.3s;
+        font-size: 1.2rem;
+    }
+
+    .collapse-icon.collapsed {
+        transform: rotate(-90deg);
+    }
+
+    .section-content {
+        transition: max-height 0.3s ease-out;
+        overflow: hidden;
+        max-height: none;
+    }
+
+    .section-content.collapsed {
+        max-height: 0 !important;
+    }
+
+    .position-selector {
+        display: flex;
+        gap: 5px;
+        margin-right: 10px;
+        flex-wrap: nowrap;
+        min-width: 185px;
+        flex-shrink: 0;
+    }
+
+    .position-btn {
+        width: 32px;
+        height: 32px;
+        border: 2px solid #dee2e6;
+        background-color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: bold;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .position-btn:hover {
+        border-color: #0d6efd;
+        background-color: #e7f3ff;
+    }
+
+    .position-btn.selected {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+
+    .position-btn.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .player-row {
+        display: flex !important;
+        align-items: center;
+        margin: 5px 0;
+        padding: 3px 5px;
+        border-radius: 3px;
+        transition: background-color 0.2s;
+    }
+
+    .player-row label {
+        flex-grow: 1;
+        margin: 0;
+        margin-left: 10px;
+    }
+
+    .quick-actions {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .quick-actions .btn {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+    }
+
+    .duplicate-warning {
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        max-width: 300px;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+    }
+
+    .player-with-position.duplicate-player {
+        background-color: #fff3cd;
+        border-left: 3px solid #ffc107;
     }
 
     .category-counter {
@@ -74,9 +286,47 @@
         opacity: 0.4;
         color: #6c757d;
     }
+    
+    /* Ensure hidden players stay hidden */
+    .player-option[style*="display: none"],
+    .player-option[style*="display:none"] {
+        display: none !important;
+    }
 
     .player-selected-elsewhere .player-position-input {
         opacity: 0.5;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-overlay.show {
+        display: flex;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        background: white;
+        padding: 30px 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .loading-text {
+        color: #0d6efd;
+        font-weight: 500;
+        font-size: 1.1rem;
     }
 
     .player-selected-elsewhere label {
@@ -124,64 +374,199 @@
 
     .player-with-position label {
         margin: 0;
+        margin-left: 10px;
         flex-grow: 1;
+    }
+
+    /* Nickname toggle styles - high specificity to override Bootstrap */
+    .form-check-label .player-fullname,
+    label .player-fullname,
+    .player-fullname {
+        display: inline !important;
+    }
+
+    .form-check-label .player-nickname,
+    label .player-nickname,
+    .player-nickname {
+        display: none !important;
+        font-style: italic;
+    }
+
+    body.show-nicknames .form-check-label .player-fullname,
+    body.show-nicknames label .player-fullname,
+    body.show-nicknames .player-fullname {
+        display: none !important;
+    }
+
+    body.show-nicknames .form-check-label .player-nickname,
+    body.show-nicknames label .player-nickname,
+    body.show-nicknames .player-nickname {
+        display: inline !important;
+    }
+
+    /* Responsive container */
+    .game-form-container {
+        padding: 0 1rem;
+        max-width: 100%;
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    /* Mobile (up to 576px) */
+    @media (max-width: 575.98px) {
+        .game-form-container {
+            padding: 0 0.5rem !important;
+            width: 100%;
+            max-width: 100vw;
+        }
+        
+        .position-columns {
+            width: 100%;
+        }
+        
+        .lineup-section, .formation-section {
+            width: 100%;
+            padding: 12px;
+        }
+        
+        .form-control, .form-select {
+            width: 100%;
+        }
+
+        .game-form-container h1 {
+            font-size: 1.1rem !important;
+            margin-bottom: 0.75rem !important;
+            margin-top: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-control, .form-select {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        h5 {
+            font-size: 0.95rem;
+            margin-top: 1rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .formation-section {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .lineup-section {
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+    }
+
+    /* Tablet (576px to 991px) */
+    @media (min-width: 576px) and (max-width: 991.98px) {
+        .game-form-container {
+            padding: 0 1.5rem;
+            max-width: 720px;
+            margin: 1rem auto;
+        }
+    }
+
+    /* Desktop (992px and up) */
+    @media (min-width: 992px) {
+        .game-form-container {
+            max-width: 960px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+    }
+
+    /* Large Desktop (1200px and up) */
+    @media (min-width: 1200px) {
+        .game-form-container {
+            max-width: 1140px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="loading-text mt-3">{{ g.t.get('loading', 'Loading') }}...</div>
+    </div>
+</div>
+
+<div class="game-form-container">
     <h1 class="mb-4" style="font-size:1.2rem;">{{ g.t['modify_game'] if modify else g.t['create_new_game'] }}</h1>
     <form method="post" action="{{ url_for('game.modify_game', game_id=game_id) if modify else url_for('game.create_game') }}"
         id="gameForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <div class="mb-3">
-            <label for="season" class="form-label">{{ g.t['season'] }}</label>
-            {% if modify %}
-            <input type="text" class="form-control" id="season" name="season" required
-                value="{{ game.season if game.season is defined else '' }}" readonly>
-            {% else %}
-            <select class="form-select" id="season" name="season" required>
-                <option value="">{{ g.t['select_season'] }}</option>
-                {% for s in seasons %}
-                <option value="{{ s }}">{{ s }}</option>
-                {% endfor %}
-            </select>
-            {% endif %}
+        
+        <!-- Game Info - Responsive Layout -->
+        <div class="row g-2 g-sm-3">
+            <div class="col-12 col-sm-6">
+                <label for="season" class="form-label">{{ g.t['season'] }}</label>
+                {% if modify %}
+                <input type="text" class="form-control" id="season" name="season" required
+                    value="{{ game.season if game.season is defined else '' }}" readonly>
+                {% else %}
+                <select class="form-select" id="season" name="season" required>
+                    <option value="">{{ g.t['select_season'] }}</option>
+                    {% for s in seasons %}
+                    <option value="{{ s }}">{{ s }}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+            </div>
+            <div class="col-12 col-sm-6">
+                <label for="team" class="form-label">{{ g.t['category'] }}</label>
+                {% if modify %}
+                <input type="text" class="form-control" id="team" name="team" required
+                    value="{{ game.team if game.team is defined else '' }}" readonly>
+                {% else %}
+                <select class="form-select" id="team" name="team" required disabled>
+                    <option value="">{{ g.t['select_season'] if g.t is defined else 'Select season first' }}</option>
+                </select>
+                {% endif %}
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="team" class="form-label">{{ g.t['category'] }}</label>
-            {% if modify %}
-            <input type="text" class="form-control" id="team" name="team" required
-                value="{{ game.team if game.team is defined else '' }}" readonly>
-            {% else %}
-            <select class="form-select" id="team" name="team" required disabled>
-                <option value="">{{ g.t['select_season'] if g.t is defined else 'Select season first' }}</option>
-            </select>
-            {% endif %}
+        
+        <div class="row g-2 g-sm-3 mt-2">
+            <div class="col-12 col-sm-6">
+                <label for="home_team" class="form-label">{{ g.t['home_team'] }}</label>
+                <input type="text" class="form-control" id="home_team" name="home_team" required
+                    value="{{ game.home_team if modify else '' }}">
+            </div>
+            <div class="col-12 col-sm-6">
+                <label for="away_team" class="form-label">{{ g.t['away_team'] }}</label>
+                <input type="text" class="form-control" id="away_team" name="away_team" required
+                    value="{{ game.away_team if modify else '' }}">
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="home_team" class="form-label">{{ g.t['home_team'] }}</label>
-            <input type="text" class="form-control" id="home_team" name="home_team" required
-                value="{{ game.home_team if modify else '' }}">
-        </div>
-        <div class="mb-3">
-            <label for="away_team" class="form-label">{{ g.t['away_team'] }}</label>
-            <input type="text" class="form-control" id="away_team" name="away_team" required
-                value="{{ game.away_team if modify else '' }}">
-        </div>
-        <div class="mb-3">
+        
+        <div class="mt-2 mb-3">
             <label for="date" class="form-label">{{ g.t['date'] }}</label>
             <input type="date" class="form-control" id="date" name="date" required
                 value="{{ game.date if modify and game.date is defined else '' }}">
         </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
+        
+        <!-- Referees Section -->
+        <h5 class="mt-3 mb-2">{{ g.t['referees'] }}</h5>
+        <div class="row g-2 g-sm-3">
+            <div class="col-12 col-sm-6">
                 <label for="referee1" class="form-label">{{ g.t['referee1'] }}</label>
                 <input type="text" class="form-control" id="referee1" name="referee1"
                     value="{{ game.referee1 if modify and game.referee1 is defined else '' }}">
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-12 col-sm-6">
                 <label for="referee2" class="form-label">{{ g.t['referee2'] }}</label>
                 <input type="text" class="form-control" id="referee2" name="referee2"
                     value="{{ game.referee2 if modify and game.referee2 is defined else '' }}">
@@ -192,15 +577,30 @@
         <div class="lineup-section" id="lineupSection" style="display: {% if modify %}block{% else %}none{% endif %};">
             <h4>{{ g.t['lineup'] }}</h4>
 
+            <!-- Duplicate Warning Container -->
+            <div id="duplicateWarningContainer"></div>
+
             <!-- Convocato Section -->
             <div class="mb-4">
                 <h5>{{ g.t['convocato'] }}</h5>
                 <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="hideInactivePlayers" checked>
-                        <label class="form-check-label" for="hideInactivePlayers">
-                            {{ g.t['hide_inactive_players'] }}
-                        </label>
+                    <div class="row g-2">
+                        <div class="col-12 col-sm-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="hideInactivePlayers" checked>
+                                <label class="form-check-label" for="hideInactivePlayers">
+                                    {{ g.t['hide_inactive_players'] }}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showNicknames">
+                                <label class="form-check-label" for="showNicknames">
+                                    {{ g.t['show_nicknames'] }}
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div id="categoryCounter" class="category-counter" style="display: none;">
@@ -232,7 +632,11 @@
                                 data-category="{{ player.tesser }}" data-position="{{ player.position }}"
                                 data-number="{{ player.number }}">
                             <label class="form-check-label" for="convocato_{{ player.id }}">
-                                #{{ player.number }} {{ player.surname }} {{ player.name }} ({{ player.tesser }})
+                                #{{ player.number }} 
+                                <span class="player-name-toggle" 
+                                      data-fullname="{{ player.surname }} {{ player.name }}" 
+                                      data-nickname="{{ player.nickname if player.nickname else (player.name + ' ' + player.surname[:1] + '.') }}">{{ player.surname }} {{ player.name }}</span>
+                                ({{ player.tesser }})
                             </label>
                         </div>
                         {% endif %}
@@ -247,7 +651,7 @@
                 <h5>{{ g.t['starting_goalies'] }}</h5>
                 <p class="text-muted small">{{ g.t['select_starting_goalie_instruction'] }}</p>
                 <div id="goalieSelection" style="display: none;">
-                    <!-- Goalie radio buttons will be populated here by JavaScript -->
+                    <!-- Goalie position buttons (1=Starting, 2=Backup) will be populated here by JavaScript -->
                 </div>
                 <input type="hidden" id="goalie1" name="goalie1">
                 <input type="hidden" id="goalie2" name="goalie2">
@@ -255,10 +659,26 @@
 
             <!-- Lines Section -->
             {% for line_num in range(1, 5) %}
-            <div class="formation-section" id="lineSection{{ line_num }}">
-                <h5>{{ g.t['line'] }} {{ line_num }}</h5>
-                <div class="position-columns" style="grid-template-columns: repeat(3, 1fr);"
-                    data-line-section="l{{ line_num }}">
+            <div class="formation-section" id="lineSection{{ line_num }}" data-section-type="line">
+                <div class="section-header" onclick="toggleSection('lineSection{{ line_num }}')">
+                    <div style="display: flex; align-items: center;">
+                        <h5 style="margin: 0;">{{ g.t['line'] }} {{ line_num }}</h5>
+                        <span class="completion-badge" id="badge-l{{ line_num }}">0/5</span>
+                    </div>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="section-content" id="content-lineSection{{ line_num }}">
+                    <div class="quick-actions">
+                        {% if line_num > 1 %}
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyLine({{ line_num - 1 }}, {{ line_num }})">
+                            ← Copy from L{{ line_num - 1 }}
+                        </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearLine({{ line_num }})">
+                            Clear Line
+                        </button>
+                    </div>
+                    <div class="position-columns" data-line-section="l{{ line_num }}">
                     {% for position in ['A', 'C', 'D'] %}
                     <div class="position-column">
                         <h6>
@@ -269,19 +689,30 @@
                         </h6>
                         {% for player in roster %}
                         {% if player.position == position %}
-                        <div class="player-with-position player-option" data-player-id="{{ player.id }}"
+                        <div class="player-with-position player-option player-row" data-player-id="{{ player.id }}"
                             data-position="{{ player.position }}">
-                            <input class="form-control form-control-sm player-position-input" type="number"
+                            <div class="position-selector" data-input-id="l{{ line_num }}_{{ player.id }}">
+                                <button type="button" class="position-btn" data-position="1">1</button>
+                                <button type="button" class="position-btn" data-position="2">2</button>
+                                <button type="button" class="position-btn" data-position="3">3</button>
+                                <button type="button" class="position-btn" data-position="4">4</button>
+                                <button type="button" class="position-btn" data-position="5">5</button>
+                            </div>
+                            <input class="form-control form-control-sm player-position-input" type="hidden"
                                 name="l{{ line_num }}_{{ player.id }}" id="l{{ line_num }}_{{ player.id }}" min="1"
-                                max="6" placeholder="#" data-line="l{{ line_num }}" data-player-id="{{ player.id }}">
+                                max="5" placeholder="#" data-line="l{{ line_num }}" data-player-id="{{ player.id }}">
                             <label for="l{{ line_num }}_{{ player.id }}">
-                                #{{ player.number }} {{ player.surname }} {{ player.name }}
+                                #{{ player.number }} 
+                                <span class="player-name-toggle" 
+                                      data-fullname="{{ player.surname }} {{ player.name }}" 
+                                      data-nickname="{{ player.nickname if player.nickname else (player.name + ' ' + player.surname[:1] + '.') }}">{{ player.surname }} {{ player.name }}</span>
                             </label>
                         </div>
                         {% endif %}
                         {% endfor %}
                     </div>
                     {% endfor %}
+                </div>
                 </div>
             </div>
             {% endfor %}
@@ -296,10 +727,23 @@
             ('stress_line', g.t['stress_line'])
             ] %}
             {% for formation_key, formation_name in formations %}
-            <div class="formation-section" id="formation{{ formation_key }}">
-                <h5>{{ formation_name }}</h5>
-                <div class="position-columns" style="grid-template-columns: repeat(3, 1fr);"
-                    data-formation-section="{{ formation_key }}">
+            <div class="formation-section" id="formation{{ formation_key }}" data-section-type="formation">
+                <div class="section-header" onclick="toggleSection('formation{{ formation_key }}')">
+                    <div style="display: flex; align-items: center;">
+                        <h5 style="margin: 0;">{{ formation_name }}</h5>
+                        <span class="completion-badge" id="badge-{{ formation_key }}">
+                            0/{% if formation_key in ['bp1', 'bp2'] %}4{% elif formation_key == '6vs5' %}6{% else %}5{% endif %}
+                        </span>
+                    </div>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="section-content" id="content-formation{{ formation_key }}">
+                    <div class="quick-actions">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearFormation('{{ formation_key }}')">
+                            Clear {{ formation_name }}
+                        </button>
+                    </div>
+                    <div class="position-columns" data-formation-section="{{ formation_key }}">
                     {% for position in ['A', 'C', 'D'] %}
                     <div class="position-column">
                         <h6>
@@ -310,20 +754,30 @@
                         </h6>
                         {% for player in roster %}
                         {% if player.position == position %}
-                        <div class="player-with-position player-option" data-player-id="{{ player.id }}"
+                        <div class="player-with-position player-option player-row" data-player-id="{{ player.id }}"
                             data-position="{{ player.position }}">
-                            <input class="form-control form-control-sm player-position-input" type="number"
+                            <div class="position-selector" data-input-id="{{ formation_key }}_{{ player.id }}">
+                                {% set max_pos = 4 if formation_key in ['bp1', 'bp2'] else (6 if formation_key == '6vs5' else 5) %}
+                                {% for pos in range(1, max_pos + 1) %}
+                                <button type="button" class="position-btn" data-position="{{ pos }}">{{ pos }}</button>
+                                {% endfor %}
+                            </div>
+                            <input class="form-control form-control-sm player-position-input" type="hidden"
                                 name="{{ formation_key }}_{{ player.id }}" id="{{ formation_key }}_{{ player.id }}"
-                                min="1" max="6" placeholder="#" data-formation="{{ formation_key }}"
+                                min="1" max="{% if formation_key in ['bp1', 'bp2'] %}4{% elif formation_key == '6vs5' %}6{% else %}5{% endif %}" placeholder="#" data-formation="{{ formation_key }}"
                                 data-player-id="{{ player.id }}">
                             <label for="{{ formation_key }}_{{ player.id }}">
-                                #{{ player.number }} {{ player.surname }} {{ player.name }}
+                                #{{ player.number }} 
+                                <span class="player-name-toggle" 
+                                      data-fullname="{{ player.surname }} {{ player.name }}" 
+                                      data-nickname="{{ player.nickname if player.nickname else (player.name + ' ' + player.surname[:1] + '.') }}">{{ player.surname }} {{ player.name }}</span>
                             </label>
                         </div>
                         {% endif %}
                         {% endfor %}
                     </div>
                     {% endfor %}
+                </div>
                 </div>
             </div>
             {% endfor %}
@@ -332,7 +786,7 @@
         <div class="mb-3">
             <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="enable_opponent_goalie"
-                    name="enable_opponent_goalie" {{ 'checked' if modify and game.opponent_goalie_enabled else '' }}>
+                    name="enable_opponent_goalie" {% if modify %}{% if game.opponent_goalie_enabled %}checked{% endif %}{% else %}checked{% endif %}>
                 <label class="form-check-label" for="enable_opponent_goalie">{{ g.t['track_opponent_goalie'] }}</label>
             </div>
         </div>
@@ -358,6 +812,7 @@
 <script>
     // Store roster globally
     var currentRoster = [];
+    var isPopulatingData = false; // Flag to prevent rebuild during data population
 
     document.addEventListener('DOMContentLoaded', function () {
         var delForm = document.getElementById('delete-game-form');
@@ -409,6 +864,21 @@
                 });
         }
         
+        // Loading overlay functions
+        function showLoading() {
+            var overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        }
+
+        function hideLoading() {
+            var overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+        }
+        
         // Function to load roster based on current season and category
         function loadRosterForCurrentSelection() {
             if (!teamSelect || !teamSelect.value || !teamSelect.value.trim()) {
@@ -418,6 +888,7 @@
                 return;
             }
             
+            showLoading();
             var category = teamSelect.value.trim();
             var season = seasonSelect ? seasonSelect.value.trim() : '';
             
@@ -442,6 +913,7 @@
                     if (lineupSection) {
                         lineupSection.style.display = 'block';
                     }
+                    hideLoading();
                 })
                 .catch(error => {
                     console.error('Error loading roster:', error);
@@ -450,6 +922,7 @@
                     if (lineupSection) {
                         lineupSection.style.display = 'block';
                     }
+                    hideLoading();
                 });
         }
         
@@ -512,6 +985,14 @@
             updateCategoryCounter();
             updatePositionCounters();
             updateGoalieDropdowns();
+            
+            // Expand all sections after content is loaded
+            setTimeout(function() {
+                expandAllSections();
+                initializePositionSelectors();
+                updateAllCompletionBadges();
+                hideLoading();
+            }, 100);
         }
 
         function rebuildConvocatoSection(roster) {
@@ -556,7 +1037,13 @@
                     var label = document.createElement('label');
                     label.className = 'form-check-label';
                     label.htmlFor = 'convocato_' + player.id;
-                    label.textContent = '#' + player.number + ' ' + player.surname + ' ' + player.name + ' (' + player.tesser + ')';
+                    
+                    // Create label with nickname toggle support
+                    var nickname = player.nickname || (player.name + ' ' + player.surname.charAt(0) + '.');
+                    var fullname = player.surname + ' ' + player.name;
+                    label.innerHTML = '#' + player.number + ' ' +
+                        '<span class="player-name-toggle" data-fullname="' + fullname + '" data-nickname="' + nickname + '">' + fullname + '</span>' +
+                        ' (' + player.tesser + ')';
 
                     checkDiv.appendChild(checkbox);
                     checkDiv.appendChild(label);
@@ -573,6 +1060,11 @@
 
         function rebuildLineAndFormationSections(roster) {
             console.log('Rebuilding line and formation sections with roster:', roster);
+
+            // Clear all existing data-initialized flags before rebuilding
+            document.querySelectorAll('.position-selector[data-initialized]').forEach(function(selector) {
+                selector.removeAttribute('data-initialized');
+            });
 
             // Rebuild line sections (L1-L4)
             for (var lineNum = 1; lineNum <= 4; lineNum++) {
@@ -593,7 +1085,40 @@
                 }
             });
 
-            // Reinitialize all event listeners
+            // Reinitialize all event listeners after all sections are rebuilt
+            initializeLineListeners();
+            initializePositionSelectors();
+            
+            // Update completion badges
+            updateAllCompletionBadges();
+        }
+
+        function rebuildLineAndFormationSectionsWithoutInit(roster) {
+            console.log('Rebuilding line and formation sections (without init) with roster:', roster);
+
+            // Clear all existing data-initialized flags before rebuilding
+            document.querySelectorAll('.position-selector[data-initialized]').forEach(function(selector) {
+                selector.removeAttribute('data-initialized');
+            });
+
+            // Rebuild line sections (L1-L4)
+            for (var lineNum = 1; lineNum <= 4; lineNum++) {
+                var positionColumns = document.querySelector('[data-line-section="l' + lineNum + '"]');
+                if (positionColumns) {
+                    rebuildFormationSection(positionColumns, roster, 'l' + lineNum, ['A', 'C', 'D']);
+                }
+            }
+
+            // Rebuild formation sections
+            var formations = ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line'];
+            formations.forEach(function (formationKey) {
+                var positionColumns = document.querySelector('[data-formation-section="' + formationKey + '"]');
+                if (positionColumns) {
+                    rebuildFormationSection(positionColumns, roster, formationKey, ['A', 'C', 'D']);
+                }
+            });
+
+            // Only reinitialize line listeners (not position selectors)
             initializeLineListeners();
         }
 
@@ -606,9 +1131,25 @@
             };
 
             var isLine = formationKey.startsWith('l');
+            
+            // Determine max positions for this formation
+            var maxPos = 5; // default
+            if (formationKey === 'bp1' || formationKey === 'bp2') {
+                maxPos = 4;
+            } else if (formationKey === '6vs5') {
+                maxPos = 6;
+            }
+
+            // Get list of checked (called up) players
+            var checkedPlayers = new Set();
+            var convocatoCheckboxes = document.querySelectorAll('input[name="convocato"]:checked');
+            convocatoCheckboxes.forEach(function(checkbox) {
+                checkedPlayers.add(checkbox.value);
+            });
 
             positions.forEach(function (position) {
-                var positionPlayers = roster.filter(p => p.position === position);
+                // Filter to only include players in this position who are also called up
+                var positionPlayers = roster.filter(p => p.position === position && checkedPlayers.has(p.id.toString()));
 
                 var columnDiv = document.createElement('div');
                 columnDiv.className = 'position-column';
@@ -619,17 +1160,31 @@
 
                 positionPlayers.forEach(function (player) {
                     var playerDiv = document.createElement('div');
-                    playerDiv.className = 'player-with-position player-option';
+                    playerDiv.className = 'player-with-position player-option player-row';
                     playerDiv.setAttribute('data-player-id', player.id);
                     playerDiv.setAttribute('data-position', player.position);
 
+                    // Create position selector buttons
+                    var selectorDiv = document.createElement('div');
+                    selectorDiv.className = 'position-selector';
+                    selectorDiv.setAttribute('data-input-id', formationKey + '_' + player.id);
+                    
+                    for (var i = 1; i <= maxPos; i++) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'position-btn';
+                        btn.setAttribute('data-position', i.toString());
+                        btn.textContent = i.toString();
+                        selectorDiv.appendChild(btn);
+                    }
+
                     var input = document.createElement('input');
                     input.className = 'form-control form-control-sm player-position-input';
-                    input.type = 'number';
+                    input.type = 'hidden';
                     input.name = formationKey + '_' + player.id;
                     input.id = formationKey + '_' + player.id;
                     input.min = 1;
-                    input.max = 5;
+                    input.max = maxPos;
                     input.placeholder = '#';
 
                     // Set correct data attribute based on type
@@ -642,8 +1197,14 @@
 
                     var label = document.createElement('label');
                     label.htmlFor = formationKey + '_' + player.id;
-                    label.textContent = '#' + player.number + ' ' + player.surname + ' ' + player.name;
+                    
+                    // Create label with nickname toggle support
+                    var nickname = player.nickname || (player.name + ' ' + player.surname.charAt(0) + '.');
+                    var fullname = player.surname + ' ' + player.name;
+                    label.innerHTML = '#' + player.number + ' ' +
+                        '<span class="player-name-toggle" data-fullname="' + fullname + '" data-nickname="' + nickname + '">' + fullname + '</span>';
 
+                    playerDiv.appendChild(selectorDiv);
                     playerDiv.appendChild(input);
                     playerDiv.appendChild(label);
                     columnDiv.appendChild(playerDiv);
@@ -660,7 +1221,39 @@
                     updateCategoryCounter();
                     updatePositionCounters();
                     updateGoalieDropdowns();
-                    filterFormationPlayers();
+                    
+                    // Skip rebuild if we're populating existing data
+                    if (isPopulatingData) {
+                        highlightConvocatoPlayers();
+                        return;
+                    }
+                    
+                    // Rebuild line/formation sections to show only checked players
+                    if (currentRoster && currentRoster.length > 0) {
+                        // Save current position selections
+                        var savedSelections = {};
+                        document.querySelectorAll('input.player-position-input').forEach(function(input) {
+                            if (input.value) {
+                                savedSelections[input.id] = input.value;
+                            }
+                        });
+                        
+                        // Rebuild sections WITHOUT calling initializePositionSelectors yet
+                        rebuildLineAndFormationSectionsWithoutInit(currentRoster);
+                        
+                        // Restore saved selections BEFORE initializing selectors
+                        Object.keys(savedSelections).forEach(function(inputId) {
+                            var input = document.getElementById(inputId);
+                            if (input) {
+                                input.value = savedSelections[inputId];
+                            }
+                        });
+                        
+                        // Now initialize selectors with restored values (force reinit)
+                        initializePositionSelectors(true);
+                        updateAllCompletionBadges();
+                    }
+                    
                     highlightConvocatoPlayers();
                 });
             });
@@ -767,11 +1360,15 @@
             var checkedGoalies = [];
             convocatoCheckboxes.forEach(function (checkbox) {
                 if (checkbox.checked && checkbox.getAttribute('data-position') === 'P') {
-                    var label = checkbox.nextElementSibling.textContent.trim();
-                    checkedGoalies.push({
-                        id: checkbox.value,
-                        label: label
-                    });
+                    var playerId = checkbox.value;
+                    // Find the full player data from roster
+                    var player = currentRoster.find(p => p.id.toString() === playerId);
+                    if (player) {
+                        checkedGoalies.push({
+                            id: checkbox.value,
+                            player: player
+                        });
+                    }
                 }
             });
 
@@ -785,68 +1382,146 @@
             } else if (checkedGoalies.length === 1) {
                 // Only one goalie - automatically set as starting goalie
                 goalieSelection.style.display = 'block';
-                goalieSelection.innerHTML = '<div class="alert alert-info">' +
-                    '<strong>{{ g.t["first_goalie"] }}:</strong> ' + checkedGoalies[0].label +
-                    '</div>';
-                goalie1Input.value = checkedGoalies[0].id;
+                var goalieData = checkedGoalies[0];
+                var player = goalieData.player;
+                
+                var playerDiv = document.createElement('div');
+                playerDiv.className = 'player-row';
+                playerDiv.style.marginBottom = '10px';
+                
+                var selectorDiv = document.createElement('div');
+                selectorDiv.className = 'position-selector';
+                
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'position-btn selected';
+                btn.textContent = '1';
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+                selectorDiv.appendChild(btn);
+                
+                var label = document.createElement('label');
+                label.style.marginLeft = '10px';
+                var nickname = player.nickname || (player.name + ' ' + player.surname.charAt(0) + '.');
+                var fullname = player.surname + ' ' + player.name;
+                label.innerHTML = '#' + player.number + ' ' +
+                    '<span class="player-name-toggle" data-fullname="' + fullname + '" data-nickname="' + nickname + '">' + fullname + '</span>' +
+                    ' (Starting)';
+                
+                playerDiv.appendChild(selectorDiv);
+                playerDiv.appendChild(label);
+                goalieSelection.appendChild(playerDiv);
+                
+                goalie1Input.value = goalieData.id;
                 goalie2Input.value = '';
             } else {
-                // Multiple goalies - show radio buttons to select starting goalie
+                // Multiple goalies - show position-style buttons
                 goalieSelection.style.display = 'block';
-                var html = '<div class="mb-2"><strong>{{ g.t["select_starting_goalie"] }}:</strong></div>';
-
-                checkedGoalies.forEach(function (goalie, index) {
-                    var isChecked = goalie.id === goalie1Input.value ? 'checked' : '';
-                    if (!goalie1Input.value && index === 0) isChecked = 'checked'; // Default to first
-
-                    html += '<div class="form-check">' +
-                        '<input class="form-check-input goalie-radio" type="radio" name="starting_goalie_radio" ' +
-                        'value="' + goalie.id + '" id="goalie_radio_' + goalie.id + '" ' + isChecked + '>' +
-                        '<label class="form-check-label" for="goalie_radio_' + goalie.id + '">' +
-                        goalie.label +
-                        '</label>' +
-                        '</div>';
+                
+                checkedGoalies.forEach(function (goalieData) {
+                    var player = goalieData.player;
+                    var playerDiv = document.createElement('div');
+                    playerDiv.className = 'player-row';
+                    playerDiv.style.marginBottom = '10px';
+                    
+                    var selectorDiv = document.createElement('div');
+                    selectorDiv.className = 'position-selector';
+                    selectorDiv.setAttribute('data-goalie-id', goalieData.id);
+                    
+                    // Create buttons 1 and 2
+                    for (var i = 1; i <= 2; i++) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'position-btn';
+                        btn.setAttribute('data-position', i.toString());
+                        btn.textContent = i.toString();
+                        
+                        // Check if this goalie is already assigned to position 1 or 2
+                        if ((i === 1 && goalieData.id === goalie1Input.value) || 
+                            (i === 2 && goalieData.id === goalie2Input.value)) {
+                            btn.classList.add('selected');
+                        }
+                        
+                        // Add click handler
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            var position = this.getAttribute('data-position');
+                            var goalieId = this.closest('.position-selector').getAttribute('data-goalie-id');
+                            handleGoaliePositionClick(goalieId, position);
+                        });
+                        
+                        selectorDiv.appendChild(btn);
+                    }
+                    
+                    var label = document.createElement('label');
+                    label.style.marginLeft = '10px';
+                    var nickname = player.nickname || (player.name + ' ' + player.surname.charAt(0) + '.');
+                    var fullname = player.surname + ' ' + player.name;
+                    label.innerHTML = '#' + player.number + ' ' +
+                        '<span class="player-name-toggle" data-fullname="' + fullname + '" data-nickname="' + nickname + '">' + fullname + '</span>';
+                    
+                    playerDiv.appendChild(selectorDiv);
+                    playerDiv.appendChild(label);
+                    goalieSelection.appendChild(playerDiv);
                 });
-
-                goalieSelection.innerHTML = html;
-
-                // Update hidden inputs based on radio selection
-                updateGoalieInputs();
-
-                // Add listeners to radio buttons
-                var radioButtons = document.querySelectorAll('.goalie-radio');
-                radioButtons.forEach(function (radio) {
-                    radio.addEventListener('change', updateGoalieInputs);
-                });
+                
+                // Auto-assign if not already set
+                if (!goalie1Input.value && checkedGoalies.length > 0) {
+                    goalie1Input.value = checkedGoalies[0].id;
+                    updateGoalieButtonStates();
+                }
+                if (!goalie2Input.value && checkedGoalies.length > 1) {
+                    goalie2Input.value = checkedGoalies[1].id;
+                    updateGoalieButtonStates();
+                }
             }
         }
 
-        function updateGoalieInputs() {
-            var convocatoCheckboxes = document.querySelectorAll('.convocato-checkbox');
+        function handleGoaliePositionClick(goalieId, position) {
             var goalie1Input = document.getElementById('goalie1');
             var goalie2Input = document.getElementById('goalie2');
-            var selectedRadio = document.querySelector('.goalie-radio:checked');
+            
+            // Get current assignments
+            var currentGoalie1 = goalie1Input.value;
+            var currentGoalie2 = goalie2Input.value;
+            
+            if (position === '1') {
+                // If this goalie was position 2, swap them
+                if (goalieId === currentGoalie2) {
+                    goalie2Input.value = currentGoalie1;
+                }
+                goalie1Input.value = goalieId;
+            } else if (position === '2') {
+                // If this goalie was position 1, swap them
+                if (goalieId === currentGoalie1) {
+                    goalie1Input.value = currentGoalie2;
+                }
+                goalie2Input.value = goalieId;
+            }
+            
+            updateGoalieButtonStates();
+        }
 
-            if (!selectedRadio) return;
-
-            var startingGoalieId = selectedRadio.value;
-
-            // Collect all checked goalies
-            var allGoalieIds = [];
-            convocatoCheckboxes.forEach(function (checkbox) {
-                if (checkbox.checked && checkbox.getAttribute('data-position') === 'P') {
-                    allGoalieIds.push(checkbox.value);
+        function updateGoalieButtonStates() {
+            var goalie1Input = document.getElementById('goalie1');
+            var goalie2Input = document.getElementById('goalie2');
+            
+            // Clear all selected states
+            document.querySelectorAll('#goalieSelection .position-btn').forEach(function(btn) {
+                btn.classList.remove('selected');
+            });
+            
+            // Update button states based on current assignments
+            document.querySelectorAll('#goalieSelection .position-selector').forEach(function(selector) {
+                var goalieId = selector.getAttribute('data-goalie-id');
+                var buttons = selector.querySelectorAll('.position-btn');
+                
+                if (goalieId === goalie1Input.value) {
+                    buttons[0].classList.add('selected'); // Position 1
+                } else if (goalieId === goalie2Input.value) {
+                    buttons[1].classList.add('selected'); // Position 2
                 }
             });
-
-            // Set starting goalie
-            goalie1Input.value = startingGoalieId;
-
-            // Set backup goalie (the other one)
-            var backupGoalieId = allGoalieIds.find(function (id) {
-                return id !== startingGoalieId;
-            });
-            goalie2Input.value = backupGoalieId || '';
         }
 
         function filterFormationPlayers() {
@@ -868,7 +1543,12 @@
                 if (position === 'P' || !checkedPlayers.has(playerId)) {
                     playerDiv.style.display = 'none';
                 } else {
-                    playerDiv.style.display = 'block';
+                    // Use flex for player-row elements, block for others
+                    if (playerDiv.classList.contains('player-row')) {
+                        playerDiv.style.display = 'flex';
+                    } else {
+                        playerDiv.style.display = 'block';
+                    }
                 }
             });
         }
@@ -929,6 +1609,9 @@
                     }
                 }
             });
+            
+            // Check for duplicates
+            checkDuplicates();
         }
 
         // Add listeners to line number inputs
@@ -971,6 +1654,49 @@
             });
         }
 
+        // Toggle nicknames visibility
+        var showNicknamesCheckbox = document.getElementById('showNicknames');
+        if (showNicknamesCheckbox) {
+            console.log('Nickname checkbox found:', showNicknamesCheckbox);
+            
+            function toggleNicknames() {
+                var isChecked = showNicknamesCheckbox.checked;
+                console.log('Nickname toggle - isChecked:', isChecked);
+                
+                // Get all player name elements
+                var playerNames = document.querySelectorAll('.player-name-toggle');
+                console.log('Found', playerNames.length, 'player name elements');
+                
+                playerNames.forEach(function(el) {
+                    var fullname = el.getAttribute('data-fullname');
+                    var nickname = el.getAttribute('data-nickname');
+                    
+                    if (isChecked) {
+                        // Show nickname
+                        el.textContent = nickname;
+                    } else {
+                        // Show fullname
+                        el.textContent = fullname;
+                    }
+                });
+                
+                console.log('Toggle complete - showing:', isChecked ? 'nicknames' : 'fullnames');
+            }
+            
+            showNicknamesCheckbox.addEventListener('change', function() {
+                console.log('Change event fired');
+                toggleNicknames();
+            });
+            
+            // Don't initialize immediately - wait for any dynamic content
+            setTimeout(function() {
+                console.log('Initial toggle after timeout');
+                toggleNicknames();
+            }, 100);
+        } else {
+            console.log('Nickname checkbox NOT found');
+        }
+
         // Function to populate existing game data into the form
         function populateExistingGameData() {
             console.log('Populating existing game data...');
@@ -987,6 +1713,9 @@
     var checkRoster = setInterval(function () {
         if (currentRoster && currentRoster.length > 0) {
             clearInterval(checkRoster);
+            
+            // Set flag to prevent rebuilding during population
+            isPopulatingData = true;
 
             // Create a map of player name to player ID
             var nameToIdMap = {};
@@ -1039,15 +1768,14 @@
                 }
             });
 
-            // STEP 2: Update UI to show formation players (now that checkboxes are checked)
-            console.log('Updating UI to show selected players...');
-            filterFormationPlayers(); // This will show the position input fields
+            // STEP 2: Rebuild sections to show only the checked players (without initializing selectors yet)
+            console.log('Rebuilding sections with checked players...');
+            rebuildLineAndFormationSectionsWithoutInit(currentRoster);
 
-            // STEP 3: Wait a moment for DOM to update, then populate the position values
-            setTimeout(function () {
-                console.log('Populating position values...');
+            // STEP 3: Populate the position values
+            console.log('Populating position values...');
 
-                if (gameData.lines) {
+            if (gameData.lines) {
                     gameData.lines.forEach(function (linePlayers, lineIndex) {
                         var lineNum = lineIndex + 1;
                         console.log('Processing line ' + lineNum + ':', linePlayers);
@@ -1104,21 +1832,29 @@
                     }
                 });
 
-                // STEP 4: Final UI updates - trigger change events to update counters
-                console.log('Final UI updates...');
+            // STEP 4: Final UI updates
+            console.log('Final UI updates...');
 
-                // Trigger change event on first convocato checkbox to update all counters
-                var firstCheckbox = document.querySelector('.convocato-checkbox:checked');
-                if (firstCheckbox) {
-                    var changeEvent = new Event('change', { bubbles: true });
-                    firstCheckbox.dispatchEvent(changeEvent);
-                }
+            // Update counters without triggering rebuilds
+            updateCategoryCounter();
+            updatePositionCounters();
+            updateGoalieDropdowns();
+            highlightConvocatoPlayers();
 
-                // Highlight players selected in multiple lines
-                highlightSelectedPlayers();
+            // Highlight players selected in multiple lines
+            highlightSelectedPlayers();
+            
+            // Reinitialize position selectors to show correct button states
+            initializePositionSelectors();
+            updateAllCompletionBadges();
+            
+            // Collapse sections with no selections
+            collapseEmptySections();
+            
+            // Clear the flag to allow normal rebuilds going forward
+            isPopulatingData = false;
 
-                console.log('Finished populating existing game data');
-            }, 50); // Small delay to let DOM update
+            console.log('Finished populating existing game data');
         }
     }, 100);
 
@@ -1132,14 +1868,370 @@
     updateCategoryCounter();
     updatePositionCounters();
     updateGoalieDropdowns();
+    {% if not modify %}
+    // Only filter on initial load if not in modify mode
     filterFormationPlayers();
+    {% endif %}
     highlightSelectedPlayers();
     filterInactivePlayers();
+
+    // Initialize position selectors
+    initializePositionSelectors();
+    updateAllCompletionBadges();
 
     // Populate existing game data if in modify mode
     {% if modify and game %}
     populateExistingGameData();
     {% endif %}
     });
+
+    // ===== NEW UX FEATURES =====
+
+    // Toggle section collapse/expand
+    function toggleSection(sectionId) {
+        var section = document.getElementById(sectionId);
+        var content = document.getElementById('content-' + sectionId);
+        var icon = section.querySelector('.collapse-icon');
+        
+        if (content.classList.contains('collapsed')) {
+            content.classList.remove('collapsed');
+            content.style.maxHeight = 'none';
+            icon.classList.remove('collapsed');
+        } else {
+            content.classList.add('collapsed');
+            content.style.maxHeight = '0px';
+            icon.classList.add('collapsed');
+        }
+    }
+
+    // Initialize all sections as expanded - run after a delay to allow roster to load
+    function expandAllSections() {
+        var allContents = document.querySelectorAll('.section-content');
+        allContents.forEach(function(content) {
+            if (!content.classList.contains('collapsed')) {
+                content.style.maxHeight = 'none'; // Use 'none' instead of calculating
+            }
+        });
+    }
+
+    // Collapse sections with no selections (for modify mode)
+    function collapseEmptySections() {
+        var sections = [
+            { id: 'lineSection1', key: 'l1', type: 'line' },
+            { id: 'lineSection2', key: 'l2', type: 'line' },
+            { id: 'lineSection3', key: 'l3', type: 'line' },
+            { id: 'lineSection4', key: 'l4', type: 'line' },
+            { id: 'formationpp1', key: 'pp1', type: 'formation' },
+            { id: 'formationpp2', key: 'pp2', type: 'formation' },
+            { id: 'formationbp1', key: 'bp1', type: 'formation' },
+            { id: 'formationbp2', key: 'bp2', type: 'formation' },
+            { id: 'formation6vs5', key: '6vs5', type: 'formation' },
+            { id: 'formationstress_line', key: 'stress_line', type: 'formation' }
+        ];
+
+        sections.forEach(function(section) {
+            var inputs = document.querySelectorAll('[data-' + section.type + '="' + section.key + '"]');
+            var hasSelections = false;
+            
+            inputs.forEach(function(input) {
+                if (input.value && input.value.trim() !== '') {
+                    hasSelections = true;
+                }
+            });
+
+            var content = document.getElementById('content-' + section.id);
+            var header = document.getElementById(section.id);
+            var icon = header ? header.querySelector('.collapse-icon') : null;
+
+            if (!hasSelections && content) {
+                // Collapse sections with no selections
+                content.classList.add('collapsed');
+                content.style.maxHeight = '0px';
+                if (icon) icon.classList.add('collapsed');
+            } else if (content) {
+                // Expand sections with selections
+                content.classList.remove('collapsed');
+                content.style.maxHeight = 'none';
+                if (icon) icon.classList.remove('collapsed');
+            }
+        });
+    }
+
+    // Initialize position selector buttons
+    function initializePositionSelectors(forceReinit) {
+        var allSelectors = document.querySelectorAll('.position-selector');
+        
+        allSelectors.forEach(function(selector) {
+            var inputId = selector.getAttribute('data-input-id');
+            var input = document.getElementById(inputId);
+            var buttons = selector.querySelectorAll('.position-btn');
+            
+            if (!input) return;
+            
+            // Update button states based on input value
+            function updateButtonStates() {
+                var currentValue = input.value;
+                buttons.forEach(function(btn) {
+                    if (btn.getAttribute('data-position') === currentValue) {
+                        btn.classList.add('selected');
+                    } else {
+                        btn.classList.remove('selected');
+                    }
+                });
+                updateAllCompletionBadges();
+                checkDuplicates();
+            }
+            
+            // If already initialized and not forcing, just update button states
+            if (selector.hasAttribute('data-initialized') && !forceReinit) {
+                updateButtonStates();
+                return;
+            }
+            
+            selector.setAttribute('data-initialized', 'true');
+            
+            // Handle button clicks
+            buttons.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var position = this.getAttribute('data-position');
+                    
+                    // Toggle: if already selected, unselect
+                    if (input.value === position) {
+                        input.value = '';
+                    } else {
+                        input.value = position;
+                    }
+                    
+                    updateButtonStates();
+                    highlightSelectedPlayers();
+                    
+                    // Trigger change event for other listeners
+                    var event = new Event('input', { bubbles: true });
+                    input.dispatchEvent(event);
+                });
+            });
+            
+            // Initialize button states
+            updateButtonStates();
+            
+            // Listen for programmatic changes to input
+            input.addEventListener('change', updateButtonStates);
+        });
+    }
+
+    // Copy line function
+    function copyLine(fromLine, toLine) {
+        var fromInputs = document.querySelectorAll('[data-line="l' + fromLine + '"]');
+        var copied = 0;
+        
+        fromInputs.forEach(function(fromInput) {
+            if (fromInput.value && fromInput.value.trim() !== '') {
+                var playerId = fromInput.getAttribute('data-player-id');
+                var toInput = document.querySelector('[name="l' + toLine + '_' + playerId + '"]');
+                if (toInput) {
+                    toInput.value = fromInput.value;
+                    // Trigger change to update UI
+                    var event = new Event('change', { bubbles: true });
+                    toInput.dispatchEvent(event);
+                    copied++;
+                }
+            }
+        });
+        
+        // Reinitialize selectors to update button states
+        initializePositionSelectors();
+        highlightSelectedPlayers();
+        updateAllCompletionBadges();
+        
+        // Show feedback
+        showNotification('Copied ' + copied + ' players from Line ' + fromLine + ' to Line ' + toLine);
+    }
+
+    // Clear line function
+    function clearLine(lineNum) {
+        if (!confirm('Clear all positions in Line ' + lineNum + '?')) return;
+        
+        var inputs = document.querySelectorAll('[data-line="l' + lineNum + '"]');
+        inputs.forEach(function(input) {
+            input.value = '';
+            var event = new Event('change', { bubbles: true });
+            input.dispatchEvent(event);
+        });
+        
+        initializePositionSelectors();
+        highlightSelectedPlayers();
+        updateAllCompletionBadges();
+        
+        showNotification('Line ' + lineNum + ' cleared');
+    }
+
+    // Clear formation function
+    function clearFormation(formationKey) {
+        if (!confirm('Clear all positions in this formation?')) return;
+        
+        var inputs = document.querySelectorAll('[data-formation="' + formationKey + '"]');
+        inputs.forEach(function(input) {
+            input.value = '';
+            var event = new Event('change', { bubbles: true });
+            input.dispatchEvent(event);
+        });
+        
+        initializePositionSelectors();
+        highlightSelectedPlayers();
+        updateAllCompletionBadges();
+        
+        showNotification('Formation cleared');
+    }
+
+    // Update completion badges
+    function updateAllCompletionBadges() {
+        // Update line badges (L1-L4)
+        for (var i = 1; i <= 4; i++) {
+            updateCompletionBadge('l' + i, 5);
+        }
+        
+        // Update formation badges
+        updateCompletionBadge('pp1', 5);
+        updateCompletionBadge('pp2', 5);
+        updateCompletionBadge('bp1', 4);
+        updateCompletionBadge('bp2', 4);
+        updateCompletionBadge('6vs5', 6);
+        updateCompletionBadge('stress_line', 5);
+    }
+
+    function updateCompletionBadge(sectionKey, maxPlayers) {
+        var inputs = document.querySelectorAll('[data-line="' + sectionKey + '"], [data-formation="' + sectionKey + '"]');
+        var filledCount = 0;
+        
+        inputs.forEach(function(input) {
+            if (input.value && input.value.trim() !== '') {
+                filledCount++;
+            }
+        });
+        
+        var badge = document.getElementById('badge-' + sectionKey);
+        if (badge) {
+            badge.textContent = filledCount + '/' + maxPlayers;
+            badge.classList.remove('complete', 'partial');
+            
+            if (filledCount === maxPlayers) {
+                badge.classList.add('complete');
+            } else if (filledCount > 0) {
+                badge.classList.add('partial');
+            }
+        }
+    }
+
+    // Update progress tracker
+    // Check for duplicate players and show warnings
+    function checkDuplicates() {
+        // Define groups where duplicates matter
+        var groups = {
+            'lines': ['l1', 'l2', 'l3', 'l4'],
+            'powerplay': ['pp1', 'pp2'],
+            'boxplay': ['bp1', 'bp2'],
+            'specialty': ['6vs5', 'stress_line']
+        };
+        
+        var allInputs = document.querySelectorAll('.player-position-input[data-line], .player-position-input[data-formation]');
+        
+        // Clear previous highlights
+        document.querySelectorAll('.duplicate-player').forEach(function(el) {
+            el.classList.remove('duplicate-player');
+        });
+        
+        var allDuplicates = [];
+        
+        // Check for duplicates within each group
+        Object.keys(groups).forEach(function(groupName) {
+            var groupSections = groups[groupName];
+            var playerCounts = {};
+            
+            // Count player appearances within this group
+            allInputs.forEach(function(input) {
+                if (input.value && input.value.trim() !== '') {
+                    var playerId = input.getAttribute('data-player-id');
+                    var section = input.getAttribute('data-line') || input.getAttribute('data-formation');
+                    
+                    // Only count if this section is in the current group
+                    if (groupSections.indexOf(section) !== -1) {
+                        if (!playerCounts[playerId]) {
+                            playerCounts[playerId] = [];
+                        }
+                        playerCounts[playerId].push(section);
+                    }
+                }
+            });
+            
+            // Find duplicates within this group
+            for (var playerId in playerCounts) {
+                if (playerCounts[playerId].length > 1) {
+                    allDuplicates.push({
+                        playerId: playerId,
+                        sections: playerCounts[playerId],
+                        group: groupName
+                    });
+                    
+                    // Highlight duplicate players
+                    playerCounts[playerId].forEach(function(section) {
+                        var input = document.querySelector('[data-player-id="' + playerId + '"][data-line="' + section + '"], [data-player-id="' + playerId + '"][data-formation="' + section + '"]');
+                        if (input) {
+                            var playerRow = input.closest('.player-row');
+                            if (playerRow) {
+                                playerRow.classList.add('duplicate-player');
+                            }
+                        }
+                    });
+                }
+            }
+        });
+        
+        // Show warning if duplicates exist
+        showDuplicateWarning(allDuplicates);
+    }
+
+    function showDuplicateWarning(duplicates) {
+        var container = document.getElementById('duplicateWarningContainer');
+        if (!container) return;
+        
+        if (duplicates.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        var html = '<div class="alert alert-warning alert-dismissible fade show duplicate-warning" role="alert">' +
+            '<strong>⚠️ Duplicate Players Detected</strong><br>' +
+            '<small>' + duplicates.length + ' player(s) appear in multiple sections (highlighted in yellow)</small>' +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+            '</div>';
+        
+        container.innerHTML = html;
+    }
+
+    // Show notification toast
+    function showNotification(message) {
+        var notification = document.createElement('div');
+        notification.className = 'alert alert-success';
+        notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px; animation: slideIn 0.3s ease;';
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(function() {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(function() {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 2000);
+    }
+
+    // Add CSS for slideOut animation
+    var style = document.createElement('style');
+    style.textContent = '@keyframes slideOut { to { transform: translateX(120%); opacity: 0; } }';
+    document.head.appendChild(style);
+
+    // ===== END NEW UX FEATURES =====
+
 </script>
 {% endblock %}
