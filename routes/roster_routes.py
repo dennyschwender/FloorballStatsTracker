@@ -9,6 +9,7 @@ from models.roster import (
     save_roster, 
     get_all_categories_with_rosters,
     get_all_seasons,
+    get_all_rosters_with_seasons,
     get_all_tesser_values,
     get_roster_file
 )
@@ -22,8 +23,18 @@ def roster_list():
     season = request.args.get('season', '')
     all_categories = get_all_categories_with_rosters(season)
     
-    if not category and all_categories:
-        category = all_categories[0]
+    # Don't auto-select a category - let user choose from the list
+    
+    # Get all rosters with season info for grouping
+    all_rosters_info = get_all_rosters_with_seasons()
+    
+    # Group rosters by season
+    rosters_by_season = {}
+    for roster_info in all_rosters_info:
+        roster_season = roster_info['season']
+        if roster_season not in rosters_by_season:
+            rosters_by_season[roster_season] = []
+        rosters_by_season[roster_season].append(roster_info['category'])
     
     roster = load_roster(category, season)
     # Sort roster by number
@@ -50,6 +61,7 @@ def roster_list():
         by_position=by_position,
         by_category=by_category,
         existing_rosters=all_categories,
+        rosters_by_season=rosters_by_season,
         selected_category=category,
         selected_season=season,
         all_seasons=get_all_seasons()

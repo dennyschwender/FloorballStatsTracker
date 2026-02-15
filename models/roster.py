@@ -110,6 +110,38 @@ def get_all_categories_with_rosters(season=None):
     return sorted(categories)
 
 
+def get_all_rosters_with_seasons():
+    """Get all rosters with their season and category information.
+    Returns a list of dicts: [{'season': '2025-26', 'category': 'NLB'}, ...]
+    """
+    rosters = []
+    
+    # Ensure rosters directory exists
+    if not os.path.exists(ROSTERS_DIR):
+        return rosters
+    
+    # Scan for all roster_*.json files
+    for filename in os.listdir(ROSTERS_DIR):
+        if filename.startswith('roster_') and filename.endswith('.json'):
+            # Extract season and category from filename: roster_SEASON_CATEGORY.json
+            parts = filename[7:-5].split('_', 1)  # Remove 'roster_' prefix and '.json' suffix
+            if len(parts) == 2:
+                rosters.append({
+                    'season': parts[0],
+                    'category': parts[1]
+                })
+            elif len(parts) == 1:
+                # Old format without season
+                rosters.append({
+                    'season': '',
+                    'category': parts[0]
+                })
+    
+    # Sort by season (descending) then category (ascending)
+    rosters.sort(key=lambda x: (x['season'], x['category']), reverse=True)
+    return rosters
+
+
 def get_all_tesser_values():
     """Get list of all unique tesser/category values from all rosters"""
     tesser_values = set()

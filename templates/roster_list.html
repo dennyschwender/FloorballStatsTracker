@@ -23,18 +23,40 @@
     <!-- Show existing rosters as clickable cards -->
     <div class="mb-4">
         <h4>{{ g.t['select_roster'] }}</h4>
-        <div class="row">
-            {% for roster_cat in existing_rosters %}
-            <div class="col-md-3 mb-3">
-                <a href="{{ url_for('roster.roster_list', category=roster_cat, season=selected_season) }}" class="btn btn-outline-primary w-100 p-3"
-                    style="font-size: 1.2rem;">
-                    {{ roster_cat }}
-                </a>
+        
+        {% if selected_season %}
+            <!-- Season is selected, show rosters for that season -->
+            <div class="row">
+                {% for roster_cat in existing_rosters %}
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('roster.roster_list', category=roster_cat, season=selected_season) }}" class="btn btn-outline-primary w-100 p-3"
+                        style="font-size: 1.2rem;">
+                        {{ roster_cat }}
+                    </a>
+                </div>
+                {% endfor %}
             </div>
+            {% if not existing_rosters %}
+            <div class="alert alert-info">{{ g.t['no_players'] }}</div>
+            {% endif %}
+        {% else %}
+            <!-- No season selected, group by season -->
+            {% for season, categories in rosters_by_season.items() %}
+                <h5 class="mt-3">{% if season %}{{ g.t['season'] }}: {{ season }}{% else %}{{ g.t['no_season'] }}{% endif %}</h5>
+                <div class="row">
+                    {% for roster_cat in categories %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('roster.roster_list', category=roster_cat, season=season) }}" class="btn btn-outline-primary w-100 p-3"
+                            style="font-size: 1.2rem;">
+                            {{ roster_cat }}
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
             {% endfor %}
-        </div>
-        {% if not existing_rosters %}
-        <div class="alert alert-info">{{ g.t['no_players'] }}</div>
+            {% if not rosters_by_season %}
+            <div class="alert alert-info">{{ g.t['no_players'] }}</div>
+            {% endif %}
         {% endif %}
     </div>
 
