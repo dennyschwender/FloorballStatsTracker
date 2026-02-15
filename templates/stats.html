@@ -333,6 +333,32 @@
                     </td>
                 </tr>
                 {% endfor %}
+                {% for goalie in goalies %}
+                <tr style="background-color: #f0f8ff;">
+                    <td class="text-start"><strong>{{ goalie }} (P)</strong></td>
+                    {% for game in games %}
+                    {% set goalie_in_game = namespace(found=false) %}
+                    {% if goalie in game.get('goalies', []) %}
+                        {% set goalie_in_game.found = true %}
+                    {% endif %}
+                    <td>{% if goalie_in_game.found %}{{ "%.1f"|format(game.goalie_game_scores.get(goalie, 0)) }}{% else %}-{% endif %}</td>
+                    {% endfor %}
+                    <td class="fw-bold">{{ "%.1f"|format(goalie_data[goalie]['game_score']) }}</td>
+                    <td class="fw-bold">
+                        {% set games_played = namespace(count=0) %}
+                        {% for game in games %}
+                            {% if goalie in game.get('goalies', []) %}
+                                {% set games_played.count = games_played.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if games_played.count > 0 %}
+                            {{ "%.2f"|format(goalie_data[goalie]['game_score'] / games_played.count) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
