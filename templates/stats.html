@@ -179,6 +179,7 @@
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('plusMinusTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('plusMinusTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -195,6 +196,25 @@
                     <td>{% if player_in_game.found %}{{ game.plusminus.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['plusminus'] }}</td>
+                    <td class="fw-bold">
+                        {% set games_played = namespace(count=0) %}
+                        {% for game in games %}
+                            {% set player_in_game = namespace(found=false) %}
+                            {% for line in game.lines %}
+                                {% if player in line %}
+                                    {% set player_in_game.found = true %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if player_in_game.found %}
+                                {% set games_played.count = games_played.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if games_played.count > 0 %}
+                            {{ "%.2f"|format(player_totals[player]['plusminus'] / games_played.count) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -215,6 +235,7 @@
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -228,11 +249,30 @@
                             {% set player_in_game.found = true %}
                         {% endif %}
                     {% endfor %}
-                    <td>{% if player_in_game.found %}{{ game.goals.get(player, 0) }} + {{ game.assists.get(player, 0) }}{% else %}-{% endif %}</td>
+                    <td>{% if player_in_game.found %}{{ game.goals.get(player, 0) }}+{{ game.assists.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">
-                        {{ player_totals[player]['goals'] }} + {{ player_totals[player]['assists'] }} = {{
+                        {{ player_totals[player]['goals'] }}+{{ player_totals[player]['assists'] }}={{
                         player_totals[player]['goals'] + player_totals[player]['assists'] }}
+                    </td>
+                    <td class="fw-bold">
+                        {% set games_played = namespace(count=0) %}
+                        {% for game in games %}
+                            {% set player_in_game = namespace(found=false) %}
+                            {% for line in game.lines %}
+                                {% if player in line %}
+                                    {% set player_in_game.found = true %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if player_in_game.found %}
+                                {% set games_played.count = games_played.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if games_played.count > 0 %}
+                            {{ "%.2f"|format((player_totals[player]['goals'] + player_totals[player]['assists']) / games_played.count) }}
+                        {% else %}
+                            -
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -255,6 +295,7 @@
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -271,6 +312,25 @@
                     <td>{% if player_in_game.found %}{{ "%.1f"|format(game.game_scores.get(player, 0)) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ "%.1f"|format(player_totals[player]['game_score']) }}</td>
+                    <td class="fw-bold">
+                        {% set games_played = namespace(count=0) %}
+                        {% for game in games %}
+                            {% set player_in_game = namespace(found=false) %}
+                            {% for line in game.lines %}
+                                {% if player in line %}
+                                    {% set player_in_game.found = true %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if player_in_game.found %}
+                                {% set games_played.count = games_played.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if games_played.count > 0 %}
+                            {{ "%.2f"|format(player_totals[player]['game_score'] / games_played.count) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -292,6 +352,7 @@
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -308,6 +369,25 @@
                     <td>{% if player_in_game.found %}{{ game.unforced_errors.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['unforced_errors'] }}</td>
+                    <td class="fw-bold">
+                        {% set games_played = namespace(count=0) %}
+                        {% for game in games %}
+                            {% set player_in_game = namespace(found=false) %}
+                            {% for line in game.lines %}
+                                {% if player in line %}
+                                    {% set player_in_game.found = true %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if player_in_game.found %}
+                                {% set games_played.count = games_played.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if games_played.count > 0 %}
+                            {{ "%.2f"|format(player_totals[player]['unforced_errors'] / games_played.count) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -329,6 +409,7 @@
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -345,6 +426,25 @@
                     <td>{% if player_in_game.found %}{{ game.shots_on_goal.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['shots_on_goal'] }}</td>
+                    <td class="fw-bold">
+                        {% set games_played = namespace(count=0) %}
+                        {% for game in games %}
+                            {% set player_in_game = namespace(found=false) %}
+                            {% for line in game.lines %}
+                                {% if player in line %}
+                                    {% set player_in_game.found = true %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if player_in_game.found %}
+                                {% set games_played.count = games_played.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if games_played.count > 0 %}
+                            {{ "%.2f"|format(player_totals[player]['shots_on_goal'] / games_played.count) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -366,6 +466,7 @@
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -382,6 +483,25 @@
                     <td>{% if player_in_game.found %}{{ game.penalties_taken.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['penalties_taken'] }}</td>
+                    <td class="fw-bold">
+                        {% set games_played = namespace(count=0) %}
+                        {% for game in games %}
+                            {% set player_in_game = namespace(found=false) %}
+                            {% for line in game.lines %}
+                                {% if player in line %}
+                                    {% set player_in_game.found = true %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if player_in_game.found %}
+                                {% set games_played.count = games_played.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if games_played.count > 0 %}
+                            {{ "%.2f"|format(player_totals[player]['penalties_taken'] / games_played.count) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -403,6 +523,7 @@
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -419,6 +540,25 @@
                     <td>{% if player_in_game.found %}{{ game.penalties_drawn.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['penalties_drawn'] }}</td>
+                    <td class="fw-bold">
+                        {% set games_played = namespace(count=0) %}
+                        {% for game in games %}
+                            {% set player_in_game = namespace(found=false) %}
+                            {% for line in game.lines %}
+                                {% if player in line %}
+                                    {% set player_in_game.found = true %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if player_in_game.found %}
+                                {% set games_played.count = games_played.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if games_played.count > 0 %}
+                            {{ "%.2f"|format(player_totals[player]['penalties_drawn'] / games_played.count) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -512,7 +652,7 @@
         
         // Toggle sort direction for this table and column
         const key = `${tableId}_${columnIndex}`;
-        sortDirection[key] = sortDirection[key] === 'asc' ? 'desc' : 'asc';
+        sortDirection[key] = sortDirection[key] === 'desc' ? 'asc' : 'desc';
         const isAsc = sortDirection[key] === 'asc';
         
         // Sort rows
@@ -536,7 +676,7 @@
             if (aCell.includes('=')) {
                 aCell = parseFloat(aCell.split('=')[1].trim());
                 bCell = parseFloat(bCell.split('=')[1].trim());
-                return isAsc ? aCell - bCell : bCell - aNum;
+                return isAsc ? aCell - bCell : bCell - aCell;
             }
             
             // Handle combined stats like "2 + 3" (goals + assists in game cells)
