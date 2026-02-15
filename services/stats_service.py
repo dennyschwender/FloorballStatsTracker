@@ -1,6 +1,7 @@
 """
 Statistics calculation for player and goalie performance metrics
 """
+from statistics import median
 from config import PERIODS
 
 
@@ -75,6 +76,7 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
     """
     # Initialize data structures
     player_stats = {}  # player -> stats dict
+    player_game_values = {}  # player -> lists of per-game values for median calculation
     goalie_stats = {}  # goalie -> stats dict
     opponent_goalie_stats = {
         'games': [],
@@ -114,6 +116,17 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
                         'penalties_drawn': 0,
                         'game_score': 0
                     }
+                    player_game_values[player] = {
+                        'plusminus': [],
+                        'goals': [],
+                        'assists': [],
+                        'goals_assists': [],
+                        'unforced_errors': [],
+                        'shots_on_goal': [],
+                        'penalties_taken': [],
+                        'penalties_drawn': [],
+                        'game_score': []
+                    }
                 
                 # Extract stats for this player in this game
                 goals = game.get('goals', {}).get(player, 0)
@@ -133,10 +146,22 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
                 player_stats[player]['penalties_taken'] += penalties_taken
                 player_stats[player]['penalties_drawn'] += penalties_drawn
                 
+                # Track per-game values for median calculation
+                player_game_values[player]['plusminus'].append(plusminus)
+                player_game_values[player]['goals'].append(goals)
+                player_game_values[player]['assists'].append(assists)
+                player_game_values[player]['goals_assists'].append(goals + assists)
+                player_game_values[player]['unforced_errors'].append(errors)
+                player_game_values[player]['shots_on_goal'].append(sog)
+                player_game_values[player]['penalties_taken'].append(penalties_taken)
+                player_game_values[player]['penalties_drawn'].append(penalties_drawn)
+                
                 # Calculate game score for this game
-                game_calculated['game_scores'][player] = calculate_game_score(
+                game_score = calculate_game_score(
                     goals, assists, plusminus, errors, sog, penalties_drawn, penalties_taken
                 )
+                game_calculated['game_scores'][player] = game_score
+                player_game_values[player]['game_score'].append(game_score)
         
         # Process goalies in this game
         for goalie in game.get('goalies', []):
@@ -210,6 +235,47 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
             stats['penalties_taken']
         )
     
+    # Calculate median values for all players (excluding zeros)
+    for player in player_stats.keys():
+        game_values = player_game_values.get(player, {})
+        
+        # Filter out zeros for meaningful stats (keep zeros for plusminus since 0 is meaningful)
+        plusminus_vals = game_values.get('plusminus', [])
+        goals_assists_vals = [v for v in game_values.get('goals_assists', []) if v > 0]
+        game_score_vals = [v for v in game_values.get('game_score', []) if v != 0]  # Exclude only zeros, keep negative values
+        unforced_errors_vals = [v for v in game_values.get('unforced_errors', []) if v > 0]
+        shots_on_goal_vals = [v for v in game_values.get('shots_on_goal', []) if v > 0]
+        penalties_taken_vals = [v for v in game_values.get('penalties_taken', []) if v > 0]
+        penalties_drawn_vals = [v for v in game_values.get('penalties_drawn', []) if v > 0]
+        
+        player_stats[player]['median_plusminus'] = median(plusminus_vals) if plusminus_vals else 0
+        player_stats[player]['median_goals_assists'] = median(goals_assists_vals) if goals_assists_vals else 0
+        player_stats[player]['median_game_score'] = median(game_score_vals) if game_score_vals else 0
+        player_stats[player]['median_unforced_errors'] = median(unforced_errors_vals) if unforced_errors_vals else 0
+        player_stats[player]['median_shots_on_goal'] = median(shots_on_goal_vals) if shots_on_goal_vals else 0
+        player_stats[player]['median_penalties_taken'] = median(penalties_taken_vals) if penalties_taken_vals else 0
+        player_stats[player]['median_penalties_drawn'] = median(penalties_drawn_vals) if penalties_drawn_vals else 0
+        
+        # Track non-zero game counts for average calculations
+        player_stats[player]['nonzero_games'] = {
+            'plusminus': len(plusminus_vals),
+            'goals_assists': len(goals_assists_vals),
+            'game_score': len(game_score_vals),
+            'unforced_errors': len(unforced_errors_vals),
+            'shots_on_goal': len(shots_on_goal_vals),
+            'penalties_taken': len(penalties_taken_vals),
+            'penalties_drawn': len(penalties_drawn_vals)
+        }
+        
+        # Calculate averages excluding zeros
+        player_stats[player]['avg_plusminus'] = (player_stats[player]['plusminus'] / len(plusminus_vals)) if plusminus_vals else 0
+        player_stats[player]['avg_goals_assists'] = ((player_stats[player]['goals'] + player_stats[player]['assists']) / len(goals_assists_vals)) if goals_assists_vals else 0
+        player_stats[player]['avg_game_score'] = (player_stats[player]['game_score'] / len(game_score_vals)) if game_score_vals else 0
+        player_stats[player]['avg_unforced_errors'] = (player_stats[player]['unforced_errors'] / len(unforced_errors_vals)) if unforced_errors_vals else 0
+        player_stats[player]['avg_shots_on_goal'] = (player_stats[player]['shots_on_goal'] / len(shots_on_goal_vals)) if shots_on_goal_vals else 0
+        player_stats[player]['avg_penalties_taken'] = (player_stats[player]['penalties_taken'] / len(penalties_taken_vals)) if penalties_taken_vals else 0
+        player_stats[player]['avg_penalties_drawn'] = (player_stats[player]['penalties_drawn'] / len(penalties_drawn_vals)) if penalties_drawn_vals else 0
+    
     # Calculate average save percentages and total game scores for goalies
     for goalie, stats in goalie_stats.items():
         total_saves = stats['total_saves']
@@ -222,6 +288,30 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
             stats['average_save_percentage'] = None
         
         stats['game_score'] = calculate_goalie_game_score(total_saves, total_goals_conceded)
+        
+        # Calculate median save percentage and game score for goalies
+        if stats.get('games'):
+            stats['median_save_percentage'] = median(stats['games'])
+        else:
+            stats['median_save_percentage'] = None
+        
+        # For goalie game score median, we need to track per-game scores
+        goalie_game_scores = []
+        for game in games_with_stats:
+            if goalie in game.get('goalie_game_scores', {}):
+                score = game['goalie_game_scores'][goalie]
+                goalie_game_scores.append(score)
+        
+        # Filter out zeros for median/average (keep negative values)
+        # Use abs() to handle floating point precision issues
+        goalie_game_scores_nonzero = [score for score in goalie_game_scores if abs(score) > 0.001]
+        
+        if goalie_game_scores_nonzero:
+            stats['median_game_score'] = median(goalie_game_scores_nonzero)
+            stats['avg_game_score'] = sum(goalie_game_scores_nonzero) / len(goalie_game_scores_nonzero)
+        else:
+            stats['median_game_score'] = 0
+            stats['avg_game_score'] = 0
     
     # Calculate opponent goalie average
     opponent_total_saves = opponent_goalie_stats['total_saves']

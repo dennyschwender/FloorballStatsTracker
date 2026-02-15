@@ -180,6 +180,7 @@
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('plusMinusTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('plusMinusTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('plusMinusTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -196,25 +197,8 @@
                     <td>{% if player_in_game.found %}{{ game.plusminus.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['plusminus'] }}</td>
-                    <td class="fw-bold">
-                        {% set games_played = namespace(count=0) %}
-                        {% for game in games %}
-                            {% set player_in_game = namespace(found=false) %}
-                            {% for line in game.lines %}
-                                {% if player in line %}
-                                    {% set player_in_game.found = true %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if player_in_game.found %}
-                                {% set games_played.count = games_played.count + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if games_played.count > 0 %}
-                            {{ "%.2f"|format(player_totals[player]['plusminus'] / games_played.count) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['avg_plusminus']) }}</td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['median_plusminus']) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -236,6 +220,7 @@
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -255,25 +240,8 @@
                         {{ player_totals[player]['goals'] }}+{{ player_totals[player]['assists'] }}={{
                         player_totals[player]['goals'] + player_totals[player]['assists'] }}
                     </td>
-                    <td class="fw-bold">
-                        {% set games_played = namespace(count=0) %}
-                        {% for game in games %}
-                            {% set player_in_game = namespace(found=false) %}
-                            {% for line in game.lines %}
-                                {% if player in line %}
-                                    {% set player_in_game.found = true %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if player_in_game.found %}
-                                {% set games_played.count = games_played.count + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if games_played.count > 0 %}
-                            {{ "%.2f"|format((player_totals[player]['goals'] + player_totals[player]['assists']) / games_played.count) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['avg_goals_assists']) }}</td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['median_goals_assists']) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -296,6 +264,7 @@
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -312,25 +281,8 @@
                     <td>{% if player_in_game.found %}{{ "%.1f"|format(game.game_scores.get(player, 0)) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ "%.1f"|format(player_totals[player]['game_score']) }}</td>
-                    <td class="fw-bold">
-                        {% set games_played = namespace(count=0) %}
-                        {% for game in games %}
-                            {% set player_in_game = namespace(found=false) %}
-                            {% for line in game.lines %}
-                                {% if player in line %}
-                                    {% set player_in_game.found = true %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if player_in_game.found %}
-                                {% set games_played.count = games_played.count + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if games_played.count > 0 %}
-                            {{ "%.2f"|format(player_totals[player]['game_score'] / games_played.count) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['avg_game_score']) }}</td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['median_game_score']) }}</td>
                 </tr>
                 {% endfor %}
                 {% for goalie in goalies %}
@@ -344,19 +296,8 @@
                     <td>{% if goalie_in_game.found %}{{ "%.1f"|format(game.goalie_game_scores.get(goalie, 0)) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ "%.1f"|format(goalie_data[goalie]['game_score']) }}</td>
-                    <td class="fw-bold">
-                        {% set games_played = namespace(count=0) %}
-                        {% for game in games %}
-                            {% if goalie in game.get('goalies', []) %}
-                                {% set games_played.count = games_played.count + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if games_played.count > 0 %}
-                            {{ "%.2f"|format(goalie_data[goalie]['game_score'] / games_played.count) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
+                    <td class="fw-bold">{{ "%.2f"|format(goalie_data[goalie]['avg_game_score']) }}</td>
+                    <td class="fw-bold">{{ "%.2f"|format(goalie_data[goalie]['median_game_score']) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -379,6 +320,7 @@
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -395,25 +337,8 @@
                     <td>{% if player_in_game.found %}{{ game.unforced_errors.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['unforced_errors'] }}</td>
-                    <td class="fw-bold">
-                        {% set games_played = namespace(count=0) %}
-                        {% for game in games %}
-                            {% set player_in_game = namespace(found=false) %}
-                            {% for line in game.lines %}
-                                {% if player in line %}
-                                    {% set player_in_game.found = true %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if player_in_game.found %}
-                                {% set games_played.count = games_played.count + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if games_played.count > 0 %}
-                            {{ "%.2f"|format(player_totals[player]['unforced_errors'] / games_played.count) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['avg_unforced_errors']) }}</td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['median_unforced_errors']) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -436,6 +361,7 @@
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -452,25 +378,8 @@
                     <td>{% if player_in_game.found %}{{ game.shots_on_goal.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['shots_on_goal'] }}</td>
-                    <td class="fw-bold">
-                        {% set games_played = namespace(count=0) %}
-                        {% for game in games %}
-                            {% set player_in_game = namespace(found=false) %}
-                            {% for line in game.lines %}
-                                {% if player in line %}
-                                    {% set player_in_game.found = true %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if player_in_game.found %}
-                                {% set games_played.count = games_played.count + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if games_played.count > 0 %}
-                            {{ "%.2f"|format(player_totals[player]['shots_on_goal'] / games_played.count) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['avg_shots_on_goal']) }}</td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['median_shots_on_goal']) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -493,6 +402,7 @@
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -509,25 +419,8 @@
                     <td>{% if player_in_game.found %}{{ game.penalties_taken.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['penalties_taken'] }}</td>
-                    <td class="fw-bold">
-                        {% set games_played = namespace(count=0) %}
-                        {% for game in games %}
-                            {% set player_in_game = namespace(found=false) %}
-                            {% for line in game.lines %}
-                                {% if player in line %}
-                                    {% set player_in_game.found = true %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if player_in_game.found %}
-                                {% set games_played.count = games_played.count + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if games_played.count > 0 %}
-                            {{ "%.2f"|format(player_totals[player]['penalties_taken'] / games_played.count) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['avg_penalties_taken']) }}</td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['median_penalties_taken']) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -550,6 +443,7 @@
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
                     <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -566,25 +460,8 @@
                     <td>{% if player_in_game.found %}{{ game.penalties_drawn.get(player, 0) }}{% else %}-{% endif %}</td>
                     {% endfor %}
                     <td class="fw-bold">{{ player_totals[player]['penalties_drawn'] }}</td>
-                    <td class="fw-bold">
-                        {% set games_played = namespace(count=0) %}
-                        {% for game in games %}
-                            {% set player_in_game = namespace(found=false) %}
-                            {% for line in game.lines %}
-                                {% if player in line %}
-                                    {% set player_in_game.found = true %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if player_in_game.found %}
-                                {% set games_played.count = games_played.count + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if games_played.count > 0 %}
-                            {{ "%.2f"|format(player_totals[player]['penalties_drawn'] / games_played.count) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['avg_penalties_drawn']) }}</td>
+                    <td class="fw-bold">{{ "%.2f"|format(player_totals[player]['median_penalties_drawn']) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -607,6 +484,7 @@
                     </th>
                     {% endfor %}
                     <th class="sortable" onclick="sortStatsTable('goalieTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['average'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" onclick="sortStatsTable('goalieTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -627,6 +505,14 @@
                         {% set avg_pct = goalie_data[goalie]['average_save_percentage'] %}
                         {% if avg_pct is not none %}
                         {{ "%.1f"|format(avg_pct) }}%
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold">
+                        {% set median_pct = goalie_data[goalie]['median_save_percentage'] %}
+                        {% if median_pct is not none %}
+                        {{ "%.1f"|format(median_pct) }}%
                         {% else %}
                         -
                         {% endif %}
@@ -657,6 +543,9 @@
                         {% else %}
                         -
                         {% endif %}
+                    </td>
+                    <td class="fw-bold">
+                        -
                     </td>
                 </tr>
                 {% endif %}
