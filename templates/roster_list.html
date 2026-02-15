@@ -139,6 +139,18 @@
         </div>
     </div>
 
+    <!-- Info Box -->
+    <div class="alert alert-info" role="alert">
+        <h5 class="alert-heading">Roster Actions</h5>
+        <ul class="mb-0">
+            <li><strong>Hide:</strong> Hidden players will not appear when creating new games, but will remain visible in games where they were already selected.</li>
+            <li><strong>Show:</strong> Make a hidden player available again for new game creation.</li>
+            <li><strong>Edit:</strong> Modify player information (number, name, position, etc.).</li>
+            <li><strong>Delete:</strong> Permanently remove a player from this roster.</li>
+            <li><strong>Bulk Delete:</strong> Select multiple players using checkboxes and delete them all at once.</li>
+        </ul>
+    </div>
+
     <div class="mb-3">
         <a href="{{ url_for('roster.roster_add', category=selected_category, season=selected_season) }}" class="btn btn-primary">{{ g.t['add_player']
             }}</a>
@@ -163,12 +175,13 @@
                         <th class="sortable" onclick="sortTable(4)" style="cursor: pointer;">{{ g.t['nickname'] }} <span class="sort-icon"></span></th>
                         <th class="sortable" onclick="sortTable(5)" style="cursor: pointer;">{{ g.t['position'] }} <span class="sort-icon"></span></th>
                         <th class="sortable" onclick="sortTable(6)" style="cursor: pointer;">{{ g.t['tesser'] }} <span class="sort-icon"></span></th>
+                        <th class="sortable" onclick="sortTable(7)" style="cursor: pointer;">Status <span class="sort-icon"></span></th>
                         <th>{{ g.t['actions'] }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for player in roster %}
-                    <tr>
+                    <tr {% if player.hidden %}class="table-secondary" style="opacity: 0.7;"{% endif %}>
                         <td><input type="checkbox" name="player_ids" value="{{ player.id }}" class="player-checkbox"
                                 onchange="updateBulkDeleteBtn()"></td>
                         <td>{{ player.number }}</td>
@@ -184,6 +197,20 @@
                         </td>
                         <td>{{ player.tesser }}</td>
                         <td>
+                            {% if player.hidden %}
+                                <span class="badge bg-secondary">Hidden</span>
+                            {% else %}
+                                <span class="badge bg-success">Active</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm {% if player.hidden %}btn-success{% else %}btn-secondary{% endif %}"
+                                    data-player-id="{{ player.id }}"
+                                    data-current-hidden="{{ player.hidden if player.hidden else 'false' }}"
+                                    onclick="togglePlayerVisibility(this)"
+                                    title="{% if player.hidden %}Show in game creation{% else %}Hide from game creation{% endif %}">
+                                {% if player.hidden %}Show{% else %}Hide{% endif %}
+                            </button>
                             <a href="{{ url_for('roster.roster_edit', player_id=player.id, category=selected_category, season=selected_season) }}"
                                 class="btn btn-sm btn-warning">{{
                                 g.t['edit_player'] }}</a>
@@ -220,6 +247,12 @@
     </style>
 
     <script>
+        // Helper function to get CSRF token - defined globally
+        function getCsrfToken() {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            return csrfMeta ? csrfMeta.getAttribute('content') : '';
+        }
+
         let sortDirection = {};
 
         function sortTable(columnIndex) {
@@ -312,6 +345,44 @@
                 .catch(error => {
                     alert('Error: ' + error);
                 });
+        }
+
+        function togglePlayerVisibility(button) {
+            const playerId = button.dataset.playerId;
+            const currentHidden = button.dataset.currentHidden === 'true' || button.dataset.currentHidden === 'True';
+            const hidePlayer = !currentHidden;
+            const category = '{{ selected_category }}';
+            const season = '{{ selected_season }}';
+            
+            const csrfToken = getCsrfToken();
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+            
+            fetch('{{ url_for("roster.toggle_player_visibility") }}', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    player_id: playerId,
+                    category: category,
+                    season: season,
+                    hidden: hidePlayer
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error toggling player visibility: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
         }
     </script>
 

@@ -900,11 +900,20 @@
             showLoading();
             var category = teamSelect.value.trim();
             var season = seasonSelect ? seasonSelect.value.trim() : '';
+            var isModifying = {{ 'true' if modify else 'false' }};
             
             console.log('Loading roster for category:', category, 'season:', season);
             var url = '/api/roster/' + encodeURIComponent(category);
+            var params = [];
             if (season) {
-                url += '?season=' + encodeURIComponent(season);
+                params.push('season=' + encodeURIComponent(season));
+            }
+            // Include hidden players when editing an existing game
+            if (isModifying) {
+                params.push('include_hidden=true');
+            }
+            if (params.length > 0) {
+                url += '?' + params.join('&');
             }
             
             fetch(url)

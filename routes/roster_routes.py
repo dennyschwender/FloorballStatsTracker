@@ -265,3 +265,31 @@ def delete_roster():
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+
+@roster_bp.route('/toggle_player_visibility', methods=['POST'])
+def toggle_player_visibility():
+    """Toggle player visibility for game creation"""
+    try:
+        data = request.get_json()
+        player_id = data.get('player_id', '')
+        category = data.get('category', '')
+        season = data.get('season', '')
+        hidden = data.get('hidden', False)
+        
+        if not category or not player_id:
+            return jsonify({'success': False, 'error': 'Missing category or player ID'})
+        
+        roster = load_roster(category, season)
+        player = next((p for p in roster if p['id'] == player_id), None)
+        
+        if not player:
+            return jsonify({'success': False, 'error': 'Player not found'})
+        
+        # Set the hidden flag
+        player['hidden'] = hidden
+        save_roster(roster, category, season)
+        
+        return jsonify({'success': True, 'hidden': hidden})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})

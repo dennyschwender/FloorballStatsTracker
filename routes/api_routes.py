@@ -21,6 +21,13 @@ def get_roster_by_category(category):
     # Don't validate against hardcoded CATEGORIES - allow any category
     # load_roster() will return an empty list if the roster doesn't exist
     season = request.args.get('season', '')
+    include_hidden = request.args.get('include_hidden', 'false').lower() == 'true'
+    
     roster = load_roster(category, season)
+    
+    # Filter out hidden players unless explicitly requested
+    if not include_hidden:
+        roster = [p for p in roster if not p.get('hidden', False)]
+    
     roster_sorted = sorted(roster, key=lambda p: int(p.get('number', 999)))
     return jsonify(roster_sorted)
