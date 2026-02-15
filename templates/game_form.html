@@ -1236,6 +1236,12 @@
             var convocatoCheckboxes = document.querySelectorAll('.convocato-checkbox');
             convocatoCheckboxes.forEach(function (checkbox) {
                 checkbox.addEventListener('change', function () {
+                    // If player is being unchecked, clear all their assignments
+                    if (!checkbox.checked) {
+                        var playerId = checkbox.value;
+                        clearPlayerAssignments(playerId);
+                    }
+                    
                     updateCategoryCounter();
                     updatePositionCounters();
                     updateGoalieDropdowns();
@@ -1277,6 +1283,34 @@
             });
             // Initial highlight
             highlightConvocatoPlayers();
+        }
+
+        function clearPlayerAssignments(playerId) {
+            // Clear all line assignments for this player (L1-L4)
+            for (var lineNum = 1; lineNum <= 4; lineNum++) {
+                var input = document.querySelector('input[name="l' + lineNum + '_' + playerId + '"]');
+                if (input && input.value) {
+                    input.value = '';
+                    var event = new Event('change', { bubbles: true });
+                    input.dispatchEvent(event);
+                }
+            }
+            
+            // Clear all formation assignments for this player
+            var formations = ['pp1', 'pp2', 'bp1', 'bp2', '6vs5', 'stress_line'];
+            formations.forEach(function(formationKey) {
+                var input = document.querySelector('input[name="' + formationKey + '_' + playerId + '"]');
+                if (input && input.value) {
+                    input.value = '';
+                    var event = new Event('change', { bubbles: true });
+                    input.dispatchEvent(event);
+                }
+            });
+            
+            // Update UI elements
+            initializePositionSelectors(true);
+            highlightSelectedPlayers();
+            updateAllCompletionBadges();
         }
 
         function highlightConvocatoPlayers() {
