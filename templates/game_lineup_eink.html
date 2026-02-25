@@ -46,6 +46,18 @@
             font-size: 0.75rem;
             white-space: nowrap;
         }
+        #name-toggle {
+            background: none;
+            border: 1.5px solid #000;
+            font-family: inherit;
+            font-size: 0.7rem;
+            padding: 1px 6px;
+            cursor: pointer;
+            border-radius: 2px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        #name-toggle.nick-mode { background: #000; color: #fff; }
 
         /* ── Page content ─────────────────────────────────────────────────── */
         #page-area {
@@ -271,6 +283,11 @@
     {{ parts[0].strip() if parts|length > 1 else '' }}
 {%- endmacro %}
 
+{% macro player_fullname(player_string) -%}
+    {% set parts = player_string.split(' - ') %}
+    {{ parts[1].strip() if parts|length > 1 else player_string.strip() }}
+{%- endmacro %}
+
 {% macro player_name(player_string) -%}
     {% set parts = player_string.split(' - ') %}
     {% set full = parts[1].strip() if parts|length > 1 else player_string.strip() %}
@@ -281,7 +298,7 @@
 {% macro player_nick(player_string) -%}
     {% set info = player_map.get(player_string, {}) %}
     {% set nick = info.get('nickname', '') %}
-    {% if nick %}{{ nick }}{% else %}{{ player_name(player_string) }}{% endif %}
+    {% if nick %}{{ nick }}{% else %}{{ player_fullname(player_string) }}{% endif %}
 {%- endmacro %}
 
 {# collect special formations that are non-empty #}
@@ -319,6 +336,7 @@
     <!-- Top bar -->
     <div id="topbar">
         <span class="game-title">{{ game.home_team }} — {{ game.away_team }}</span>
+        <button id="name-toggle" onclick="toggleNames()" title="Switch full names / nicknames">Full</button>
         <span class="page-indicator" id="top-indicator">1 / {{ total_pages }}</span>
     </div>
 
@@ -387,7 +405,7 @@
             {% for goalie in game.goalies %}
             <div class="player-row">
                 <span class="num">{{ player_num(goalie) or loop.index }}</span>
-                <span class="pname">{{ player_name(goalie) }}</span>
+                <span class="pname" data-full="{{ player_fullname(goalie) | trim }}" data-nick="{{ player_nick(goalie) | trim }}">{{ player_fullname(goalie) | trim }}</span>
             </div>
             {% endfor %}
         </div>
@@ -405,7 +423,7 @@
             {% for player in game.lines[i] %}
             <div class="player-row">
                 <span class="num">{{ player_num(player) }}</span>
-                <span class="pname">{{ player_name(player) }}</span>
+                <span class="pname" data-full="{{ player_fullname(player) | trim }}" data-nick="{{ player_nick(player) | trim }}">{{ player_fullname(player) | trim }}</span>
             </div>
             {% endfor %}
         </div>
@@ -425,7 +443,7 @@
                     {% for player in players %}
                     <div class="spec-player">
                         <strong>{{ player_num(player) }}</strong>
-                        {{ player_name(player) }}
+                        <span class="pname" data-full="{{ player_fullname(player) | trim }}" data-nick="{{ player_nick(player) | trim }}">{{ player_fullname(player) | trim }}</span>
                     </div>
                     {% else %}
                     <span class="spec-empty">—</span>
@@ -515,6 +533,18 @@
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goPage(1);
         if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goPage(-1);
     });
+
+    // Full name / nickname toggle
+    let nameMode = 'full';  // 'full' | 'nick'
+    function toggleNames() {
+        nameMode = nameMode === 'full' ? 'nick' : 'full';
+        document.querySelectorAll('.pname').forEach(el => {
+            el.textContent = el.dataset[nameMode] || el.textContent;
+        });
+        const btn = document.getElementById('name-toggle');
+        btn.textContent = nameMode === 'full' ? 'Full' : 'Nick';
+        btn.classList.toggle('nick-mode', nameMode === 'nick');
+    }
 
     updateNav();
 </script>
