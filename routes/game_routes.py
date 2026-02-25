@@ -816,8 +816,10 @@ _EINK_DEVICES = {
         spec_spacer=5,
         # ── EPUB fixed-layout (CSS px) ──────────────────────────────────────
         epub_vw=600, epub_vh=800,
-        epub_title_fs=30, epub_vs_fs=18, epub_section_fs=24,
-        epub_meta_fs=15, epub_player_fs=18, epub_toc_fs=15, epub_pad=10,
+        epub_title_fs=28, epub_vs_fs=16, epub_section_fs=20,
+        epub_meta_fs=14, epub_player_fs=15, epub_toc_fs=13,
+        epub_pad=8, epub_row_pad=3,
+        epub_lines_per_page=1,
     ),
     'xteink': dict(
         label='Xteink X4',
@@ -831,8 +833,10 @@ _EINK_DEVICES = {
         spec_spacer=3,
         # ── EPUB fixed-layout (CSS px) ──────────────────────────────────────
         epub_vw=400, epub_vh=533,
-        epub_title_fs=20, epub_vs_fs=12, epub_section_fs=16,
-        epub_meta_fs=11, epub_player_fs=12, epub_toc_fs=11, epub_pad=6,
+        epub_title_fs=17, epub_vs_fs=10, epub_section_fs=13,
+        epub_meta_fs=10, epub_player_fs=11, epub_toc_fs=10,
+        epub_pad=5, epub_row_pad=1,
+        epub_lines_per_page=2,
     ),
 }
 
@@ -1051,6 +1055,7 @@ def download_lineup_epub(game_id):
         rows = ''.join(
             f'<div class="prow">'
             f'<span class="num">{e(n)}</span>'
+            f'<span class="sep"> &#8212; </span>'
             f'<span class="name">{e(nm)}</span>'
             f'</div>'
             for n, nm in (fmt_player(pl) for pl in players)
@@ -1098,7 +1103,8 @@ def download_lineup_epub(game_id):
         if game.get(key):
             meta_rows += (
                 f'<div class="mrow">'
-                f'<span class="ml">{e(label)}</span>'
+                f'<span class="ml">{e(label)}:</span>'
+                f'<span class="sep"> </span>'
                 f'<span class="mv">{e(game[key])}</span>'
                 f'</div>'
             )
@@ -1106,7 +1112,8 @@ def download_lineup_epub(game_id):
     if refs:
         meta_rows += (
             f'<div class="mrow">'
-            f'<span class="ml">Refs</span>'
+            f'<span class="ml">Refs:</span>'
+            f'<span class="sep"> </span>'
             f'<span class="mv">{e(refs)}</span>'
             f'</div>'
         )
@@ -1122,20 +1129,30 @@ def download_lineup_epub(game_id):
     game_title = f"{game.get('home_team', '')} vs {game.get('away_team', '')}"
     pages.append(('page_000', 'Cover', make_page(cover_body, game_title)))
 
-    n = 1
+    LPP = p['epub_lines_per_page']   # sections per page
+    n   = 1
+
+    # Goalies — always its own page
     if goalies:
         body = f'<h2 class="section">Goalies</h2><hr/>{players_html(goalies)}'
         pages.append((f'page_{n:03d}', 'Goalies', make_page(body, 'Goalies')))
         n += 1
 
-    for i, line in enumerate(lines):
-        t = f'Line {i + 1}'
-        body = f'<h2 class="section">{t}</h2><hr/>{players_html(line)}'
-        pages.append((f'page_{n:03d}', t, make_page(body, t)))
+    # Lines — group LPP per page
+    for i in range(0, len(lines), LPP):
+        chunk = lines[i:i + LPP]
+        titles = ' / '.join(f'Line {i + j + 1}' for j in range(len(chunk)))
+        body = ''.join(
+            f'<h2 class="section">Line {i + j + 1}</h2>'
+            f'<hr/>{players_html(ln)}<div class="gap"></div>'
+            for j, ln in enumerate(chunk)
+        )
+        pages.append((f'page_{n:03d}', titles, make_page(body, titles)))
         n += 1
 
-    for si in range(0, len(spec), 2):
-        chunk = spec[si:si + 2]
+    # Spec formations — group LPP per page
+    for si in range(0, len(spec), LPP):
+        chunk = spec[si:si + LPP]
         t = ' / '.join(lbl for lbl, _ in chunk)
         body = ''.join(
             f'<h2 class="section">{e(lbl)}</h2><hr/>{players_html(pl)}'
@@ -1148,33 +1165,35 @@ def download_lineup_epub(game_id):
     # ── CSS ──────────────────────────────────────────────────────────────────
     tf = p['epub_title_fs']; vsf = p['epub_vs_fs']; sf = p['epub_section_fs']
     mf = p['epub_meta_fs'];  pf  = p['epub_player_fs'];  tf2 = p['epub_toc_fs']
+    RP = p['epub_row_pad']
     css = f'''
 * {{box-sizing:border-box;margin:0;padding:0;}}
 body {{width:{VW}px;height:{VH}px;overflow:hidden;
   font-family:'Courier New',Courier,monospace;background:#fff;color:#000;}}
 .page {{width:{VW}px;height:{VH}px;padding:{PAD}px;overflow:hidden;}}
 h1.title {{font-size:{tf}px;text-align:center;font-weight:bold;
-  line-height:1.2;margin-bottom:{PAD // 2}px;}}
-.vs {{font-size:{vsf}px;text-align:center;margin-bottom:{PAD // 2}px;}}
-h2.section {{font-size:{sf}px;font-weight:bold;
-  margin-bottom:{PAD // 2}px;margin-top:{PAD // 4}px;}}
-hr {{border:none;border-top:2px solid #000;margin:{PAD // 2}px 0;}}
-.meta {{width:100%;font-size:{mf}px;margin-bottom:{PAD // 2}px;}}
-.mrow {{display:-webkit-box;display:flex;padding:{PAD // 2}px 0;
-  border-bottom:1px solid #ccc;}}
-.ml {{font-weight:bold;width:28%;-webkit-box-flex:0;flex-shrink:0;}}
-.mv {{-webkit-box-flex:1;flex:1;}}
-.toc-h {{font-size:{tf2}px;font-weight:bold;
-  margin-top:{PAD}px;margin-bottom:{PAD // 2}px;}}
-ol.toc {{font-size:{tf2}px;padding-left:18px;line-height:1.6;}}
-.players {{width:100%;font-size:{pf}px;}}
-.prow {{display:-webkit-box;display:flex;padding:{PAD // 2}px 0;
-  border-bottom:1px solid #000;}}
+  line-height:1.2;margin-bottom:{RP}px;}}
+.vs {{font-size:{vsf}px;text-align:center;margin-bottom:{RP}px;}}
+h2.section {{display:block;font-size:{sf}px;font-weight:bold;
+  margin-bottom:{RP}px;margin-top:{RP * 2}px;}}
+h2.section:first-child {{margin-top:0;}}
+hr {{border:none;border-top:2px solid #000;margin:{RP}px 0;}}
+.meta {{display:block;font-size:{mf}px;margin-bottom:{RP * 2}px;}}
+.mrow {{display:block;padding:{RP}px 0;border-bottom:1px solid #ccc;
+  line-height:1.3;}}
+.ml {{display:inline;font-weight:bold;}}
+.mv {{display:inline;}}
+.toc-h {{display:block;font-size:{tf2}px;font-weight:bold;
+  margin-top:{PAD}px;margin-bottom:{RP}px;}}
+ol.toc {{font-size:{tf2}px;padding-left:18px;line-height:1.5;}}
+.players {{display:block;font-size:{pf}px;}}
+.prow {{display:block;padding:{RP}px 0;border-bottom:1px solid #000;
+  line-height:1.3;}}
 .prow:last-child {{border-bottom:none;}}
-.num {{font-weight:bold;text-align:right;width:15%;
-  -webkit-box-flex:0;flex-shrink:0;padding-right:6px;}}
-.name {{-webkit-box-flex:1;flex:1;}}
-.gap {{height:{PAD * 2}px;}}
+.num {{display:inline;font-weight:bold;}}
+.sep {{display:inline;}}
+.name {{display:inline;}}
+.gap {{display:block;height:{RP * 3}px;}}
 '''
 
     # ── EPUB XML ─────────────────────────────────────────────────────────────
