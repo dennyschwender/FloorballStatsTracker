@@ -837,6 +837,13 @@ _EINK_DEVICES = {
         epub_meta_fs=10, epub_player_fs=11, epub_toc_fs=10,
         epub_pad=5, epub_row_pad=1,
         epub_lines_per_page=2,
+        # explicit page grouping (keys: 'goalies', 'line:N', spec key names)
+        epub_page_groups=[
+            ['line:0', 'line:1', 'line:2'],
+            ['line:3', 'goalies'],
+            ['pp1', 'pp2', '6vs5'],
+            ['bp1', 'bp2', 'stress_line'],
+        ],
     ),
 }
 
@@ -1087,17 +1094,49 @@ def download_lineup_epub(game_id):
     goalies = game.get('goalies', [])
     lines   = [l for l in game.get('lines', []) if l]
 
-    toc_entries = ['Game Info']
-    if goalies:
-        toc_entries.append('Goalies')
-    for i in range(len(lines)):
-        toc_entries.append(f'Line {i + 1}')
-    for i in range(0, len(spec), 2):
-        toc_entries.append(' / '.join(lbl for lbl, _ in spec[i:i + 2]))
-
     pages = []   # (page_id, title, xhtml_string)
 
-    # Cover
+    # ── Section lookup: key → (label, players) ───────────────────────────────
+    sec = {}
+    if goalies:
+        sec['goalies'] = ('Goalies', goalies)
+    for _i, _ln in enumerate(lines):
+        sec[f'line:{_i}'] = (f'Line {_i + 1}', _ln)
+    for _k, _lbl in SPEC_KEYS:
+        if game.get(_k):
+            sec[_k] = (_lbl, game[_k])
+
+    def sec_html(key):
+        if key not in sec:
+            return ''
+        _lbl, _players = sec[key]
+        return (f'<h2 class="section">{e(_lbl)}</h2>'
+                f'<hr/>{players_html(_players)}')
+
+    page_groups_cfg = p.get('epub_page_groups')   # None → use LPP
+    LPP             = p['epub_lines_per_page']
+
+    # ── Build TOC entries from actual groups ─────────────────────────────
+    if page_groups_cfg:
+        toc_entries = ['Game Info'] + [
+            ' / '.join(sec[k][0] for k in grp if k in sec)
+            for grp in page_groups_cfg
+            if any(k in sec for k in grp)
+        ]
+    else:
+        toc_entries = ['Game Info']
+        if goalies:
+            toc_entries.append('Goalies')
+        for _i in range(0, len(lines), LPP):
+            toc_entries.append(
+                ' / '.join(f'Line {_i + _j + 1}'
+                           for _j in range(min(LPP, len(lines) - _i)))
+            )
+        spec_labels = [lbl for lbl, _ in spec]
+        for _si in range(0, len(spec_labels), LPP):
+            toc_entries.append(' / '.join(spec_labels[_si:_si + LPP]))
+
+    # ── Cover ────────────────────────────────────────────────────────────
     meta_rows = ''
     for key, label in [('date', 'Date'), ('team', 'Team'), ('season', 'Season')]:
         if game.get(key):
@@ -1129,38 +1168,42 @@ def download_lineup_epub(game_id):
     game_title = f"{game.get('home_team', '')} vs {game.get('away_team', '')}"
     pages.append(('page_000', 'Cover', make_page(cover_body, game_title)))
 
-    LPP = p['epub_lines_per_page']   # sections per page
-    n   = 1
-
-    # Goalies — always its own page
-    if goalies:
-        body = f'<h2 class="section">Goalies</h2><hr/>{players_html(goalies)}'
-        pages.append((f'page_{n:03d}', 'Goalies', make_page(body, 'Goalies')))
-        n += 1
-
-    # Lines — group LPP per page
-    for i in range(0, len(lines), LPP):
-        chunk = lines[i:i + LPP]
-        titles = ' / '.join(f'Line {i + j + 1}' for j in range(len(chunk)))
-        body = ''.join(
-            f'<h2 class="section">Line {i + j + 1}</h2>'
-            f'<hr/>{players_html(ln)}<div class="gap"></div>'
-            for j, ln in enumerate(chunk)
-        )
-        pages.append((f'page_{n:03d}', titles, make_page(body, titles)))
-        n += 1
-
-    # Spec formations — group LPP per page
-    for si in range(0, len(spec), LPP):
-        chunk = spec[si:si + LPP]
-        t = ' / '.join(lbl for lbl, _ in chunk)
-        body = ''.join(
-            f'<h2 class="section">{e(lbl)}</h2><hr/>{players_html(pl)}'
-            f'<div class="gap"></div>'
-            for lbl, pl in chunk
-        )
-        pages.append((f'page_{n:03d}', t, make_page(body, t)))
-        n += 1
+    # ── Content pages ───────────────────────────────────────────────────
+    n = 1
+    if page_groups_cfg:
+        for grp in page_groups_cfg:
+            present = [k for k in grp if k in sec]
+            if not present:
+                continue
+            titles = ' / '.join(sec[k][0] for k in present)
+            body = '<div class="gap"></div>'.join(sec_html(k) for k in present)
+            pages.append((f'page_{n:03d}', titles, make_page(body, titles)))
+            n += 1
+    else:
+        if goalies:
+            body = f'<h2 class="section">Goalies</h2><hr/>{players_html(goalies)}'
+            pages.append((f'page_{n:03d}', 'Goalies', make_page(body, 'Goalies')))
+            n += 1
+        for _i in range(0, len(lines), LPP):
+            chunk = lines[_i:_i + LPP]
+            titles = ' / '.join(f'Line {_i + _j + 1}' for _j in range(len(chunk)))
+            body = ''.join(
+                f'<h2 class="section">Line {_i + _j + 1}</h2>'
+                f'<hr/>{players_html(ln)}<div class="gap"></div>'
+                for _j, ln in enumerate(chunk)
+            )
+            pages.append((f'page_{n:03d}', titles, make_page(body, titles)))
+            n += 1
+        for _si in range(0, len(spec), LPP):
+            chunk = spec[_si:_si + LPP]
+            t = ' / '.join(lbl for lbl, _ in chunk)
+            body = ''.join(
+                f'<h2 class="section">{e(lbl)}</h2><hr/>{players_html(pl)}'
+                f'<div class="gap"></div>'
+                for lbl, pl in chunk
+            )
+            pages.append((f'page_{n:03d}', t, make_page(body, t)))
+            n += 1
 
     # ── CSS ──────────────────────────────────────────────────────────────────
     tf = p['epub_title_fs']; vsf = p['epub_vs_fs']; sf = p['epub_section_fs']
