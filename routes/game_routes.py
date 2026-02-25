@@ -1,10 +1,11 @@
 """
 Game management routes blueprint
 """
+import io
 import json
 import hmac
 from datetime import datetime
-from flask import Blueprint, request, render_template, redirect, url_for, session, g
+from flask import Blueprint, request, render_template, redirect, url_for, session, g, send_file
 from config import REQUIRED_PIN, PERIODS
 from services.game_service import (
     load_games, save_games, find_game_by_id, ensure_game_ids,
@@ -764,23 +765,194 @@ def edit_game_json(game_id):
     )
 
 
-@game_bp.route('/game/<int:game_id>/lineup')
-def view_game_lineup(game_id):
+def _lineup_context(game_id):
+    """Shared helper: load game + roster for lineup views."""
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
-    
-    # Load roster to get player details including nicknames
+        return None, None, None
     roster = []
-    if 'team' in game and game['team']:
+    if game.get('team'):
         season = game.get('season', '')
         roster = load_roster(game['team'], season) if season else load_roster(game['team'])
-    
-    # Create a player map by "number - surname name" for quick lookup
     player_map = {}
     for player in roster:
         key = f"{player['number']} - {player['surname']} {player['name']}"
         player_map[key] = player
-    
+    return game, roster, player_map
+
+
+@game_bp.route('/game/<int:game_id>/lineup')
+def view_game_lineup(game_id):
+    game, roster, player_map = _lineup_context(game_id)
+    if game is None:
+        return "Game not found", 404
     return render_template('game_lineup.html', game=game, roster=roster, player_map=player_map)
+
+
+@game_bp.route('/game/<int:game_id>/lineup/eink')
+def view_game_lineup_eink(game_id):
+    """E-ink friendly paginated lineup view."""
+    game, roster, player_map = _lineup_context(game_id)
+    if game is None:
+        return "Game not found", 404
+    return render_template('game_lineup_eink.html', game=game, roster=roster, player_map=player_map)
+
+
+@game_bp.route('/game/<int:game_id>/lineup/pdf')
+def download_lineup_pdf(game_id):
+    """Generate and download a compact multi-page A5 PDF of the lineup."""
+    from reportlab.lib.pagesizes import A5
+    from reportlab.lib.units import mm
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak,
+    )
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+
+    game, roster, player_map = _lineup_context(game_id)
+    if game is None:
+        return "Game not found", 404
+
+    buf = io.BytesIO()
+    PAGE_W, PAGE_H = A5
+    MARGIN = 12 * mm
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A5,
+        leftMargin=MARGIN, rightMargin=MARGIN,
+        topMargin=10 * mm, bottomMargin=10 * mm,
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'Title', parent=styles['Normal'],
+        fontSize=14, fontName='Helvetica-Bold',
+        alignment=TA_CENTER, spaceAfter=2 * mm,
+    )
+    sub_style = ParagraphStyle(
+        'Sub', parent=styles['Normal'],
+        fontSize=9, alignment=TA_CENTER, spaceAfter=1 * mm,
+    )
+    section_style = ParagraphStyle(
+        'Section', parent=styles['Normal'],
+        fontSize=11, fontName='Helvetica-Bold',
+        spaceBefore=2 * mm, spaceAfter=1 * mm,
+        borderPad=1 * mm,
+    )
+    body_style = ParagraphStyle(
+        'Body', parent=styles['Normal'],
+        fontSize=10, leading=14,
+    )
+
+    def player_display(player_string):
+        """Return '#NN  Surname F.' string."""
+        parts = player_string.split(' - ', 1)
+        num = parts[0].strip() if len(parts) > 1 else ''
+        full = parts[1].strip() if len(parts) > 1 else player_string.strip()
+        words = full.split()
+        if len(words) > 1:
+            name_fmt = words[0] + ' ' + words[1][0] + '.'
+        else:
+            name_fmt = full
+        return (num, name_fmt)
+
+    def player_table(players, col_width):
+        """Build a ReportLab Table for a list of player strings."""
+        rows = []
+        for p in players:
+            num, name = player_display(p)
+            rows.append([num, name])
+        if not rows:
+            return None
+        tbl = Table(rows, colWidths=[10 * mm, col_width - 10 * mm])
+        tbl.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('LINEBELOW', (0, 0), (-1, -2), 0.3, colors.lightgrey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        return tbl
+
+    col_w = PAGE_W - 2 * MARGIN
+    story = []
+
+    # ── Cover page ─────────────────────────────────────────────────────────
+    story.append(Spacer(1, 8 * mm))
+    story.append(Paragraph(game.get('home_team', ''), title_style))
+    story.append(Paragraph('vs', sub_style))
+    story.append(Paragraph(game.get('away_team', ''), title_style))
+    story.append(Spacer(1, 4 * mm))
+
+    meta_rows = []
+    if game.get('date'):
+        meta_rows.append(['Date', game['date']])
+    if game.get('team'):
+        meta_rows.append(['Team', game['team']])
+    if game.get('season'):
+        meta_rows.append(['Season', game['season']])
+    refs = ', '.join(r for r in [game.get('referee1', ''), game.get('referee2', '')] if r)
+    if refs:
+        meta_rows.append(['Referees', refs])
+
+    if meta_rows:
+        meta_tbl = Table(meta_rows, colWidths=[22 * mm, col_w - 22 * mm])
+        meta_tbl.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('LINEBELOW', (0, 0), (-1, -1), 0.3, colors.lightgrey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        story.append(meta_tbl)
+
+    # ── Goalies page ────────────────────────────────────────────────────────
+    goalies = game.get('goalies', [])
+    if goalies:
+        story.append(PageBreak())
+        story.append(Paragraph('Goalies', section_style))
+        tbl = player_table(goalies, col_w)
+        if tbl:
+            story.append(tbl)
+
+    # ── One page per line ───────────────────────────────────────────────────
+    for i, line in enumerate(game.get('lines', [])):
+        if not line:
+            continue
+        story.append(PageBreak())
+        story.append(Paragraph(f'Line {i + 1}', section_style))
+        tbl = player_table(line, col_w)
+        if tbl:
+            story.append(tbl)
+
+    # ── Special formations (2 per page) ────────────────────────────────────
+    SPEC_KEYS = [
+        ('pp1', 'PP1'), ('pp2', 'PP2'),
+        ('bp1', 'BP1'), ('bp2', 'BP2'),
+        ('6vs5', '6 vs 5'), ('stress_line', 'Stress Line'),
+    ]
+    spec = [(label, game[key]) for key, label in SPEC_KEYS if game.get(key)]
+    for idx in range(0, len(spec), 2):
+        chunk = spec[idx:idx + 2]
+        story.append(PageBreak())
+        for label, players in chunk:
+            story.append(Paragraph(label, section_style))
+            tbl = player_table(players, col_w)
+            if tbl:
+                story.append(tbl)
+            story.append(Spacer(1, 4 * mm))
+
+    doc.build(story)
+    buf.seek(0)
+    safe_home = "".join(c for c in game.get('home_team', 'home') if c.isalnum() or c in '-_')
+    safe_away = "".join(c for c in game.get('away_team', 'away') if c.isalnum() or c in '-_')
+    filename = f"lineup_{safe_home}_vs_{safe_away}.pdf"
+    return send_file(buf, mimetype='application/pdf',
+                     as_attachment=True, download_name=filename)

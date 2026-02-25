@@ -113,6 +113,12 @@
             <a href="{{ url_for('game.view_game_lineup', game_id=game_id) }}" class="btn btn-primary">
                 📋 {{ g.t.get('view_lineup', 'View Lineup') }}
             </a>
+            <a href="{{ url_for('game.view_game_lineup_eink', game_id=game_id) }}" class="btn btn-outline-primary">
+                🖥️ {{ g.t.get('eink_lineup', 'E-Ink View') }}
+            </a>
+            <a href="{{ url_for('game.download_lineup_pdf', game_id=game_id) }}" class="btn btn-outline-danger">
+                📄 {{ g.t.get('download_pdf', 'Download PDF') }}
+            </a>
             {% else %}
             <a href="{{ url_for('game.game_details', game_id=game_id) }}" class="btn btn-outline-secondary">
                 <i class="bi bi-toggle-off"></i> Exit Edit Mode
