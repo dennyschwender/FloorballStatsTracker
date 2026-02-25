@@ -449,17 +449,22 @@
         <button id="btn-next" onclick="goPage(1)">&#8594;</button>
     </div>
 
-    <!-- PDF download bar -->
-    <div id="pdf-bar" style="flex:0 0 auto;border-top:1px solid #ccc;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;font-family:inherit;font-size:0.8rem;gap:6px;">
-        <span style="color:#555;white-space:nowrap;">&#8595; PDF:</span>
-        <a href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='tolino') }}"
-           style="background:#111;color:#fff;text-decoration:none;padding:5px 10px;font-family:inherit;font-size:0.8rem;border-radius:3px;white-space:nowrap;">
-            Tolino Shine
-        </a>
-        <a href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='xteink') }}"
-           style="background:#333;color:#fff;text-decoration:none;padding:5px 10px;font-family:inherit;font-size:0.8rem;border-radius:3px;white-space:nowrap;">
-            Xteink X4
-        </a>
+    <!-- Download bar -->
+    <div id="pdf-bar" style="flex:0 0 auto;border-top:1px solid #000;padding:5px 10px;font-family:inherit;font-size:0.75rem;">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px;">
+            <span style="color:#555;min-width:54px;white-space:nowrap;">&#128218; Tolino:</span>
+            <a href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='tolino') }}"
+               style="background:#111;color:#fff;text-decoration:none;padding:3px 8px;border-radius:3px;white-space:nowrap;">PDF</a>
+            <a href="{{ url_for('game.download_lineup_epub', game_id=game.id, device='tolino') }}"
+               style="background:#444;color:#fff;text-decoration:none;padding:3px 8px;border-radius:3px;white-space:nowrap;">EPUB</a>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+            <span style="color:#555;min-width:54px;white-space:nowrap;">&#128241; Xteink:</span>
+            <a href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='xteink') }}"
+               style="background:#111;color:#fff;text-decoration:none;padding:3px 8px;border-radius:3px;white-space:nowrap;">PDF</a>
+            <a href="{{ url_for('game.download_lineup_epub', game_id=game.id, device='xteink') }}"
+               style="background:#444;color:#fff;text-decoration:none;padding:3px 8px;border-radius:3px;white-space:nowrap;">EPUB</a>
+        </div>
     </div>
 
 </div>{# /app #}

@@ -561,8 +561,12 @@
                         <li><a class="dropdown-item" href="#" onclick="printPage(); return false;">🖨️ {{ g.t.get('print', 'Print') }}</a></li>
                         <li><a class="dropdown-item" href="#" onclick="generatePDF(); return false;">📄 {{ g.t.get('generate_pdf', 'Generate PDF') }}</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='tolino') }}">📖 E-Ink PDF — Tolino Shine (6")</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='xteink') }}">📱 E-Ink PDF — Xteink X4 (4.3")</a></li>
+                        <li><h6 class="dropdown-header">📖 Tolino Shine (6")</h6></li>
+                        <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='tolino') }}">PDF</a></li>
+                        <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_epub', game_id=game.id, device='tolino') }}">EPUB (fixed)</a></li>
+                        <li><h6 class="dropdown-header">📱 Xteink X4 (4.3")</h6></li>
+                        <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='xteink') }}">PDF</a></li>
+                        <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_epub', game_id=game.id, device='xteink') }}">EPUB (fixed)</a></li>
                     </ul>
                 </div>
 

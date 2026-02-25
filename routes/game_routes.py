@@ -806,6 +806,7 @@ def view_game_lineup_eink(game_id):
 _EINK_DEVICES = {
     'tolino': dict(
         label='Tolino Shine',
+        # ── PDF (mm) ────────────────────────────────────────────────────────
         page_w=90, page_h=122, margin=7,
         title_fs=20, vs_fs=13, section_fs=16,
         meta_fs=12, player_fs=14,
@@ -813,9 +814,14 @@ _EINK_DEVICES = {
         num_w=14, meta_label_w=18,
         cell_pad=5, hr_thick=1.5,
         spec_spacer=5,
+        # ── EPUB fixed-layout (CSS px) ──────────────────────────────────────
+        epub_vw=600, epub_vh=800,
+        epub_title_fs=30, epub_vs_fs=18, epub_section_fs=24,
+        epub_meta_fs=15, epub_player_fs=18, epub_toc_fs=15, epub_pad=10,
     ),
     'xteink': dict(
         label='Xteink X4',
+        # ── PDF (mm) ────────────────────────────────────────────────────────
         page_w=65, page_h=87, margin=5,
         title_fs=14, vs_fs=9, section_fs=11,
         meta_fs=9, player_fs=10,
@@ -823,6 +829,10 @@ _EINK_DEVICES = {
         num_w=10, meta_label_w=13,
         cell_pad=3, hr_thick=1.0,
         spec_spacer=3,
+        # ── EPUB fixed-layout (CSS px) ──────────────────────────────────────
+        epub_vw=400, epub_vh=533,
+        epub_title_fs=20, epub_vs_fs=12, epub_section_fs=16,
+        epub_meta_fs=11, epub_player_fs=12, epub_toc_fs=11, epub_pad=6,
     ),
 }
 
@@ -1004,4 +1014,232 @@ def download_lineup_pdf(game_id):
                         if c.isalnum() or c in '-_')
     filename = f"lineup_{safe_home}_vs_{safe_away}_{device_key}.pdf"
     return send_file(buf, mimetype='application/pdf',
+                     as_attachment=True, download_name=filename)
+
+
+@game_bp.route('/game/<int:game_id>/lineup/epub')
+def download_lineup_epub(game_id):
+    """Generate a fixed-layout EPUB of the lineup.  ?device=tolino|xteink"""
+    import zipfile
+    import html as _h
+
+    device_key = request.args.get('device', 'tolino')
+    p = _EINK_DEVICES.get(device_key, _EINK_DEVICES['tolino'])
+
+    game, roster, player_map = _lineup_context(game_id)
+    if game is None:
+        return "Game not found", 404
+
+    VW  = p['epub_vw']
+    VH  = p['epub_vh']
+    PAD = p['epub_pad']
+
+    def e(s):
+        return _h.escape(str(s) if s else '')
+
+    def fmt_player(s):
+        parts = s.split(' - ', 1)
+        num   = parts[0].strip() if len(parts) > 1 else ''
+        full  = parts[1].strip() if len(parts) > 1 else s.strip()
+        words = full.split()
+        name  = (words[0] + ' ' + words[1][0] + '.') if len(words) > 1 else full
+        return num, name
+
+    def players_html(players):
+        if not players:
+            return ''
+        rows = ''.join(
+            f'<tr><td class="num">{e(n)}</td><td class="name">{e(nm)}</td></tr>'
+            for n, nm in (fmt_player(pl) for pl in players)
+        )
+        return f'<table class="players">{rows}</table>'
+
+    def make_page(body_html, title=''):
+        return (
+            f'<?xml version="1.0" encoding="UTF-8"?>\n'
+            f'<!DOCTYPE html>\n'
+            f'<html xmlns="http://www.w3.org/1999/xhtml" '
+            f'xmlns:epub="http://www.idpf.org/2007/ops">\n'
+            f'<head>\n'
+            f'  <meta charset="UTF-8"/>\n'
+            f'  <meta name="viewport" content="width={VW}, height={VH}"/>\n'
+            f'  <title>{e(title)}</title>\n'
+            f'  <link rel="stylesheet" type="text/css" href="style.css"/>\n'
+            f'</head>\n'
+            f'<body><div class="page">{body_html}</div></body>\n'
+            f'</html>'
+        )
+
+    # ── Content helpers ──────────────────────────────────────────────────────
+    SPEC_KEYS = [
+        ('pp1', 'PP1'), ('pp2', 'PP2'),
+        ('bp1', 'BP1'), ('bp2', 'BP2'),
+        ('6vs5', '6 vs 5'), ('stress_line', 'Stress Line'),
+    ]
+    spec    = [(label, game[k]) for k, label in SPEC_KEYS if game.get(k)]
+    goalies = game.get('goalies', [])
+    lines   = [l for l in game.get('lines', []) if l]
+
+    toc_entries = ['Game Info']
+    if goalies:
+        toc_entries.append('Goalies')
+    for i in range(len(lines)):
+        toc_entries.append(f'Line {i + 1}')
+    for i in range(0, len(spec), 2):
+        toc_entries.append(' / '.join(lbl for lbl, _ in spec[i:i + 2]))
+
+    pages = []   # (page_id, title, xhtml_string)
+
+    # Cover
+    meta_rows = ''
+    for key, label in [('date', 'Date'), ('team', 'Team'), ('season', 'Season')]:
+        if game.get(key):
+            meta_rows += f'<tr><td class="ml">{label}</td><td>{e(game[key])}</td></tr>'
+    refs = ', '.join(r for r in [game.get('referee1', ''), game.get('referee2', '')] if r)
+    if refs:
+        meta_rows += f'<tr><td class="ml">Refs</td><td>{e(refs)}</td></tr>'
+    toc_items = ''.join(f'<li>{e(entry)}</li>' for entry in toc_entries)
+    cover_body = (
+        f'<h1 class="title">{e(game.get("home_team", ""))}</h1>'
+        f'<div class="vs">vs</div>'
+        f'<h1 class="title">{e(game.get("away_team", ""))}</h1>'
+        f'<hr/>'
+        + (f'<table class="meta">{meta_rows}</table>' if meta_rows else '')
+        + f'<div class="toc-h">Contents</div><ol class="toc">{toc_items}</ol>'
+    )
+    game_title = f"{game.get('home_team', '')} vs {game.get('away_team', '')}"
+    pages.append(('page_000', 'Cover', make_page(cover_body, game_title)))
+
+    n = 1
+    if goalies:
+        body = f'<h2 class="section">Goalies</h2><hr/>{players_html(goalies)}'
+        pages.append((f'page_{n:03d}', 'Goalies', make_page(body, 'Goalies')))
+        n += 1
+
+    for i, line in enumerate(lines):
+        t = f'Line {i + 1}'
+        body = f'<h2 class="section">{t}</h2><hr/>{players_html(line)}'
+        pages.append((f'page_{n:03d}', t, make_page(body, t)))
+        n += 1
+
+    for si in range(0, len(spec), 2):
+        chunk = spec[si:si + 2]
+        t = ' / '.join(lbl for lbl, _ in chunk)
+        body = ''.join(
+            f'<h2 class="section">{e(lbl)}</h2><hr/>{players_html(pl)}'
+            f'<div class="gap"></div>'
+            for lbl, pl in chunk
+        )
+        pages.append((f'page_{n:03d}', t, make_page(body, t)))
+        n += 1
+
+    # ── CSS ──────────────────────────────────────────────────────────────────
+    tf = p['epub_title_fs']; vsf = p['epub_vs_fs']; sf = p['epub_section_fs']
+    mf = p['epub_meta_fs'];  pf  = p['epub_player_fs'];  tf2 = p['epub_toc_fs']
+    css = f'''
+* {{box-sizing:border-box;margin:0;padding:0;}}
+body {{width:{VW}px;height:{VH}px;overflow:hidden;
+  font-family:'Courier New',Courier,monospace;background:#fff;color:#000;}}
+.page {{width:{VW}px;height:{VH}px;padding:{PAD}px;overflow:hidden;}}
+h1.title {{font-size:{tf}px;text-align:center;font-weight:bold;
+  line-height:1.2;margin-bottom:{PAD // 2}px;}}
+.vs {{font-size:{vsf}px;text-align:center;margin-bottom:{PAD // 2}px;}}
+h2.section {{font-size:{sf}px;font-weight:bold;
+  margin-bottom:{PAD // 2}px;margin-top:{PAD // 4}px;}}
+hr {{border:none;border-top:2px solid #000;margin:{PAD // 2}px 0;}}
+table.meta {{width:100%;border-collapse:collapse;font-size:{mf}px;
+  margin-bottom:{PAD // 2}px;}}
+table.meta td {{padding:{PAD // 2}px 3px;border-bottom:1px solid #ccc;
+  vertical-align:middle;}}
+td.ml {{font-weight:bold;width:28%;}}
+.toc-h {{font-size:{tf2}px;font-weight:bold;
+  margin-top:{PAD}px;margin-bottom:{PAD // 2}px;}}
+ol.toc {{font-size:{tf2}px;padding-left:18px;line-height:1.6;}}
+table.players {{width:100%;border-collapse:collapse;font-size:{pf}px;}}
+table.players td {{padding:{PAD // 2}px 3px;
+  border-bottom:1px solid #000;vertical-align:middle;}}
+table.players tr:last-child td {{border-bottom:none;}}
+td.num {{font-weight:bold;text-align:right;width:15%;padding-right:6px;}}
+td.name {{text-align:left;}}
+.gap {{height:{PAD * 2}px;}}
+'''
+
+    # ── EPUB XML ─────────────────────────────────────────────────────────────
+    container_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">'
+        '<rootfiles>'
+        '<rootfile full-path="OEBPS/content.opf"'
+        ' media-type="application/oebps-package+xml"/>'
+        '</rootfiles></container>'
+    )
+
+    manifest_pages = '\n'.join(
+        f'    <item id="{pid}" href="{pid}.xhtml"'
+        f' media-type="application/xhtml+xml"/>'
+        for pid, _, _ in pages
+    )
+    spine_items = '\n'.join(
+        f'    <itemref idref="{pid}"'
+        f' properties="rendition:page-spread-center"/>'
+        for pid, _, _ in pages
+    )
+    ht = e(game.get('home_team', ''))
+    at = e(game.get('away_team', ''))
+    opf = (
+        f'<?xml version="1.0" encoding="UTF-8"?>'
+        f'<package xmlns="http://www.idpf.org/2007/opf"'
+        f' xmlns:dc="http://purl.org/dc/elements/1.1/"'
+        f' version="3.0" unique-identifier="uid">'
+        f'<metadata>'
+        f'<dc:identifier id="uid">lineup-{game_id}-{device_key}</dc:identifier>'
+        f'<dc:title>{ht} vs {at}</dc:title>'
+        f'<dc:language>en</dc:language>'
+        f'<meta property="rendition:layout">pre-paginated</meta>'
+        f'<meta property="rendition:spread">none</meta>'
+        f'<meta property="rendition:viewport">width={VW}, height={VH}</meta>'
+        f'</metadata>'
+        f'<manifest>'
+        f'<item id="nav" href="nav.xhtml"'
+        f' media-type="application/xhtml+xml" properties="nav"/>'
+        f'<item id="style" href="style.css" media-type="text/css"/>'
+        f'{manifest_pages}'
+        f'</manifest>'
+        f'<spine>{spine_items}</spine>'
+        f'</package>'
+    )
+
+    nav_items = '\n'.join(
+        f'  <li><a href="{pid}.xhtml">{e(ptitle)}</a></li>'
+        for pid, ptitle, _ in pages
+    )
+    nav = (
+        f'<?xml version="1.0" encoding="UTF-8"?>'
+        f'<!DOCTYPE html>'
+        f'<html xmlns="http://www.w3.org/1999/xhtml"'
+        f' xmlns:epub="http://www.idpf.org/2007/ops">'
+        f'<head><meta charset="UTF-8"/><title>Navigation</title></head>'
+        f'<body><nav epub:type="toc" id="toc"><ol>\n{nav_items}\n</ol></nav></body>'
+        f'</html>'
+    )
+
+    # ── Build ZIP ─────────────────────────────────────────────────────────────
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        info = zipfile.ZipInfo('mimetype')
+        info.compress_type = zipfile.ZIP_STORED
+        zf.writestr(info, 'application/epub+zip')
+        zf.writestr('META-INF/container.xml', container_xml)
+        zf.writestr('OEBPS/content.opf', opf)
+        zf.writestr('OEBPS/nav.xhtml', nav)
+        zf.writestr('OEBPS/style.css', css)
+        for pid, _, xhtml in pages:
+            zf.writestr(f'OEBPS/{pid}.xhtml', xhtml)
+    buf.seek(0)
+    safe_home = ''.join(c for c in game.get('home_team', 'home')
+                        if c.isalnum() or c in '-_')
+    safe_away = ''.join(c for c in game.get('away_team', 'away')
+                        if c.isalnum() or c in '-_')
+    filename = f"lineup_{safe_home}_vs_{safe_away}_{device_key}.epub"
+    return send_file(buf, mimetype='application/epub+zip',
                      as_attachment=True, download_name=filename)

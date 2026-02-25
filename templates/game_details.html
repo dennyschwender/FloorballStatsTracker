@@ -127,8 +127,13 @@
                 📄 {{ g.t.get('download_pdf', 'Download PDF') }}
               </button>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('game.download_lineup_pdf', game_id=game_id, device='tolino') }}">📖 Tolino Shine (6")</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('game.download_lineup_pdf', game_id=game_id, device='xteink') }}">📱 Xteink X4 (4.3")</a></li>
+                <li><h6 class="dropdown-header">📖 Tolino Shine (6")</h6></li>
+                <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_pdf', game_id=game_id, device='tolino') }}">PDF</a></li>
+                <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_epub', game_id=game_id, device='tolino') }}">EPUB (fixed)</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">📱 Xteink X4 (4.3")</h6></li>
+                <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_pdf', game_id=game_id, device='xteink') }}">PDF</a></li>
+                <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_epub', game_id=game_id, device='xteink') }}">EPUB (fixed)</a></li>
               </ul>
             </div>
             {% else %}
