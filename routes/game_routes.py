@@ -1049,15 +1049,17 @@ def download_lineup_epub(game_id):
         if not players:
             return ''
         rows = ''.join(
-            f'<tr><td class="num">{e(n)}</td><td class="name">{e(nm)}</td></tr>'
+            f'<div class="prow">'
+            f'<span class="num">{e(n)}</span>'
+            f'<span class="name">{e(nm)}</span>'
+            f'</div>'
             for n, nm in (fmt_player(pl) for pl in players)
         )
-        return f'<table class="players">{rows}</table>'
+        return f'<div class="players">{rows}</div>'
 
     def make_page(body_html, title=''):
         return (
             f'<?xml version="1.0" encoding="UTF-8"?>\n'
-            f'<!DOCTYPE html>\n'
             f'<html xmlns="http://www.w3.org/1999/xhtml" '
             f'xmlns:epub="http://www.idpf.org/2007/ops">\n'
             f'<head>\n'
@@ -1094,17 +1096,27 @@ def download_lineup_epub(game_id):
     meta_rows = ''
     for key, label in [('date', 'Date'), ('team', 'Team'), ('season', 'Season')]:
         if game.get(key):
-            meta_rows += f'<tr><td class="ml">{label}</td><td>{e(game[key])}</td></tr>'
+            meta_rows += (
+                f'<div class="mrow">'
+                f'<span class="ml">{e(label)}</span>'
+                f'<span class="mv">{e(game[key])}</span>'
+                f'</div>'
+            )
     refs = ', '.join(r for r in [game.get('referee1', ''), game.get('referee2', '')] if r)
     if refs:
-        meta_rows += f'<tr><td class="ml">Refs</td><td>{e(refs)}</td></tr>'
+        meta_rows += (
+            f'<div class="mrow">'
+            f'<span class="ml">Refs</span>'
+            f'<span class="mv">{e(refs)}</span>'
+            f'</div>'
+        )
     toc_items = ''.join(f'<li>{e(entry)}</li>' for entry in toc_entries)
     cover_body = (
         f'<h1 class="title">{e(game.get("home_team", ""))}</h1>'
         f'<div class="vs">vs</div>'
         f'<h1 class="title">{e(game.get("away_team", ""))}</h1>'
         f'<hr/>'
-        + (f'<table class="meta">{meta_rows}</table>' if meta_rows else '')
+        + (f'<div class="meta">{meta_rows}</div>' if meta_rows else '')
         + f'<div class="toc-h">Contents</div><ol class="toc">{toc_items}</ol>'
     )
     game_title = f"{game.get('home_team', '')} vs {game.get('away_team', '')}"
@@ -1147,20 +1159,21 @@ h1.title {{font-size:{tf}px;text-align:center;font-weight:bold;
 h2.section {{font-size:{sf}px;font-weight:bold;
   margin-bottom:{PAD // 2}px;margin-top:{PAD // 4}px;}}
 hr {{border:none;border-top:2px solid #000;margin:{PAD // 2}px 0;}}
-table.meta {{width:100%;border-collapse:collapse;font-size:{mf}px;
-  margin-bottom:{PAD // 2}px;}}
-table.meta td {{padding:{PAD // 2}px 3px;border-bottom:1px solid #ccc;
-  vertical-align:middle;}}
-td.ml {{font-weight:bold;width:28%;}}
+.meta {{width:100%;font-size:{mf}px;margin-bottom:{PAD // 2}px;}}
+.mrow {{display:-webkit-box;display:flex;padding:{PAD // 2}px 0;
+  border-bottom:1px solid #ccc;}}
+.ml {{font-weight:bold;width:28%;-webkit-box-flex:0;flex-shrink:0;}}
+.mv {{-webkit-box-flex:1;flex:1;}}
 .toc-h {{font-size:{tf2}px;font-weight:bold;
   margin-top:{PAD}px;margin-bottom:{PAD // 2}px;}}
 ol.toc {{font-size:{tf2}px;padding-left:18px;line-height:1.6;}}
-table.players {{width:100%;border-collapse:collapse;font-size:{pf}px;}}
-table.players td {{padding:{PAD // 2}px 3px;
-  border-bottom:1px solid #000;vertical-align:middle;}}
-table.players tr:last-child td {{border-bottom:none;}}
-td.num {{font-weight:bold;text-align:right;width:15%;padding-right:6px;}}
-td.name {{text-align:left;}}
+.players {{width:100%;font-size:{pf}px;}}
+.prow {{display:-webkit-box;display:flex;padding:{PAD // 2}px 0;
+  border-bottom:1px solid #000;}}
+.prow:last-child {{border-bottom:none;}}
+.num {{font-weight:bold;text-align:right;width:15%;
+  -webkit-box-flex:0;flex-shrink:0;padding-right:6px;}}
+.name {{-webkit-box-flex:1;flex:1;}}
 .gap {{height:{PAD * 2}px;}}
 '''
 
