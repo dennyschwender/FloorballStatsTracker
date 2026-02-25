@@ -1,23 +1,18 @@
 import json
 import copy
-import os
 
 import pytest
 
-from config import GAMES_FILE
+from services.game_service import load_games, save_games
+from models.roster import save_roster
 
 
 def _read_games():
-    try:
-        with open(GAMES_FILE, 'r') as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return load_games()
 
 
 def _write_games(games):
-    with open(GAMES_FILE, 'w') as f:
-        json.dump(games, f, indent=2)
+    save_games(games)
 
 
 # games file preservation handled in tests/conftest.py
@@ -164,10 +159,7 @@ def test_set_period_and_modify_game(client):
         {"id": "2", "number": "20", "surname": "Player", "name": "Two", "position": "A", "tesser": "U21", "nickname": "P2"},
         {"id": "3", "number": "1", "surname": "Goalie", "name": "Two", "position": "P", "tesser": "U21", "nickname": "G2"}
     ]
-    from app import ROSTERS_DIR
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_NewTeam.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, 'NewTeam', '')
     
     games = [make_sample_game()]
     _write_games(games)
@@ -197,11 +189,6 @@ def test_set_period_and_modify_game(client):
     assert len(g['goalies']) == 1
     assert '1 - Goalie Two' in g['goalies'][0]
     assert g['opponent_goalie_enabled'] is True
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
-
 
 def test_stats_page_contains_players_and_goalies(client):
     games = [make_sample_game(opponent_goalie_enabled=True)]
@@ -219,8 +206,7 @@ def test_stats_page_contains_players_and_goalies(client):
 
 def test_invalid_game_and_period(client):
     # no games -> invalid game id
-    with open(GAMES_FILE, 'w') as f:
-        f.write('[]')
+    save_games([])
     rv = client.get('/game/99')
     assert rv.status_code == 404
 

@@ -5,13 +5,14 @@ import os
 from flask import Blueprint, request, render_template, redirect, url_for, jsonify
 from services.game_service import load_games
 from models.roster import (
-    load_roster, 
-    save_roster, 
+    load_roster,
+    save_roster,
     get_all_categories_with_rosters,
     get_all_seasons,
     get_all_rosters_with_seasons,
     get_all_tesser_values,
-    get_roster_file
+    get_roster_file,          # deprecated stub - kept for any residual calls
+    delete_roster_category,
 )
 
 roster_bp = Blueprint('roster', __name__, url_prefix='/roster')
@@ -255,13 +256,13 @@ def delete_roster():
                 'message': f'{len(games_using_roster)} game(s) are using this roster. Deleting it will not affect existing game data, but you won\'t be able to load this roster for those games anymore.'
             })
         
-        # Delete the roster file
-        roster_file = get_roster_file(category)
-        if os.path.exists(roster_file):
-            os.remove(roster_file)
+        # Delete the roster from the database
+        season = data.get('season', '')
+        deleted = delete_roster_category(category, season)
+        if deleted:
             return jsonify({'success': True, 'message': 'Roster deleted successfully'})
         else:
-            return jsonify({'success': False, 'error': 'Roster file not found'})
+            return jsonify({'success': False, 'error': 'Roster not found or already empty'})
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})

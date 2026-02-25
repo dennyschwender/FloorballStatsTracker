@@ -1,14 +1,11 @@
 from app import app
+from services.game_service import load_games
 
 
 def test_opponent_goalie_goals_conceded_render(client):
     """Check that opponent goalie goals conceded renders correctly in game detail template."""
-    import json
-    import os
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    path = os.path.join(root, 'gamesFiles', 'games.json')
-    with open(path, 'r') as f:
-        games = json.load(f)
+    import re
+    games = load_games()
     
     if not games:
         import pytest
@@ -24,20 +21,15 @@ def test_opponent_goalie_goals_conceded_render(client):
     assert start != -1
     snippet = html[start:start+800]
     # Expect at least one digit in the Goals Conceded column (e.g., '3')
-    import re
     assert re.search(r'Goals Conceded', snippet)
     assert re.search(r'\b\d+\b', snippet)
 
 
 def test_opponent_goalie_render_in_edit_mode():
-    import json
-    import os
+    import re
     from app import app
-    
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    path = os.path.join(root, 'gamesFiles', 'games.json')
-    with open(path, 'r') as f:
-        games = json.load(f)
+
+    games = load_games()
     
     if not games:
         import pytest

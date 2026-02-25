@@ -28,8 +28,8 @@ def validate_category(category):
 
 
 def validate_season(season):
-    """Validate season input (e.g., 2024-25)."""
+    """Validate season input (e.g., 2024-25, 2024_25_Spring)."""
     if not season:
         return True  # Empty season is allowed for backward compatibility
-    # Allow format like 2024-25 or just 2024
-    return bool(re.match(r'^\d{4}(-\d{2})?$', season))
+    # Allow alphanumeric, hyphens, underscores, and dots up to 50 chars
+    return bool(re.match(r'^[a-zA-Z0-9_\-\.]{1,50}$', season))

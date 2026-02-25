@@ -1,14 +1,9 @@
-import json
-import os
-
 import pytest
+from services.game_service import load_games
 
 
 def load_games_file():
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    path = os.path.join(root, 'gamesFiles', 'games.json')
-    with open(path, 'r') as f:
-        return json.load(f)
+    return load_games()
 
 
 def test_opponent_goalie_goals_span_present_and_numeric(client):

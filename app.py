@@ -12,6 +12,10 @@ from config import FLASK_CONFIG, LANGUAGES, TRANSLATIONS
 # Import utils
 from utils.validators import format_date
 
+# Import database + models (models must be imported before db.create_all)
+from models.database import db
+import models  # noqa: F401 — registers GameRecord and RosterPlayer with SQLAlchemy
+
 # Import route blueprints
 from routes import game_bp, roster_bp, stats_bp, api_bp
 
@@ -22,6 +26,19 @@ def create_app():
     
     # Apply configuration
     app.config.update(FLASK_CONFIG)
+    
+    # Initialise SQLAlchemy
+    db.init_app(app)
+    
+    # Ensure the gamesFiles directory exists, then create DB tables
+    import os
+    db_dir = os.path.dirname(
+        app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+    )
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
+    with app.app_context():
+        db.create_all()
     
     # Initialize CSRF protection
     csrf = CSRFProtect(app)

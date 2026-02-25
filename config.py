@@ -24,20 +24,14 @@ if not SECRET_KEY:
 if SECRET_KEY == 'dev_secret':
     raise ValueError("FLASK_SECRET_KEY cannot be 'dev_secret' in production")
 
-# File paths
+# File paths (kept for backward-compat with maintenance scripts)
 GAMES_FILE = 'gamesFiles/games.json'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROSTERS_DIR = os.path.join(BASE_DIR, 'rosters')
 
-# Ensure directories exist
-if not os.path.exists(ROSTERS_DIR):
-    os.makedirs(ROSTERS_DIR)
-
-# Ensure games.json exists
-if not os.path.exists(GAMES_FILE):
-    import json
-    with open(GAMES_FILE, 'w') as f:
-        json.dump([], f)
+# SQLite database path (used by Flask-SQLAlchemy)
+_DB_DIR = os.path.join(BASE_DIR, 'gamesFiles')
+DATABASE_URI = 'sqlite:///' + os.path.join(_DB_DIR, 'floorball.db')
 
 # Game constants
 CATEGORIES = ['U18', 'U21', 'U16', 'Senior']
@@ -53,6 +47,9 @@ FLASK_CONFIG = {
     'SESSION_COOKIE_SAMESITE': 'Lax',
     'PERMANENT_SESSION_LIFETIME': timedelta(hours=2),
     'DEFAULT_LANG': os.environ.get('DEFAULT_LANG', 'en'),
+    # SQLAlchemy
+    'SQLALCHEMY_DATABASE_URI': os.environ.get('DATABASE_URL', DATABASE_URI),
+    'SQLALCHEMY_TRACK_MODIFICATIONS': False,
 }
 
 # Language support

@@ -1,6 +1,6 @@
 import json
-import os
-from config import GAMES_FILE, ROSTERS_DIR
+from services.game_service import load_games
+from models.roster import save_roster
 
 
 def create_test_game(client, roster_data, home_team, away_team, team='U21', season='2024-25', date='2025-11-14', 
@@ -14,10 +14,8 @@ def create_test_game(client, roster_data, home_team, away_team, team='U21', seas
         line2_players: list of player IDs for line 2
         goalies: list of goalie player IDs (e.g., ['4'])
     """
-    # Create roster with season
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    # Load roster into DB
+    save_roster(roster_data, team, season)
     
     # Build form data
     data = {
@@ -54,10 +52,10 @@ def create_test_game(client, roster_data, home_team, away_team, team='U21', seas
     
     client.post('/create_game', data=data, follow_redirects=True)
     
-    # Return the created game
-    games = json.load(open(GAMES_FILE))
+    # Return the created game from DB
+    games = load_games()
     game = next((g for g in games if g['home_team'] == home_team), None)
-    return game, roster_path
+    return game, None
 
 
 def test_home_page(client):
@@ -77,19 +75,14 @@ def test_roster_management(client):
         {"id": "5", "number": "77", "surname": "Schwender", "name": "Dennis", "position": "P", "tesser": "U21", "nickname": "Denny"}
     ]
     
-    # Create test roster with season
+    # Load roster into DB
     test_season = '2024-25'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{test_season}_TestTeam.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, 'TestTeam', test_season)
     
     # Test roster loads correctly with season parameter - just check it returns 200
     response = client.get(f'/roster/?category=TestTeam&season={test_season}')
     assert response.status_code == 200
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 
@@ -103,10 +96,8 @@ def test_create_game_with_realistic_data(client):
         {"id": "4", "number": "77", "surname": "Schwender", "name": "Dennis", "position": "P", "tesser": "U21", "nickname": "Denny"}
     ]
     
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_U21.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
-    
+    save_roster(roster_data, 'U21', '')
+
     # Use the new roster-based form format
     data = {
         'team': 'U21',
@@ -124,7 +115,7 @@ def test_create_game_with_realistic_data(client):
     response = client.post('/create_game', data=data, follow_redirects=True)
     assert response.status_code == 200
     
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     created_game = next((g for g in games if g['home_team'] == 'Grasshoppers Zürich'), None)
     assert created_game is not None
     assert created_game['away_team'] == 'Red Lions Frauenfeld'
@@ -133,9 +124,6 @@ def test_create_game_with_realistic_data(client):
     assert len(created_game['lines'][0]) == 3
     assert '69 - Bazzuri Andrea' in created_game['lines'][0]
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_game_details_by_id(client):
@@ -158,9 +146,6 @@ def test_game_details_by_id(client):
     assert b'Home Team' in response.data
     assert b'Away Team' in response.data
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_modify_game(client):
@@ -191,15 +176,12 @@ def test_modify_game(client):
     assert response.status_code == 200
     
     # Verify changes
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     modified_game = next((g for g in games if g['id'] == game_id), None)
     assert modified_game is not None
     assert modified_game['home_team'] == 'Modified Home'
     assert modified_game['away_team'] == 'Modified Away'
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_player_actions(client):
@@ -224,14 +206,11 @@ def test_player_actions(client):
     assert response.status_code == 200
     
     # Verify stats
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game['goals'].get('69 - Bazzuri Andrea', 0) == 1
     assert game['assists'].get('84 - Belvederi Andrea', 0) == 1
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_goalie_actions(client):
@@ -256,14 +235,11 @@ def test_goalie_actions(client):
     client.get(f'/action_goalie/{game_id}/77 - Schwender Dennis?action=goal_conceded', follow_redirects=True)
     
     # Verify stats
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game['saves'].get('77 - Schwender Dennis', 0) == 3
     assert game['goals_conceded'].get('77 - Schwender Dennis', 0) == 1
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_period_management(client):
@@ -283,19 +259,16 @@ def test_period_management(client):
     assert response.status_code == 200
     
     # Verify period
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game['current_period'] == '2'
     
     # Set to period 3
     client.get(f'/set_period/{game_id}/3', follow_redirects=True)
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game['current_period'] == '3'
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_stats_page(client):
@@ -332,9 +305,6 @@ def test_stats_page(client):
     response = client.get('/stats?hide_zero_stats=1')
     assert response.status_code == 200
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_reset_stats(client):
@@ -353,7 +323,7 @@ def test_reset_stats(client):
     client.get(f'/action/{game_id}/69 - Bazzuri Andrea?action=goal', follow_redirects=True)
     
     # Verify stats exist
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game['goals'].get('69 - Bazzuri Andrea', 0) > 0
     
@@ -362,13 +332,10 @@ def test_reset_stats(client):
     assert response.status_code == 200
     
     # Verify stats are reset
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game['goals'].get('69 - Bazzuri Andrea', 0) == 0
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_opponent_goalie_tracking(client):
@@ -392,14 +359,11 @@ def test_opponent_goalie_tracking(client):
     client.get(f'/action_opponent_goalie/{game_id}?action=goal_conceded', follow_redirects=True)
     
     # Verify stats
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game['opponent_goalie_saves'].get('Opponent Goalie', 0) == 5
     assert game['opponent_goalie_goals_conceded'].get('Opponent Goalie', 0) == 1
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_multiple_lines(client):
@@ -411,10 +375,8 @@ def test_multiple_lines(client):
         {"id": "3", "number": "79", "surname": "Biaggio", "name": "Filippo", "position": "A", "tesser": "U21", "nickname": "Pippo"},
         {"id": "4", "number": "98", "surname": "Bottoli", "name": "Enea", "position": "D", "tesser": "U21", "nickname": "Bottox"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_U21.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
-    
+    save_roster(roster_data, 'U21', '')
+
     # Create a game with multiple lines using roster format
     data = {
         'team': 'U21',
@@ -432,7 +394,7 @@ def test_multiple_lines(client):
     assert response.status_code == 200
     
     # Verify lines
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Test Home'), None)
     # Check that first two lines have players
     assert len(game['lines'][0]) == 2
@@ -440,9 +402,6 @@ def test_multiple_lines(client):
     assert '69 - Bazzuri Andrea' in game['lines'][0]
     assert '79 - Biaggio Filippo' in game['lines'][1]
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 # client fixture is provided in tests/conftest.py

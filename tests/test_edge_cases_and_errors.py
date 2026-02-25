@@ -1,7 +1,7 @@
 """Tests for edge cases, error handling, and additional functionality"""
-import json
-import os
-from config import GAMES_FILE, ROSTERS_DIR
+from services.game_service import load_games, save_games
+from models.roster import save_roster
+
 
 
 def test_roster_delete_entire_roster(client):
@@ -12,10 +12,8 @@ def test_roster_delete_entire_roster(client):
     ]
     season = '2024-25'
     team = 'TestTeam'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Try to delete roster via API (note: endpoint uses 'category' not 'season' in current implementation)
     response = client.post('/roster/delete_roster', 
@@ -26,10 +24,6 @@ def test_roster_delete_entire_roster(client):
     # Should succeed since no games use this roster, or return warning
     # Note: The current implementation may not find season-specific rosters without season param
     assert result['success'] == True or result.get('warning') == True or 'error' in result
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_roster_delete_with_games_warning(client):
@@ -40,10 +34,8 @@ def test_roster_delete_with_games_warning(client):
     
     season = '2024-25'
     team = 'WarningTest'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create a game using this roster
     game_data = {
@@ -66,10 +58,6 @@ def test_roster_delete_with_games_warning(client):
     result = response.get_json()
     # Should return warning since games use this roster
     assert result.get('warning') == True or result.get('game_count', 0) > 0
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_home_page_season_filter(client):
@@ -82,9 +70,7 @@ def test_home_page_season_filter(client):
     seasons = ['2023-24', '2024-25']
     
     for season in seasons:
-        roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_U21.json')
-        with open(roster_path, 'w') as f:
-            json.dump(roster_data, f)
+        save_roster(roster_data, 'U21', season)
         
         game_data = {
             'season': season,
@@ -109,11 +95,6 @@ def test_home_page_season_filter(client):
     assert f'Home {seasons[1]}'.encode() in response.data
     
     # Cleanup
-    for season in seasons:
-        roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_U21.json')
-        if os.path.exists(roster_path):
-            os.remove(roster_path)
-
 
 def test_home_page_category_filter(client):
     """Test home page filters games by category"""
@@ -125,9 +106,7 @@ def test_home_page_category_filter(client):
     categories = ['U21', 'U18']
     
     for category in categories:
-        roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{category}.json')
-        with open(roster_path, 'w') as f:
-            json.dump(roster_data, f)
+        save_roster(roster_data, category, season)
         
         game_data = {
             'season': season,
@@ -150,11 +129,6 @@ def test_home_page_category_filter(client):
     assert response.status_code == 200
     
     # Cleanup
-    for category in categories:
-        roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{category}.json')
-        if os.path.exists(roster_path):
-            os.remove(roster_path)
-
 
 def test_invalid_game_id_on_actions(client):
     """Test that invalid game IDs are handled properly"""
@@ -177,10 +151,8 @@ def test_game_with_special_characters_in_names(client):
     
     season = '2024-25'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create game with special characters
     game_data = {
@@ -200,18 +172,13 @@ def test_game_with_special_characters_in_names(client):
     assert response.status_code == 200
     
     # Verify game was created with special characters
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     
     game = next((g for g in games if "St. Gallen" in g.get('home_team', '')), None)
     assert game is not None
     assert game['home_team'] == "FC St. Gallen's Tigers"
     assert game['away_team'] == 'München Eagles'
     assert game['referee1'] == "O'Connor"
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_stats_page_with_hide_zeros(client):
@@ -223,10 +190,8 @@ def test_stats_page_with_hide_zeros(client):
     
     season = '2024-25'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create game
     game_data = {
@@ -244,8 +209,7 @@ def test_stats_page_with_hide_zeros(client):
     assert response.status_code == 200
     
     # Get game ID
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Home'), None)
     game_id = game['id']
     
@@ -257,10 +221,6 @@ def test_stats_page_with_hide_zeros(client):
     assert response.status_code == 200
     # Active player should be shown
     assert b'Active' in response.data
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_game_with_no_players_in_lines(client):
@@ -271,10 +231,8 @@ def test_game_with_no_players_in_lines(client):
     
     season = '2024-25'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create game with no players in lines
     game_data = {
@@ -291,18 +249,13 @@ def test_game_with_no_players_in_lines(client):
     assert response.status_code == 200
     
     # Verify game was created with empty lines
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     
     game = next((g for g in games if g['home_team'] == 'Empty Lines Home'), None)
     assert game is not None
     # Lines should exist but be empty
     assert 'lines' in game
     assert all(len(line) == 0 for line in game['lines'])
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_season_with_underscores(client):
@@ -314,10 +267,8 @@ def test_season_with_underscores(client):
     # Use season with underscore (filesystem-safe format)
     season = '2024_25_Spring'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create game with special character season
     game_data = {
@@ -335,16 +286,11 @@ def test_season_with_underscores(client):
     assert response.status_code == 200
     
     # Verify game was created
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     
     game = next((g for g in games if g.get('season') == season), None)
     assert game is not None
     assert game['season'] == season
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_api_roster_with_invalid_category(client):
@@ -365,10 +311,8 @@ def test_multiple_consecutive_actions_same_player(client):
     
     season = '2024-25'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create game
     game_data = {
@@ -385,8 +329,7 @@ def test_multiple_consecutive_actions_same_player(client):
     client.post('/create_game', data=game_data, follow_redirects=True)
     
     # Get game ID
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Hat Trick Game'), None)
     game_id = game['id']
     
@@ -398,14 +341,9 @@ def test_multiple_consecutive_actions_same_player(client):
         assert response.status_code == 200 or response.status_code == 302
     
     # Verify goals were recorded
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game['goals'].get(player, 0) == 3
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_game_lineup_page_access(client):
@@ -416,10 +354,8 @@ def test_game_lineup_page_access(client):
     
     season = '2024-25'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create game
     game_data = {
@@ -436,8 +372,7 @@ def test_game_lineup_page_access(client):
     client.post('/create_game', data=game_data, follow_redirects=True)
     
     # Get game ID
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Lineup Test'), None)
     game_id = game['id']
     
@@ -445,10 +380,6 @@ def test_game_lineup_page_access(client):
     response = client.get(f'/game/{game_id}/lineup')
     assert response.status_code == 200
     assert b'Lineup Test' in response.data
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_combined_season_and_category_filter(client):
@@ -466,9 +397,7 @@ def test_combined_season_and_category_filter(client):
     ]
     
     for season, category in combinations:
-        roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{category}.json')
-        with open(roster_path, 'w') as f:
-            json.dump(roster_data, f)
+        save_roster(roster_data, category, season)
         
         game_data = {
             'season': season,
@@ -488,8 +417,3 @@ def test_combined_season_and_category_filter(client):
     # Should show only 2024-25 U21 game
     assert b'2024-25 U21 Home' in response.data
     
-    # Cleanup
-    for season, category in combinations:
-        roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{category}.json')
-        if os.path.exists(roster_path):
-            os.remove(roster_path)

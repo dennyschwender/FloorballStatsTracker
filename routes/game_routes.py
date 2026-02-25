@@ -8,7 +8,8 @@ from flask import Blueprint, request, render_template, redirect, url_for, sessio
 from config import REQUIRED_PIN, PERIODS
 from services.game_service import (
     load_games, save_games, find_game_by_id, ensure_game_ids,
-    ensure_game_stats, ensure_player_stats, build_formation_from_form
+    ensure_game_stats, ensure_player_stats, build_formation_from_form,
+    delete_game_by_id,
 )
 from services.stats_service import recalculate_game_scores
 from models.roster import load_roster, get_all_seasons
@@ -692,12 +693,10 @@ def reset_game(game_id):
 
 @game_bp.route('/delete_game/<int:game_id>', methods=['POST'])
 def delete_game(game_id):
-    games = load_games()
-    game = find_game_by_id(games, game_id)
+    game = find_game_by_id(load_games(), game_id)
     if not game:
         return "Game not found", 404
-    games = [g for g in games if g.get('id') != game_id]
-    save_games(games)
+    delete_game_by_id(game_id)
     return redirect(url_for('game.index'))
 
 
@@ -708,15 +707,16 @@ def set_period(game_id, period):
     if not game:
         return "Game not found", 404
     
-    if period in PERIODS:
-        game['current_period'] = period
-        # Find and update game by ID
-        for i, game_item in enumerate(games):
-            if game_item.get('id') == game_id:
-                games[i] = game
-                break
-        save_games(games)
-    
+    if period not in PERIODS:
+        return f"Invalid period '{period}'", 400
+
+    game['current_period'] = period
+    # Find and update game by ID
+    for i, game_item in enumerate(games):
+        if game_item.get('id') == game_id:
+            games[i] = game
+            break
+    save_games(games)
     return redirect(url_for('game.game_details', game_id=game_id))
 
 

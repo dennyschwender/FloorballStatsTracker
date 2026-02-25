@@ -1,156 +1,141 @@
 """
-Roster data model and management functions
+Roster data model and management functions (SQLite-backed).
+
+Public API is identical to the old JSON/file-based version so that existing
+routes continue to work without changes.
 """
-import os
-import json
-from config import ROSTERS_DIR
-from utils.security import sanitize_filename, validate_category, validate_season
+import logging
+from models.database import db
+from models.game_model import RosterPlayer
+from utils.security import validate_category, validate_season
+
+logger = logging.getLogger(__name__)
 
 
-def get_roster_file(category, season=None):
-    """Get the roster file path for a specific category and season.
-    
-    Security: Validates inputs and prevents path traversal attacks.
-    """
-    # Security: Validate category input
+def _check_category(category):
     if not category or not validate_category(category):
         raise ValueError("Invalid category")
-    
-    # Security: Validate season input
+
+
+def _check_season(season):
     if season and not validate_season(season):
         raise ValueError("Invalid season format")
-    
-    # Security: Sanitize components
-    safe_category = sanitize_filename(category)
-    
-    if season and season.strip():
-        safe_season = sanitize_filename(season)
-        filename = f'roster_{safe_season}_{safe_category}.json'
-    else:
-        # For backward compatibility, return old format if no season specified
-        filename = f'roster_{safe_category}.json'
-    
-    # Security: Ensure the path stays within ROSTERS_DIR
-    filepath = os.path.join(ROSTERS_DIR, filename)
-    filepath = os.path.abspath(filepath)
-    
-    # Verify the resolved path is still within ROSTERS_DIR
-    if not filepath.startswith(os.path.abspath(ROSTERS_DIR)):
-        raise ValueError("Path traversal attempt detected")
-    
-    return filepath
 
 
 def load_roster(category=None, season=None):
-    """Load roster for a specific category and season. If no category, return empty list."""
+    """Load roster for a specific category/season.  Returns list of player dicts."""
     if not category:
         return []
-    
-    roster_file = get_roster_file(category, season)
     try:
-        if os.path.exists(roster_file):
-            with open(roster_file, 'r') as f:
-                return json.load(f)
+        _check_category(category)
+        _check_season(season)
+        q = RosterPlayer.query.filter_by(category=category, season=season or "")
+        rows = q.all()
+        return [r.to_dict() for r in rows]
+    except ValueError:
+        raise
     except Exception:
-        pass
-    return []
+        logger.exception("load_roster failed for category=%s season=%s", category, season)
+        return []
 
 
 def save_roster(roster, category, season=None):
-    """Save roster for a specific category and season"""
-    roster_file = get_roster_file(category, season)
-    with open(roster_file, 'w') as f:
-        json.dump(roster, f, indent=2)
+    """Replace the entire roster for a (category, season) with roster.
+
+    Deletes existing rows then inserts the new list in one transaction.
+    """
+    _check_category(category)
+    _check_season(season)
+    safe_season = season or ""
+    try:
+        RosterPlayer.query.filter_by(category=category, season=safe_season).delete()
+        for player in roster:
+            row = RosterPlayer(
+                player_id=str(player.get("id", "")),
+                season=safe_season,
+                category=category,
+                number=str(player.get("number", "")),
+                surname=str(player.get("surname", "")),
+                name=str(player.get("name", "")),
+                nickname=str(player.get("nickname", "")),
+                position=str(player.get("position", "A")),
+                tesser=str(player.get("tesser", "")),
+                hidden=1 if player.get("hidden") else 0,
+            )
+            db.session.add(row)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        logger.exception("save_roster failed for category=%s season=%s", category, season)
+        raise
+
+
+def delete_roster_category(category, season=None):
+    """Remove every player in a (category, season) roster from the database."""
+    _check_category(category)
+    safe_season = season or ""
+    try:
+        deleted = RosterPlayer.query.filter_by(
+            category=category, season=safe_season
+        ).delete()
+        db.session.commit()
+        return deleted > 0
+    except Exception:
+        db.session.rollback()
+        logger.exception("delete_roster_category failed")
+        raise
 
 
 def get_all_seasons():
-    """Get list of all unique seasons from roster files"""
-    seasons = set()
-    
-    # Ensure rosters directory exists
-    if not os.path.exists(ROSTERS_DIR):
-        return sorted(seasons)
-    
-    # Scan for all roster_*.json files
-    for filename in os.listdir(ROSTERS_DIR):
-        if filename.startswith('roster_') and filename.endswith('.json'):
-            # Extract season and category from filename: roster_SEASON_CATEGORY.json or roster_CATEGORY.json
-            parts = filename[7:-5].split('_', 1)  # Remove 'roster_' prefix and '.json' suffix
-            if len(parts) == 2:
-                seasons.add(parts[0])  # First part is season
-    
-    return sorted(seasons, reverse=True)  # Most recent season first
+    """Return sorted list (descending) of all unique season strings."""
+    try:
+        rows = db.session.query(RosterPlayer.season).distinct().all()
+        return sorted({r[0] for r in rows if r[0]}, reverse=True)
+    except Exception:
+        logger.exception("get_all_seasons failed")
+        return []
 
 
 def get_all_categories_with_rosters(season=None):
-    """Get list of all categories that have roster files by scanning the rosters directory"""
-    categories = set()
-    
-    # Ensure rosters directory exists
-    if not os.path.exists(ROSTERS_DIR):
-        return sorted(categories)
-    
-    # Scan for all roster_*.json files
-    for filename in os.listdir(ROSTERS_DIR):
-        if filename.startswith('roster_') and filename.endswith('.json'):
-            # Extract category name from filename
-            parts = filename[7:-5].split('_', 1)  # Remove 'roster_' prefix and '.json' suffix
-            if season and season.strip():
-                # Filter by season: roster_SEASON_CATEGORY.json
-                if len(parts) == 2 and parts[0] == season:
-                    categories.add(parts[1])
-            else:
-                # Get all categories (with or without season)
-                if len(parts) == 2:
-                    categories.add(parts[1])
-                elif len(parts) == 1:
-                    categories.add(parts[0])  # Old format without season
-    
-    # Sort alphabetically
-    return sorted(categories)
+    """Return sorted list of categories that have at least one player."""
+    try:
+        q = db.session.query(RosterPlayer.category).distinct()
+        if season and season.strip():
+            q = q.filter(RosterPlayer.season == season)
+        rows = q.all()
+        return sorted({r[0] for r in rows if r[0]})
+    except Exception:
+        logger.exception("get_all_categories_with_rosters failed")
+        return []
 
 
 def get_all_rosters_with_seasons():
-    """Get all rosters with their season and category information.
-    Returns a list of dicts: [{'season': '2025-26', 'category': 'NLB'}, ...]
-    """
-    rosters = []
-    
-    # Ensure rosters directory exists
-    if not os.path.exists(ROSTERS_DIR):
-        return rosters
-    
-    # Scan for all roster_*.json files
-    for filename in os.listdir(ROSTERS_DIR):
-        if filename.startswith('roster_') and filename.endswith('.json'):
-            # Extract season and category from filename: roster_SEASON_CATEGORY.json
-            parts = filename[7:-5].split('_', 1)  # Remove 'roster_' prefix and '.json' suffix
-            if len(parts) == 2:
-                rosters.append({
-                    'season': parts[0],
-                    'category': parts[1]
-                })
-            elif len(parts) == 1:
-                # Old format without season
-                rosters.append({
-                    'season': '',
-                    'category': parts[0]
-                })
-    
-    # Sort by season (descending) then category (ascending)
-    rosters.sort(key=lambda x: (x['season'], x['category']), reverse=True)
-    return rosters
+    """Return list of dicts [{season, category}, ...] sorted by season desc."""
+    try:
+        rows = (
+            db.session.query(RosterPlayer.season, RosterPlayer.category)
+            .distinct()
+            .all()
+        )
+        result = [{"season": r[0], "category": r[1]} for r in rows]
+        result.sort(key=lambda x: (x["season"], x["category"]), reverse=True)
+        return result
+    except Exception:
+        logger.exception("get_all_rosters_with_seasons failed")
+        return []
 
 
 def get_all_tesser_values():
-    """Get list of all unique tesser/category values from all rosters"""
-    tesser_values = set()
-    # Scan all roster files
-    all_categories = get_all_categories_with_rosters()
-    for category in all_categories:
-        roster = load_roster(category)
-        for player in roster:
-            if 'tesser' in player and player['tesser']:
-                tesser_values.add(player['tesser'])
-    # Return sorted list
-    return sorted(tesser_values)
+    """Return sorted list of all unique tesser values across all rosters."""
+    try:
+        rows = db.session.query(RosterPlayer.tesser).distinct().all()
+        return sorted({r[0] for r in rows if r[0]})
+    except Exception:
+        logger.exception("get_all_tesser_values failed")
+        return []
+
+
+def get_roster_file(category, season=None):
+    """Deprecated stub kept so old import paths do not crash."""
+    logger.warning("get_roster_file() is deprecated; use delete_roster_category()")
+    return None

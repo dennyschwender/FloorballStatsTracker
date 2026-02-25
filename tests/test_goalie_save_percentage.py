@@ -1,7 +1,7 @@
 """Test to verify goalie save percentage calculation"""
-import json
-import os
-from config import GAMES_FILE, ROSTERS_DIR
+from services.game_service import load_games, save_games
+from models.roster import save_roster
+
 
 
 def test_goalie_save_percentage_with_fallback(client):
@@ -12,10 +12,8 @@ def test_goalie_save_percentage_with_fallback(client):
     
     season = '2024-25'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create a game
     game_data = {
@@ -32,8 +30,7 @@ def test_goalie_save_percentage_with_fallback(client):
     client.post('/create_game', data=game_data, follow_redirects=True)
     
     # Get the game
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Test Team'), None)
     assert game is not None, "Game should be created"
     game_id = game['id']
@@ -44,8 +41,7 @@ def test_goalie_save_percentage_with_fallback(client):
         client.get(f'/action_goalie/{game_id}/{goalie_name}?action=save')
     
     # Manually set the game result to show 7-4 (home-away) without tracking goals_conceded
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     
     for g in games:
         if g['id'] == game_id:
@@ -63,8 +59,7 @@ def test_goalie_save_percentage_with_fallback(client):
             g['goals_conceded'][goalie_name] = 0  # Bug: not tracked
             break
     
-    with open(GAMES_FILE, 'w') as f:
-        json.dump(games, f, indent=2)
+    save_games(games)
     
     # Now check the game details page
     response = client.get(f'/game/{game_id}')
@@ -91,10 +86,6 @@ def test_goalie_save_percentage_with_fallback(client):
     
     # Should show correct save percentage on stats page too
     assert '87.5' in stats_content or '87' in stats_content  # Allow for rounding
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_goalie_save_percentage_calculation(client):
@@ -106,10 +97,8 @@ def test_goalie_save_percentage_calculation(client):
     
     season = '2024-25'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create game
     game_data = {
@@ -126,8 +115,7 @@ def test_goalie_save_percentage_calculation(client):
     client.post('/create_game', data=game_data, follow_redirects=True)
     
     # Get game ID
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Save % Test'), None)
     assert game is not None, "Game should be created"
     game_id = game['id']
@@ -143,8 +131,7 @@ def test_goalie_save_percentage_calculation(client):
         client.get(f'/action_goalie/{game_id}/{goalie}?action=goal_conceded')
     
     # Verify in game data
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     
     assert game is not None
@@ -164,10 +151,6 @@ def test_goalie_save_percentage_calculation(client):
     # Count occurrences - there should be some, but not for our goalie's average
     assert response.data.count(b'100.0%') == 0 or b'Goalie Test' not in response.data, \
         "Goalie should NOT have 100% save rate when they conceded goals"
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_goalie_with_only_saves_no_goals(client):
@@ -179,10 +162,8 @@ def test_goalie_with_only_saves_no_goals(client):
     
     season = '2024-25'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create game
     game_data = {
@@ -199,8 +180,7 @@ def test_goalie_with_only_saves_no_goals(client):
     client.post('/create_game', data=game_data, follow_redirects=True)
     
     # Get game ID
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Perfect Save Test'), None)
     assert game is not None, "Game should be created"
     game_id = game['id']
@@ -212,8 +192,7 @@ def test_goalie_with_only_saves_no_goals(client):
         client.get(f'/action_goalie/{game_id}/{goalie}?action=save')
     
     # Verify in game data
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     
     assert game is not None
@@ -224,10 +203,6 @@ def test_goalie_with_only_saves_no_goals(client):
     response = client.get(f'/stats?season={season}')
     assert response.status_code == 200
     assert b'100.0%' in response.data or b'100%' in response.data
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_goalie_goals_conceded_tracked_correctly(client):
@@ -238,10 +213,8 @@ def test_goalie_goals_conceded_tracked_correctly(client):
     
     season = '2024-25'
     team = 'U21'
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
+
     
     # Create game
     game_data = {
@@ -257,8 +230,7 @@ def test_goalie_goals_conceded_tracked_correctly(client):
     client.post('/create_game', data=game_data, follow_redirects=True)
     
     # Get game ID
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Goals Conceded Test'), None)
     game_id = game['id']
     
@@ -272,8 +244,7 @@ def test_goalie_goals_conceded_tracked_correctly(client):
         client.get(f'/action_goalie/{game_id}/{goalie}?action=goal_conceded')
     
     # Verify data
-    with open(GAMES_FILE) as f:
-        games = json.load(f)
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     
     # Debug: print the game data
@@ -291,7 +262,3 @@ def test_goalie_goals_conceded_tracked_correctly(client):
     # Check for 30% save rate
     assert b'30.0%' in response.data or b'30%' in response.data, \
         f"Save percentage should be 30% (3 saves / 10 total shots), not 100%"
-    
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)

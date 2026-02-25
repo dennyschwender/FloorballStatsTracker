@@ -2,22 +2,16 @@
 Tests for stats page to ensure all games are displayed correctly.
 These tests verify that the stats page properly displays all games in the tables.
 """
-import json
 import pytest
-from config import GAMES_FILE
+from services.game_service import load_games, save_games
 
 
 def _read_games():
-    try:
-        with open(GAMES_FILE, 'r') as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return load_games()
 
 
 def _write_games(games):
-    with open(GAMES_FILE, 'w') as f:
-        json.dump(games, f, indent=2)
+    save_games(games)
 
 
 def make_sample_game(game_id, date, home_team, away_team, player='Player1'):
@@ -100,7 +94,7 @@ class TestStatsPageGameDisplay:
         table_html = data[plusminus_start:table_end]
         
         # Count th.rotate elements (each game should have one)
-        rotate_count = table_html.count('th class="rotate"')
+        rotate_count = table_html.count('th class="rotate sortable"')
         assert rotate_count == 3, f"Expected 3 game columns, found {rotate_count}"
 
     def test_game_columns_in_goals_assists_table(self, client):
@@ -123,7 +117,7 @@ class TestStatsPageGameDisplay:
         table_html = data[goals_table_start:table_end]
         
         # Count th.rotate elements
-        rotate_count = table_html.count('th class="rotate"')
+        rotate_count = table_html.count('th class="rotate sortable"')
         assert rotate_count == 2, f"Expected 2 game columns, found {rotate_count}"
 
     def test_stats_data_structure_integrity(self, client):

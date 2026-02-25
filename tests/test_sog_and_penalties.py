@@ -1,20 +1,13 @@
-import json
 import pytest
-
-from config import GAMES_FILE
+from services.game_service import load_games, save_games
 
 
 def _read_games():
-    try:
-        with open(GAMES_FILE, 'r') as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return load_games()
 
 
 def _write_games(games):
-    with open(GAMES_FILE, 'w') as f:
-        json.dump(games, f, indent=2)
+    save_games(games)
 
 
 def make_sample_game():
@@ -205,8 +198,8 @@ def test_game_details_page_displays_new_stats(client):
     # SOG column should be there
     assert 'SOG' in data or 'TIG' in data  # English or Italian
     
-    # Check for the penalty columns
-    assert 'Penalty' in data or 'Penalità' in data
+    # Check for the penalty columns (using translation keys: P. Taken / P. Presa)
+    assert 'P. Taken' in data or 'P. Presa' in data
 
 
 def test_edit_mode_preserves_new_stats_actions(client):

@@ -1,7 +1,6 @@
 """Tests for advanced features and edge cases"""
-import json
-import os
-from config import GAMES_FILE, ROSTERS_DIR
+from services.game_service import load_games
+from models.roster import save_roster
 
 
 def create_test_roster(team='TestTeam'):
@@ -12,10 +11,7 @@ def create_test_roster(team='TestTeam'):
         {"id": "3", "number": "79", "surname": "Biaggio", "name": "Filippo", "position": "A", "tesser": "U21", "nickname": "Pippo"},
         {"id": "4", "number": "77", "surname": "Schwender", "name": "Dennis", "position": "P", "tesser": "U21", "nickname": "Denny"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{team}.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
-    return roster_path
+    save_roster(roster_data, team, '')
 
 
 def test_line_action_plusminus(client):
@@ -36,7 +32,7 @@ def test_line_action_plusminus(client):
     }
     client.post('/create_game', data=data, follow_redirects=True)
     
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Test Home'), None)
     assert game is not None
     game_id = game['id']
@@ -46,15 +42,12 @@ def test_line_action_plusminus(client):
     assert response.status_code == 200
     
     # Verify all players in line got +1
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game is not None
     for player in game['lines'][0]:
         assert game['plusminus'].get(player, 0) == 1
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_unforced_errors(client):
@@ -73,7 +66,7 @@ def test_unforced_errors(client):
     }
     client.post('/create_game', data=data, follow_redirects=True)
     
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Test Home'), None)
     assert game is not None
     game_id = game['id']
@@ -84,7 +77,7 @@ def test_unforced_errors(client):
     assert response.status_code == 200
     
     # Verify error was recorded
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game is not None
     assert game['unforced_errors'].get(player, 0) == 1
@@ -94,14 +87,11 @@ def test_unforced_errors(client):
     assert response.status_code == 200
     
     # Verify error was decremented
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game is not None
     assert game['unforced_errors'].get(player, 0) == 0
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_special_formations(client):
@@ -123,7 +113,7 @@ def test_special_formations(client):
     }
     client.post('/create_game', data=data, follow_redirects=True)
     
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Test Home'), None)
     assert game is not None
     
@@ -133,9 +123,6 @@ def test_special_formations(client):
     assert len(game['pp1']) == 2
     assert len(game['bp1']) == 1
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_game_lineup_page(client):
@@ -154,7 +141,7 @@ def test_game_lineup_page(client):
     }
     client.post('/create_game', data=data, follow_redirects=True)
     
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Test Home'), None)
     assert game is not None
     game_id = game['id']
@@ -164,9 +151,6 @@ def test_game_lineup_page(client):
     assert response.status_code == 200
     assert b'Test Home' in response.data
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_delete_game(client):
@@ -185,7 +169,7 @@ def test_delete_game(client):
     }
     client.post('/create_game', data=data, follow_redirects=True)
     
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     initial_count = len(games)
     game = next((g for g in games if g['home_team'] == 'Test Home'), None)
     assert game is not None
@@ -196,13 +180,10 @@ def test_delete_game(client):
     assert response.status_code == 200
     
     # Verify game was deleted
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     assert len(games) == initial_count - 1
     assert not any(g['id'] == game_id for g in games)
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_invalid_game_id(client):
@@ -227,7 +208,7 @@ def test_invalid_period(client):
     }
     client.post('/create_game', data=data, follow_redirects=True)
     
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Test Home'), None)
     assert game is not None
     game_id = game['id']
@@ -236,24 +217,16 @@ def test_invalid_period(client):
     response = client.get(f'/set_period/{game_id}/5')
     assert response.status_code == 400
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_empty_roster_handling(client):
     """Test handling of empty roster"""
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_EmptyTeam.json')
-    with open(roster_path, 'w') as f:
-        json.dump([], f)
+    save_roster([], 'EmptyTeam', '')
     
     # Try to create game with empty roster
     response = client.get('/create_game')
     assert response.status_code == 200
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_goal_with_goalie_on_ice(client):
@@ -273,7 +246,7 @@ def test_goal_with_goalie_on_ice(client):
     }
     client.post('/create_game', data=data, follow_redirects=True)
     
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Test Home'), None)
     assert game is not None
     game_id = game['id']
@@ -284,14 +257,11 @@ def test_goal_with_goalie_on_ice(client):
     assert response.status_code == 200
     
     # Verify opponent goalie goals conceded increased
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game is not None
     assert game['opponent_goalie_goals_conceded'].get('Opponent Goalie', 0) == 1
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_goalie_assist(client):
@@ -310,7 +280,7 @@ def test_goalie_assist(client):
     }
     client.post('/create_game', data=data, follow_redirects=True)
     
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['home_team'] == 'Test Home'), None)
     assert game is not None
     game_id = game['id']
@@ -321,11 +291,8 @@ def test_goalie_assist(client):
     assert response.status_code == 200
     
     # Verify assist was recorded
-    games = json.load(open(GAMES_FILE))
+    games = load_games()
     game = next((g for g in games if g['id'] == game_id), None)
     assert game is not None
     assert game['assists'].get(goalie, 0) == 1
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)

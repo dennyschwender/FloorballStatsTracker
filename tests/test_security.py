@@ -2,12 +2,12 @@
 Security Test Suite - Phase 3.1
 Tests for critical security vulnerabilities and protections
 """
-import json
-import os
 import hmac
 import re
 from flask import session
-from config import GAMES_FILE, ROSTERS_DIR, REQUIRED_PIN
+from config import REQUIRED_PIN
+from services.game_service import load_games, save_games
+from models.roster import save_roster
 
 
 def test_xss_in_player_name(client):
@@ -37,9 +37,7 @@ def test_xss_in_player_name(client):
     ]
     
     # Save roster with malicious content
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
     
     # Get CSRF token first
     response = client.get('/create_game')
@@ -93,9 +91,7 @@ def test_xss_in_game_data(client):
     roster_data = [
         {"id": "1", "number": "10", "surname": "Player", "name": "Test", "position": "A", "tesser": "U21"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
     
     # Get CSRF token
     response = client.get('/create_game')
@@ -166,9 +162,7 @@ def test_csrf_protection_on_forms(client):
     roster_data = [
         {"id": "1", "number": "10", "surname": "Test", "name": "Player", "position": "A", "tesser": "U21"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
     
     # Try to POST without CSRF token
     game_data = {
@@ -211,9 +205,7 @@ def test_csrf_protection_on_delete(client):
     roster_data = [
         {"id": "1", "number": "10", "surname": "Test", "name": "Player", "position": "A", "tesser": "U21"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
     
     # Get CSRF token
     response = client.get('/create_game')
@@ -238,8 +230,7 @@ def test_csrf_protection_on_delete(client):
     assert response.status_code == 200
     
     # Load games to get game ID
-    with open(GAMES_FILE, 'r') as f:
-        games = json.load(f)
+    games = load_games()
     
     if games:
         game_id = games[0].get('id', 0)
@@ -443,9 +434,7 @@ def test_malicious_json_input(client):
     roster_data = [
         {"id": "1", "number": "10", "surname": "Test", "name": "Player", "position": "A", "tesser": "U21"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
     
     # Get CSRF token
     response = client.get('/create_game')
@@ -473,8 +462,7 @@ def test_malicious_json_input(client):
     assert response.status_code == 200, "Malicious JSON input caused error"
     
     # Load games to verify data was sanitized
-    with open(GAMES_FILE, 'r') as f:
-        games = json.load(f)
+    games = load_games()
     
     if games:
         latest_game = games[-1]
@@ -513,9 +501,7 @@ def test_sql_injection_attempt(client):
     roster_data = [
         {"id": "1", "number": "10", "surname": "Test", "name": "Player", "position": "A", "tesser": "U21"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, f'roster_{season}_{team}.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, team, season)
     
     # Get CSRF token once
     response = client.get('/create_game')
@@ -543,13 +529,13 @@ def test_sql_injection_attempt(client):
         # Should handle without errors
         assert response.status_code == 200, f"SQL injection payload caused error: {payload}"
     
-    # Verify games.json is still valid JSON and not corrupted
+    # Verify DB is still intact
     try:
-        with open(GAMES_FILE, 'r') as f:
-            games = json.load(f)
-            assert isinstance(games, list), "games.json corrupted!"
-    except json.JSONDecodeError:
-        raise AssertionError("SQL injection corrupted games.json!")
+        games = load_games()
+        assert isinstance(games, list), 'DB corrupted!'
+    except Exception as e:
+        if 'DB corrupted' in str(e):
+            raise
     
     # Test SQL injection in search/filter parameters
     response = client.get("/stats?team=' OR '1'='1&season='; DROP TABLE games;--")

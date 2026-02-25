@@ -110,7 +110,7 @@
             <a href="{{ url_for('game.game_details', game_id=game_id, edit=1) }}" class="btn btn-secondary">
                 <i class="bi bi-toggle-on"></i> {{ g.t.get('edit_mode', 'Edit Mode') }}
             </a>
-            <a href="{{ url_for('game.view_game_lineup', game_id=game_id) }}" class="btn btn-primary" target="_blank">
+            <a href="{{ url_for('game.view_game_lineup', game_id=game_id) }}" class="btn btn-primary">
                 📋 {{ g.t.get('view_lineup', 'View Lineup') }}
             </a>
             {% else %}

@@ -1,8 +1,7 @@
 """Tests for roster CRUD operations"""
 import json
-import os
 import pytest
-from config import ROSTERS_DIR
+from models.roster import save_roster, load_roster
 
 
 def test_roster_add_player(client):
@@ -11,9 +10,7 @@ def test_roster_add_player(client):
     roster_data = [
         {"id": "1", "number": "69", "surname": "Bazzuri", "name": "Andrea", "position": "A", "tesser": "U21", "nickname": "Andy"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_TestTeam.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, 'TestTeam', '')
     
     # Add new player
     data = {
@@ -29,14 +26,10 @@ def test_roster_add_player(client):
     assert response.status_code == 200
     
     # Verify player was added
-    with open(roster_path, 'r') as f:
-        roster = json.load(f)
+    roster = load_roster('TestTeam', '')
     assert len(roster) == 2
     assert any(p['surname'] == 'Belvederi' for p in roster)
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_roster_edit_player(client):
@@ -44,9 +37,7 @@ def test_roster_edit_player(client):
     roster_data = [
         {"id": "1", "number": "69", "surname": "Bazzuri", "name": "Andrea", "position": "A", "tesser": "U21", "nickname": "Andy"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_TestTeam.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, 'TestTeam', '')
     
     # Edit player
     data = {
@@ -62,16 +53,12 @@ def test_roster_edit_player(client):
     assert response.status_code == 200
     
     # Verify changes
-    with open(roster_path, 'r') as f:
-        roster = json.load(f)
+    roster = load_roster('TestTeam', '')
     player = next((p for p in roster if p['id'] == '1'), None)
     assert player is not None
     assert player['number'] == '70'
     assert player['position'] == 'D'
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_roster_delete_player(client):
@@ -80,23 +67,17 @@ def test_roster_delete_player(client):
         {"id": "1", "number": "69", "surname": "Bazzuri", "name": "Andrea", "position": "A", "tesser": "U21", "nickname": "Andy"},
         {"id": "2", "number": "84", "surname": "Belvederi", "name": "Andrea", "position": "A", "tesser": "U21", "nickname": "Belve"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_TestTeam.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, 'TestTeam', '')
     
     # Delete player
     response = client.get('/roster/delete/1?category=TestTeam', follow_redirects=True)
     assert response.status_code == 200
     
     # Verify player was deleted
-    with open(roster_path, 'r') as f:
-        roster = json.load(f)
+    roster = load_roster('TestTeam', '')
     assert len(roster) == 1
     assert not any(p['id'] == '1' for p in roster)
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_roster_bulk_delete(client):
@@ -106,9 +87,7 @@ def test_roster_bulk_delete(client):
         {"id": "2", "number": "84", "surname": "Belvederi", "name": "Andrea", "position": "A", "tesser": "U21", "nickname": "Belve"},
         {"id": "3", "number": "79", "surname": "Biaggio", "name": "Filippo", "position": "A", "tesser": "U21", "nickname": "Pippo"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_TestTeam.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, 'TestTeam', '')
     
     # Bulk delete players 1 and 2
     data = {
@@ -123,22 +102,16 @@ def test_roster_bulk_delete(client):
     assert result['success'] == True
     
     # Verify players were deleted
-    with open(roster_path, 'r') as f:
-        roster = json.load(f)
+    roster = load_roster('TestTeam', '')
     assert len(roster) == 1
     assert roster[0]['id'] == '3'
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_roster_bulk_import(client):
     """Test importing players from text"""
     # Prepare empty roster
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_TestTeam.json')
-    with open(roster_path, 'w') as f:
-        json.dump([], f)
+    save_roster([], 'TestTeam', '')
     
     # Import players (tab-separated format)
     import_text = """69\tBazzuri\tAndrea\tA\tU21\tAndy
@@ -153,16 +126,12 @@ def test_roster_bulk_import(client):
     assert response.status_code == 200
     
     # Verify players were imported
-    with open(roster_path, 'r') as f:
-        roster = json.load(f)
+    roster = load_roster('TestTeam', '')
     assert len(roster) == 3
     assert any(p['surname'] == 'Bazzuri' for p in roster)
     assert any(p['surname'] == 'Belvederi' for p in roster)
     assert any(p['surname'] == 'Biaggio' for p in roster)
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
 
 
 def test_api_roster_endpoint(client):
@@ -170,9 +139,7 @@ def test_api_roster_endpoint(client):
     roster_data = [
         {"id": "1", "number": "69", "surname": "Bazzuri", "name": "Andrea", "position": "A", "tesser": "U21", "nickname": "Andy"}
     ]
-    roster_path = os.path.join(ROSTERS_DIR, 'roster_U21.json')
-    with open(roster_path, 'w') as f:
-        json.dump(roster_data, f)
+    save_roster(roster_data, 'U21', '')
     
     # Call API endpoint
     response = client.get('/api/roster/U21')
@@ -183,6 +150,3 @@ def test_api_roster_endpoint(client):
     assert len(data) == 1
     assert data[0]['surname'] == 'Bazzuri'
     
-    # Cleanup
-    if os.path.exists(roster_path):
-        os.remove(roster_path)
