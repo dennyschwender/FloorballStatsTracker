@@ -450,11 +450,15 @@
     </div>
 
     <!-- PDF download bar -->
-    <div id="pdf-bar" style="flex:0 0 auto;border-top:1px solid #ccc;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;font-family:inherit;font-size:0.8rem;">
-        <span style="color:#555;">Save for offline / e-ink:</span>
-        <a href="{{ url_for('game.download_lineup_pdf', game_id=game.id) }}"
-           style="background:#111;color:#fff;text-decoration:none;padding:6px 14px;font-family:inherit;font-size:0.85rem;border-radius:3px;">
-            &#8595; Download PDF
+    <div id="pdf-bar" style="flex:0 0 auto;border-top:1px solid #ccc;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;font-family:inherit;font-size:0.8rem;gap:6px;">
+        <span style="color:#555;white-space:nowrap;">&#8595; PDF:</span>
+        <a href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='tolino') }}"
+           style="background:#111;color:#fff;text-decoration:none;padding:5px 10px;font-family:inherit;font-size:0.8rem;border-radius:3px;white-space:nowrap;">
+            Tolino Shine
+        </a>
+        <a href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='xteink') }}"
+           style="background:#333;color:#fff;text-decoration:none;padding:5px 10px;font-family:inherit;font-size:0.8rem;border-radius:3px;white-space:nowrap;">
+            Xteink X4
         </a>
     </div>
 

@@ -799,160 +799,209 @@ def view_game_lineup_eink(game_id):
     return render_template('game_lineup_eink.html', game=game, roster=roster, player_map=player_map)
 
 
+# ── Device profiles for e-reader PDF export ────────────────────────────────
+# Page dimensions are the physical screen area.
+# Tolino Shine (6"): 1448×1072 px @ 300 ppi → ~122.7×90.7 mm
+# Xteink X4 (4.3"): 800×600 px portrait @ ~233 ppi → ~87×65 mm
+_EINK_DEVICES = {
+    'tolino': dict(
+        label='Tolino Shine',
+        page_w=90, page_h=122, margin=7,
+        title_fs=20, vs_fs=13, section_fs=16,
+        meta_fs=12, player_fs=14,
+        toc_title_fs=13, toc_item_fs=12,
+        num_w=14, meta_label_w=18,
+        cell_pad=5, hr_thick=1.5,
+        spec_spacer=5,
+    ),
+    'xteink': dict(
+        label='Xteink X4',
+        page_w=65, page_h=87, margin=5,
+        title_fs=14, vs_fs=9, section_fs=11,
+        meta_fs=9, player_fs=10,
+        toc_title_fs=9, toc_item_fs=9,
+        num_w=10, meta_label_w=13,
+        cell_pad=3, hr_thick=1.0,
+        spec_spacer=3,
+    ),
+}
+
+
 @game_bp.route('/game/<int:game_id>/lineup/pdf')
 def download_lineup_pdf(game_id):
-    """Generate and download a compact multi-page A5 PDF of the lineup."""
-    from reportlab.lib.pagesizes import A5
+    """Generate an e-reader PDF of the lineup.  ?device=tolino|xteink"""
     from reportlab.lib.units import mm
     from reportlab.platypus import (
         SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak,
+        HRFlowable,
     )
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.styles import ParagraphStyle
     from reportlab.lib import colors
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+    from reportlab.lib.enums import TA_CENTER
+
+    device_key = request.args.get('device', 'tolino')
+    p = _EINK_DEVICES.get(device_key, _EINK_DEVICES['tolino'])
 
     game, roster, player_map = _lineup_context(game_id)
     if game is None:
         return "Game not found", 404
 
+    # ── Page geometry ────────────────────────────────────────────────────────
+    PAGE_W = p['page_w'] * mm
+    PAGE_H = p['page_h'] * mm
+    MARGIN = p['margin'] * mm
+    COL_W  = PAGE_W - 2 * MARGIN
+    NUM_W  = p['num_w'] * mm
+    PAD    = p['cell_pad']
+
     buf = io.BytesIO()
-    PAGE_W, PAGE_H = A5
-    MARGIN = 12 * mm
     doc = SimpleDocTemplate(
         buf,
-        pagesize=A5,
+        pagesize=(PAGE_W, PAGE_H),
         leftMargin=MARGIN, rightMargin=MARGIN,
-        topMargin=10 * mm, bottomMargin=10 * mm,
+        topMargin=MARGIN, bottomMargin=MARGIN,
     )
 
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'Title', parent=styles['Normal'],
-        fontSize=14, fontName='Helvetica-Bold',
-        alignment=TA_CENTER, spaceAfter=2 * mm,
-    )
-    sub_style = ParagraphStyle(
-        'Sub', parent=styles['Normal'],
-        fontSize=9, alignment=TA_CENTER, spaceAfter=1 * mm,
-    )
-    section_style = ParagraphStyle(
-        'Section', parent=styles['Normal'],
-        fontSize=11, fontName='Helvetica-Bold',
-        spaceBefore=2 * mm, spaceAfter=1 * mm,
-        borderPad=1 * mm,
-    )
-    body_style = ParagraphStyle(
-        'Body', parent=styles['Normal'],
-        fontSize=10, leading=14,
-    )
+    # ── Styles ───────────────────────────────────────────────────────────────
+    def _ps(name, font='Helvetica', size=10, align=None, **kw):
+        kwargs = dict(fontName=font, fontSize=size, leading=round(size * 1.25))
+        if align is not None:
+            kwargs['alignment'] = align
+        kwargs.update(kw)
+        return ParagraphStyle(name, **kwargs)
 
-    def player_display(player_string):
-        """Return '#NN  Surname F.' string."""
-        parts = player_string.split(' - ', 1)
-        num = parts[0].strip() if len(parts) > 1 else ''
-        full = parts[1].strip() if len(parts) > 1 else player_string.strip()
+    title_style     = _ps('T', 'Helvetica-Bold', p['title_fs'],    TA_CENTER,
+                          spaceAfter=2 * mm)
+    vs_style        = _ps('V', 'Helvetica',      p['vs_fs'],       TA_CENTER,
+                          spaceAfter=2 * mm)
+    section_style   = _ps('S', 'Helvetica-Bold', p['section_fs'],
+                          spaceAfter=2 * mm, spaceBefore=1 * mm)
+    meta_lbl_style  = _ps('ML', 'Helvetica-Bold', p['meta_fs'])
+    meta_val_style  = _ps('MV', 'Helvetica',       p['meta_fs'])
+    player_style    = _ps('PV', 'Helvetica',        p['player_fs'])
+    player_bold     = _ps('PB', 'Helvetica-Bold',   p['player_fs'])
+    toc_title_style = _ps('TT', 'Helvetica-Bold', p['toc_title_fs'],
+                          spaceBefore=2 * mm, spaceAfter=1 * mm)
+    toc_item_style  = _ps('TI', 'Helvetica',      p['toc_item_fs'])
+
+    def hr():
+        return HRFlowable(width='100%', thickness=p['hr_thick'],
+                          color=colors.black, spaceAfter=1.5 * mm, spaceBefore=0)
+
+    def fmt_player(s):
+        parts = s.split(' - ', 1)
+        num   = parts[0].strip() if len(parts) > 1 else ''
+        full  = parts[1].strip() if len(parts) > 1 else s.strip()
         words = full.split()
-        if len(words) > 1:
-            name_fmt = words[0] + ' ' + words[1][0] + '.'
-        else:
-            name_fmt = full
-        return (num, name_fmt)
+        name  = (words[0] + ' ' + words[1][0] + '.') if len(words) > 1 else full
+        return num, name
 
-    def player_table(players, col_width):
-        """Build a ReportLab Table for a list of player strings."""
-        rows = []
-        for p in players:
-            num, name = player_display(p)
-            rows.append([num, name])
+    def player_table(players):
+        rows = [[Paragraph(num, player_bold), Paragraph(nm, player_style)]
+                for num, nm in (fmt_player(pl) for pl in players)]
         if not rows:
             return None
-        tbl = Table(rows, colWidths=[10 * mm, col_width - 10 * mm])
+        tbl = Table(rows, colWidths=[NUM_W, COL_W - NUM_W])
         tbl.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
-            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('LINEBELOW', (0, 0), (-1, -2), 0.3, colors.lightgrey),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE',      (0, 0), (-1, -1), p['player_fs']),
+            ('ALIGN',         (0, 0), (0, -1), 'RIGHT'),
+            ('ALIGN',         (1, 0), (1, -1), 'LEFT'),
+            ('TOPPADDING',    (0, 0), (-1, -1), PAD),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), PAD),
+            ('LINEBELOW',     (0, 0), (-1, -2), 0.5, colors.black),
+            ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         return tbl
 
-    col_w = PAGE_W - 2 * MARGIN
-    story = []
-
-    # ── Cover page ─────────────────────────────────────────────────────────
-    story.append(Spacer(1, 8 * mm))
-    story.append(Paragraph(game.get('home_team', ''), title_style))
-    story.append(Paragraph('vs', sub_style))
-    story.append(Paragraph(game.get('away_team', ''), title_style))
-    story.append(Spacer(1, 4 * mm))
-
-    meta_rows = []
-    if game.get('date'):
-        meta_rows.append(['Date', game['date']])
-    if game.get('team'):
-        meta_rows.append(['Team', game['team']])
-    if game.get('season'):
-        meta_rows.append(['Season', game['season']])
-    refs = ', '.join(r for r in [game.get('referee1', ''), game.get('referee2', '')] if r)
-    if refs:
-        meta_rows.append(['Referees', refs])
-
-    if meta_rows:
-        meta_tbl = Table(meta_rows, colWidths=[22 * mm, col_w - 22 * mm])
-        meta_tbl.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('LINEBELOW', (0, 0), (-1, -1), 0.3, colors.lightgrey),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
-        story.append(meta_tbl)
-
-    # ── Goalies page ────────────────────────────────────────────────────────
-    goalies = game.get('goalies', [])
-    if goalies:
-        story.append(PageBreak())
-        story.append(Paragraph('Goalies', section_style))
-        tbl = player_table(goalies, col_w)
-        if tbl:
-            story.append(tbl)
-
-    # ── One page per line ───────────────────────────────────────────────────
-    for i, line in enumerate(game.get('lines', [])):
-        if not line:
-            continue
-        story.append(PageBreak())
-        story.append(Paragraph(f'Line {i + 1}', section_style))
-        tbl = player_table(line, col_w)
-        if tbl:
-            story.append(tbl)
-
-    # ── Special formations (2 per page) ────────────────────────────────────
+    # ── Content helpers ──────────────────────────────────────────────────────
     SPEC_KEYS = [
         ('pp1', 'PP1'), ('pp2', 'PP2'),
         ('bp1', 'BP1'), ('bp2', 'BP2'),
         ('6vs5', '6 vs 5'), ('stress_line', 'Stress Line'),
     ]
-    spec = [(label, game[key]) for key, label in SPEC_KEYS if game.get(key)]
-    for idx in range(0, len(spec), 2):
-        chunk = spec[idx:idx + 2]
+    spec    = [(label, game[k]) for k, label in SPEC_KEYS if game.get(k)]
+    goalies = game.get('goalies', [])
+    lines   = [l for l in game.get('lines', []) if l]
+
+    toc_entries = ['Game Info']
+    if goalies:
+        toc_entries.append('Goalies')
+    for i in range(len(lines)):
+        toc_entries.append(f'Line {i + 1}')
+    for i in range(0, len(spec), 2):
+        toc_entries.append(' / '.join(lbl for lbl, _ in spec[i:i + 2]))
+
+    story = []
+
+    # ── Cover ────────────────────────────────────────────────────────────────
+    story.append(Spacer(1, 3 * mm))
+    story.append(Paragraph(game.get('home_team', ''), title_style))
+    story.append(Paragraph('vs', vs_style))
+    story.append(Paragraph(game.get('away_team', ''), title_style))
+    story.append(hr())
+
+    meta_rows = []
+    for key, label in [('date', 'Date'), ('team', 'Team'),
+                       ('season', 'Season')]:
+        if game.get(key):
+            meta_rows.append([Paragraph(f'<b>{label}</b>', meta_lbl_style),
+                              Paragraph(game[key], meta_val_style)])
+    refs = ', '.join(r for r in [game.get('referee1', ''),
+                                  game.get('referee2', '')] if r)
+    if refs:
+        meta_rows.append([Paragraph('<b>Refs</b>', meta_lbl_style),
+                          Paragraph(refs, meta_val_style)])
+    if meta_rows:
+        lw = p['meta_label_w'] * mm
+        mt = Table(meta_rows, colWidths=[lw, COL_W - lw])
+        mt.setStyle(TableStyle([
+            ('TOPPADDING',    (0, 0), (-1, -1), PAD),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), PAD),
+            ('LINEBELOW',     (0, 0), (-1, -1), 0.4, colors.grey),
+            ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        story.append(mt)
+        story.append(Spacer(1, 2 * mm))
+
+    story.append(Paragraph('Contents', toc_title_style))
+    for idx, entry in enumerate(toc_entries):
+        story.append(Paragraph(f'{idx + 1}.  {entry}', toc_item_style))
+
+    # ── Goalies ──────────────────────────────────────────────────────────────
+    if goalies:
         story.append(PageBreak())
-        for label, players in chunk:
+        story.append(Paragraph('Goalies', section_style))
+        story.append(hr())
+        tbl = player_table(goalies)
+        if tbl:
+            story.append(tbl)
+
+    # ── Lines (one per page) ─────────────────────────────────────────────────
+    for i, line in enumerate(lines):
+        story.append(PageBreak())
+        story.append(Paragraph(f'Line {i + 1}', section_style))
+        story.append(hr())
+        tbl = player_table(line)
+        if tbl:
+            story.append(tbl)
+
+    # ── Special formations (2 per page) ──────────────────────────────────────
+    for idx in range(0, len(spec), 2):
+        story.append(PageBreak())
+        for label, players in spec[idx:idx + 2]:
             story.append(Paragraph(label, section_style))
-            tbl = player_table(players, col_w)
+            story.append(hr())
+            tbl = player_table(players)
             if tbl:
                 story.append(tbl)
-            story.append(Spacer(1, 4 * mm))
+            story.append(Spacer(1, p['spec_spacer'] * mm))
 
     doc.build(story)
     buf.seek(0)
-    safe_home = "".join(c for c in game.get('home_team', 'home') if c.isalnum() or c in '-_')
-    safe_away = "".join(c for c in game.get('away_team', 'away') if c.isalnum() or c in '-_')
-    filename = f"lineup_{safe_home}_vs_{safe_away}.pdf"
+    safe_home = ''.join(c for c in game.get('home_team', 'home')
+                        if c.isalnum() or c in '-_')
+    safe_away = ''.join(c for c in game.get('away_team', 'away')
+                        if c.isalnum() or c in '-_')
+    filename = f"lineup_{safe_home}_vs_{safe_away}_{device_key}.pdf"
     return send_file(buf, mimetype='application/pdf',
                      as_attachment=True, download_name=filename)

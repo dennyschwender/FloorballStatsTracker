@@ -116,9 +116,15 @@
             <a href="{{ url_for('game.view_game_lineup_eink', game_id=game_id) }}" class="btn btn-outline-primary">
                 🖥️ {{ g.t.get('eink_lineup', 'E-Ink View') }}
             </a>
-            <a href="{{ url_for('game.download_lineup_pdf', game_id=game_id) }}" class="btn btn-outline-danger">
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-outline-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 📄 {{ g.t.get('download_pdf', 'Download PDF') }}
-            </a>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('game.download_lineup_pdf', game_id=game_id, device='tolino') }}">📖 Tolino Shine (6")</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('game.download_lineup_pdf', game_id=game_id, device='xteink') }}">📱 Xteink X4 (4.3")</a></li>
+              </ul>
+            </div>
             {% else %}
             <a href="{{ url_for('game.game_details', game_id=game_id) }}" class="btn btn-outline-secondary">
                 <i class="bi bi-toggle-off"></i> Exit Edit Mode
