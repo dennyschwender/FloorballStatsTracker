@@ -283,16 +283,17 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
             'stolen_balls': len(stolen_balls_vals),
         }
         
-        # Calculate averages excluding zeros
-        player_stats[player]['avg_plusminus'] = (player_stats[player]['plusminus'] / len(plusminus_vals)) if plusminus_vals else 0
-        player_stats[player]['avg_goals_assists'] = ((player_stats[player]['goals'] + player_stats[player]['assists']) / len(goals_assists_vals)) if goals_assists_vals else 0
-        player_stats[player]['avg_game_score'] = (player_stats[player]['game_score'] / len(game_score_vals)) if game_score_vals else 0
-        player_stats[player]['avg_unforced_errors'] = (player_stats[player]['unforced_errors'] / len(unforced_errors_vals)) if unforced_errors_vals else 0
-        player_stats[player]['avg_shots_on_goal'] = (player_stats[player]['shots_on_goal'] / len(shots_on_goal_vals)) if shots_on_goal_vals else 0
-        player_stats[player]['avg_penalties_taken'] = (player_stats[player]['penalties_taken'] / len(penalties_taken_vals)) if penalties_taken_vals else 0
-        player_stats[player]['avg_penalties_drawn'] = (player_stats[player]['penalties_drawn'] / len(penalties_drawn_vals)) if penalties_drawn_vals else 0
-        player_stats[player]['avg_block_shots'] = (player_stats[player]['block_shots'] / len(block_shots_vals)) if block_shots_vals else 0
-        player_stats[player]['avg_stolen_balls'] = (player_stats[player]['stolen_balls'] / len(stolen_balls_vals)) if stolen_balls_vals else 0
+        # Calculate averages: use total games for all stats except GS (Game Score keeps zero-exclusion)
+        total_games = len(game_values.get('plusminus', []))
+        player_stats[player]['avg_plusminus'] = (player_stats[player]['plusminus'] / total_games) if total_games else 0
+        player_stats[player]['avg_goals_assists'] = ((player_stats[player]['goals'] + player_stats[player]['assists']) / total_games) if total_games else 0
+        player_stats[player]['avg_game_score'] = (player_stats[player]['game_score'] / len(game_score_vals)) if game_score_vals else 0  # GS: exclude zero games
+        player_stats[player]['avg_unforced_errors'] = (player_stats[player]['unforced_errors'] / total_games) if total_games else 0
+        player_stats[player]['avg_shots_on_goal'] = (player_stats[player]['shots_on_goal'] / total_games) if total_games else 0
+        player_stats[player]['avg_penalties_taken'] = (player_stats[player]['penalties_taken'] / total_games) if total_games else 0
+        player_stats[player]['avg_penalties_drawn'] = (player_stats[player]['penalties_drawn'] / total_games) if total_games else 0
+        player_stats[player]['avg_block_shots'] = (player_stats[player]['block_shots'] / total_games) if total_games else 0
+        player_stats[player]['avg_stolen_balls'] = (player_stats[player]['stolen_balls'] / total_games) if total_games else 0
     
     # Calculate average save percentages and total game scores for goalies
     for goalie, stats in goalie_stats.items():

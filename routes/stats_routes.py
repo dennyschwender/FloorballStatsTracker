@@ -65,13 +65,47 @@ def stats():
     # Get filter parameters
     hide_zero_stats = request.args.get('hide_zero_stats', 'false') == 'true'
     hide_future_games = request.args.get('hide_future_games', 'false') == 'true'
-    
+
+    # Filter to last N games
+    last_n_games = request.args.get('last_n_games', '')
+    try:
+        last_n = int(last_n_games) if last_n_games else None
+    except ValueError:
+        last_n = None
+    if last_n and last_n > 0:
+        games_sorted = games_sorted[-last_n:]
+
     # Calculate stats using optimized function
     stats_data = calculate_stats_optimized(games_sorted, hide_zero_stats)
-    
+
+    # Pre-sort player lists by avg/game DESC for each stat table
+    _players = stats_data['players']
+    _totals = stats_data['player_totals']
+    def _sort(key):
+        return sorted(_players, key=lambda p: _totals[p].get(key, 0), reverse=True)
+
+    players_by_game_score      = _sort('avg_game_score')
+    players_by_goals_assists   = _sort('avg_goals_assists')
+    players_by_plusminus       = _sort('avg_plusminus')
+    players_by_unforced_errors = _sort('avg_unforced_errors')
+    players_by_sog             = _sort('avg_shots_on_goal')
+    players_by_block_shots     = _sort('avg_block_shots')
+    players_by_stolen_balls    = _sort('avg_stolen_balls')
+    players_by_penalties_taken = _sort('avg_penalties_taken')
+    players_by_penalties_drawn = _sort('avg_penalties_drawn')
+
     return render_template(
         'stats.html',
         players=stats_data['players'],
+        players_by_game_score=players_by_game_score,
+        players_by_goals_assists=players_by_goals_assists,
+        players_by_plusminus=players_by_plusminus,
+        players_by_unforced_errors=players_by_unforced_errors,
+        players_by_sog=players_by_sog,
+        players_by_block_shots=players_by_block_shots,
+        players_by_stolen_balls=players_by_stolen_balls,
+        players_by_penalties_taken=players_by_penalties_taken,
+        players_by_penalties_drawn=players_by_penalties_drawn,
         player_totals=stats_data['player_totals'],
         goalies=stats_data['goalies'],
         goalie_data=stats_data['goalie_data'],
@@ -83,5 +117,6 @@ def stats():
         seasons=seasons,
         selected_season=selected_season,
         hide_zero_stats=hide_zero_stats,
-        hide_future_games=hide_future_games
+        hide_future_games=hide_future_games,
+        last_n_games=last_n_games
     )

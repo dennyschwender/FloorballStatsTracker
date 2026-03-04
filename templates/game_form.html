@@ -964,6 +964,11 @@
                     loadCategoriesForSeason(this.value);
                 }
             });
+
+            // Auto-load categories if a season is already pre-selected on page load
+            if (seasonSelect.value) {
+                loadCategoriesForSeason(seasonSelect.value);
+            }
         }
 
         if (teamSelect) {

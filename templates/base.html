@@ -84,9 +84,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/create_game">{{ g.t['create_game'] }}</a></li>
                     <li class="nav-item"><a class="nav-link" href="/stats">{{ g.t['stats'] }}</a></li>
+                    {% if g.is_admin_session or g.current_user %}
+                    <li class="nav-item"><a class="nav-link" href="/create_game">{{ g.t['create_game'] }}</a></li>
                     <li class="nav-item"><a class="nav-link" href="/roster">{{ g.t['roster'] }}</a></li>
+                    {% endif %}
                     {% if g.is_admin_session or (g.current_user and g.current_user.is_admin) %}
                     <li class="nav-item"><a class="nav-link" href="/admin/">{{ g.t.get('admin', 'Admin') }}</a></li>
                     {% endif %}
