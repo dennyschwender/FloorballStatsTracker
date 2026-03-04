@@ -9,7 +9,7 @@ from flask import (
 )
 from models.database import db
 from models.auth_models import User, TeamPermission
-from models.team_settings import TeamSettings, DEFAULTS, get_all_settings, set_setting
+from models.team_settings import TeamSettings, DEFAULTS, get_all_settings, set_setting, get_current_season, set_current_season
 from models.roster import get_all_categories_with_rosters
 
 
@@ -123,7 +123,7 @@ def edit_user(user_id):
         flash('Changes saved.', 'success')
         return redirect(url_for('admin.edit_user', user_id=user.id))
 
-    return render_template('admin/user_form.html', user=user, categories=CATEGORIES)
+    return render_template('admin/user_form.html', user=user, categories=_roster_categories())
 
 
 # ── Team settings ──────────────────────────────────────────────────────────────
@@ -139,6 +139,9 @@ def team_settings():
             for key in DEFAULTS:
                 val = '1' if request.form.get(f'{cat}_{key}') == '1' else '0'
                 set_setting(cat, key, val)
+        # Save current season global setting
+        current_season = request.form.get('current_season', '')
+        set_current_season(current_season)
         db.session.commit()
         flash('Team settings saved.', 'success')
         return redirect(url_for('admin.team_settings'))
@@ -146,9 +149,12 @@ def team_settings():
     # Build settings dict per category
     cats = _roster_categories()
     settings_by_cat = {cat: get_all_settings(cat) for cat in cats}
+    from models.roster import get_all_seasons
     return render_template(
         'admin/team_settings.html',
         categories=cats,
         settings_by_cat=settings_by_cat,
         setting_keys=list(DEFAULTS.keys()),
+        all_seasons=get_all_seasons(),
+        current_season=get_current_season(),
     )

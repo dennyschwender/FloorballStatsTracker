@@ -522,7 +522,7 @@
                 <select class="form-select" id="season" name="season" required>
                     <option value="">{{ g.t['select_season'] }}</option>
                     {% for s in seasons %}
-                    <option value="{{ s }}">{{ s }}</option>
+                    <option value="{{ s }}" {% if s == current_season %}selected{% endif %}>{{ s }}</option>
                     {% endfor %}
                 </select>
                 {% endif %}

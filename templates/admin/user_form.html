@@ -43,6 +43,7 @@
             </div>
         </div>
 
+        <div id="permissionsSection">
         <h3 class="h5 mb-3">{{ g.t.get('permissions', 'Team Permissions') }}</h3>
         <table class="table table-bordered align-middle mb-4">
             <thead class="table-light">
@@ -79,6 +80,7 @@
             {% endfor %}
             </tbody>
         </table>
+        </div>{# /permissionsSection #}
 
         <div class="d-flex gap-2">
             <button type="submit" name="_action" value="save" class="btn btn-primary">
@@ -93,4 +95,15 @@
         </div>
     </form>
 </div>
+<script>
+(function () {
+    const adminCheck = document.getElementById('isAdminCheck');
+    const permSection = document.getElementById('permissionsSection');
+    function toggle() {
+        permSection.style.display = adminCheck.checked ? 'none' : '';
+    }
+    adminCheck.addEventListener('change', toggle);
+    toggle(); // apply on page load
+})();
+</script>
 {% endblock %}

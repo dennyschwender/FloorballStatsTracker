@@ -88,7 +88,9 @@ def index():
     
     # Filter by season
     seasons = get_all_seasons()
-    selected_season = request.args.get('season')
+    from models.team_settings import get_current_season as _cur_season
+    _default_season = _cur_season()
+    selected_season = request.args.get('season', _default_season if _default_season else None)
     if selected_season:
         games_sorted = [
             game for game in games_sorted if game.get('season') == selected_season
@@ -315,7 +317,8 @@ def create_game():
     
     # GET request - load seasons (categories loaded dynamically via API)
     seasons = get_all_seasons()
-    return render_template('game_form.html', categories=[], seasons=seasons)
+    from models.team_settings import get_current_season as _cur_season
+    return render_template('game_form.html', categories=[], seasons=seasons, current_season=_cur_season())
 
 
 @game_bp.route('/modify_game/<int:game_id>', methods=['GET', 'POST'])

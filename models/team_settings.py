@@ -59,6 +59,34 @@ def get_all_settings(category: str) -> dict[str, str]:
     return result
 
 
+# ── Global / app-level settings ───────────────────────────────────────────────
+_APP_CATEGORY = '_app'
+
+
+def get_current_season() -> str:
+    """Return the configured current season (empty string if not set)."""
+    row = TeamSettings.query.filter_by(
+        category=_APP_CATEGORY, setting_key='current_season'
+    ).first()
+    return row.setting_value if row else ''
+
+
+def set_current_season(value: str) -> None:
+    """Persist the current season (call db.session.commit() afterwards)."""
+    row = TeamSettings.query.filter_by(
+        category=_APP_CATEGORY, setting_key='current_season'
+    ).first()
+    if row is None:
+        row = TeamSettings(
+            category=_APP_CATEGORY,
+            setting_key='current_season',
+            setting_value=value,
+        )
+        db.session.add(row)
+    else:
+        row.setting_value = value
+
+
 def set_setting(category: str, key: str, value: str) -> None:
     """Upsert a team setting (does NOT commit)."""
     row = TeamSettings.query.filter_by(category=category, setting_key=key).first()
