@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5" style="max-width: 400px;">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4">
+                {{ g.t.get('user_login', 'User Login') }}
+            </h2>
+
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('game.user_login') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                <div class="mb-3">
+                    <label for="username" class="form-label">{{ g.t.get('username', 'Username') }}</label>
+                    <input type="text" id="username" name="username" class="form-control"
+                           required autofocus autocomplete="username">
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label">{{ g.t.get('password', 'Password') }}</label>
+                    <input type="password" id="password" name="password" class="form-control"
+                           required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    {{ g.t.get('login', 'Login') }}
+                </button>
+            </form>
+
+            <hr>
+            <p class="text-center text-muted small mb-0">
+                Or use the <a href="{{ url_for('game.index') }}">PIN login</a>.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

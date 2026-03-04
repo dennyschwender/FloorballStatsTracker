@@ -129,6 +129,7 @@ def ensure_game_stats(game):
         'plusminus', 'goals', 'assists', 'unforced_errors',
         'shots_on_goal', 'penalties_taken', 'penalties_drawn',
         'saves', 'goals_conceded', 'game_scores', 'goalie_game_scores',
+        'block_shots', 'stolen_balls',
     ]
     for stat in stat_keys:
         if stat not in game or not isinstance(game[stat], dict):
@@ -141,6 +142,7 @@ def ensure_player_stats(game, player):
     for stat in [
         'plusminus', 'goals', 'assists', 'unforced_errors',
         'shots_on_goal', 'penalties_taken', 'penalties_drawn',
+        'block_shots', 'stolen_balls',
     ]:
         if stat in game and player not in game[stat]:
             game[stat][player] = 0

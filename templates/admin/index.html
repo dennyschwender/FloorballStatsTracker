@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ g.t.get('admin_panel', 'Admin Panel') }}</h1>
+        <div>
+            <a href="{{ url_for('admin.team_settings') }}" class="btn btn-outline-primary me-2">
+                {{ g.t.get('team_settings_nav', 'Team Settings') }}
+            </a>
+            <a href="{{ url_for('admin.new_user') }}" class="btn btn-success">
+                + {{ g.t.get('new_user', 'New User') }}
+            </a>
+        </div>
+    </div>
+
+    <h2 class="h4 mb-3">{{ g.t.get('users', 'Users') }}</h2>
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>{{ g.t.get('username', 'Username') }}</th>
+                    <th>{{ g.t.get('is_admin', 'Admin') }}</th>
+                    <th>{{ g.t.get('permissions', 'Permissions') }}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>
+                    {% if user.is_admin %}
+                    <span class="badge bg-danger">Admin</span>
+                    {% else %}
+                    <span class="badge bg-secondary">User</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% for perm in user.permissions %}
+                    <span class="badge bg-info text-dark me-1">{{ perm.category }}: {{ perm.role }}</span>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-outline-secondary">
+                        Edit
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No users yet. <a href="{{ url_for('admin.new_user') }}">Create the first user.</a></p>
+    {% endif %}
+</div>
+{% endblock %}

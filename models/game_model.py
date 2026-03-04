@@ -27,6 +27,7 @@ _STAT_COLS = [
     'saves', 'goals_conceded', 'goalie_plusminus',
     'game_scores', 'goalie_game_scores',
     'opponent_goalie_saves', 'opponent_goalie_goals_conceded',
+    'block_shots', 'stolen_balls',
 ]
 
 
@@ -71,6 +72,8 @@ class GameRecord(db.Model):
     goalie_game_scores = db.Column(db.Text, default='{}', nullable=False)
     opponent_goalie_saves = db.Column(db.Text, default='{}', nullable=False)
     opponent_goalie_goals_conceded = db.Column(db.Text, default='{}', nullable=False)
+    block_shots = db.Column(db.Text, default='{}', nullable=False)
+    stolen_balls = db.Column(db.Text, default='{}', nullable=False)
 
     # ── Catch-all for any non-standard fields ──────────────────────────────
     extra_data = db.Column(db.Text, default='{}', nullable=False)

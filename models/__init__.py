@@ -15,6 +15,9 @@ from .roster import (
     get_all_tesser_values,
 )
 
+from .auth_models import User, TeamPermission  # noqa: F401 — register tables
+from .team_settings import TeamSettings, get_setting, get_all_settings, set_setting  # noqa: F401
+
 __all__ = [
     'db',
     'GameRecord',
@@ -27,4 +30,10 @@ __all__ = [
     'get_all_categories_with_rosters',
     'get_all_rosters_with_seasons',
     'get_all_tesser_values',
+    'User',
+    'TeamPermission',
+    'TeamSettings',
+    'get_setting',
+    'get_all_settings',
+    'set_setting',
 ]

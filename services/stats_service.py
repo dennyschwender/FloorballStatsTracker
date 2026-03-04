@@ -114,6 +114,8 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
                         'shots_on_goal': 0,
                         'penalties_taken': 0,
                         'penalties_drawn': 0,
+                        'block_shots': 0,
+                        'stolen_balls': 0,
                         'game_score': 0
                     }
                     player_game_values[player] = {
@@ -125,6 +127,8 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
                         'shots_on_goal': [],
                         'penalties_taken': [],
                         'penalties_drawn': [],
+                        'block_shots': [],
+                        'stolen_balls': [],
                         'game_score': []
                     }
                 
@@ -136,6 +140,8 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
                 sog = game.get('shots_on_goal', {}).get(player, 0)
                 penalties_drawn = game.get('penalties_drawn', {}).get(player, 0)
                 penalties_taken = game.get('penalties_taken', {}).get(player, 0)
+                block_shots = game.get('block_shots', {}).get(player, 0)
+                stolen_balls = game.get('stolen_balls', {}).get(player, 0)
                 
                 # Accumulate totals
                 player_stats[player]['plusminus'] += plusminus
@@ -145,6 +151,8 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
                 player_stats[player]['shots_on_goal'] += sog
                 player_stats[player]['penalties_taken'] += penalties_taken
                 player_stats[player]['penalties_drawn'] += penalties_drawn
+                player_stats[player]['block_shots'] += block_shots
+                player_stats[player]['stolen_balls'] += stolen_balls
                 
                 # Track per-game values for median calculation
                 player_game_values[player]['plusminus'].append(plusminus)
@@ -155,6 +163,8 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
                 player_game_values[player]['shots_on_goal'].append(sog)
                 player_game_values[player]['penalties_taken'].append(penalties_taken)
                 player_game_values[player]['penalties_drawn'].append(penalties_drawn)
+                player_game_values[player]['block_shots'].append(block_shots)
+                player_game_values[player]['stolen_balls'].append(stolen_balls)
                 
                 # Calculate game score for this game
                 game_score = calculate_game_score(
@@ -247,6 +257,8 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
         shots_on_goal_vals = [v for v in game_values.get('shots_on_goal', []) if v > 0]
         penalties_taken_vals = [v for v in game_values.get('penalties_taken', []) if v > 0]
         penalties_drawn_vals = [v for v in game_values.get('penalties_drawn', []) if v > 0]
+        block_shots_vals = [v for v in game_values.get('block_shots', []) if v > 0]
+        stolen_balls_vals = [v for v in game_values.get('stolen_balls', []) if v > 0]
         
         player_stats[player]['median_plusminus'] = median(plusminus_vals) if plusminus_vals else 0
         player_stats[player]['median_goals_assists'] = median(goals_assists_vals) if goals_assists_vals else 0
@@ -255,6 +267,8 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
         player_stats[player]['median_shots_on_goal'] = median(shots_on_goal_vals) if shots_on_goal_vals else 0
         player_stats[player]['median_penalties_taken'] = median(penalties_taken_vals) if penalties_taken_vals else 0
         player_stats[player]['median_penalties_drawn'] = median(penalties_drawn_vals) if penalties_drawn_vals else 0
+        player_stats[player]['median_block_shots'] = median(block_shots_vals) if block_shots_vals else 0
+        player_stats[player]['median_stolen_balls'] = median(stolen_balls_vals) if stolen_balls_vals else 0
         
         # Track non-zero game counts for average calculations
         player_stats[player]['nonzero_games'] = {
@@ -264,7 +278,9 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
             'unforced_errors': len(unforced_errors_vals),
             'shots_on_goal': len(shots_on_goal_vals),
             'penalties_taken': len(penalties_taken_vals),
-            'penalties_drawn': len(penalties_drawn_vals)
+            'penalties_drawn': len(penalties_drawn_vals),
+            'block_shots': len(block_shots_vals),
+            'stolen_balls': len(stolen_balls_vals),
         }
         
         # Calculate averages excluding zeros
@@ -275,6 +291,8 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
         player_stats[player]['avg_shots_on_goal'] = (player_stats[player]['shots_on_goal'] / len(shots_on_goal_vals)) if shots_on_goal_vals else 0
         player_stats[player]['avg_penalties_taken'] = (player_stats[player]['penalties_taken'] / len(penalties_taken_vals)) if penalties_taken_vals else 0
         player_stats[player]['avg_penalties_drawn'] = (player_stats[player]['penalties_drawn'] / len(penalties_drawn_vals)) if penalties_drawn_vals else 0
+        player_stats[player]['avg_block_shots'] = (player_stats[player]['block_shots'] / len(block_shots_vals)) if block_shots_vals else 0
+        player_stats[player]['avg_stolen_balls'] = (player_stats[player]['stolen_balls'] / len(stolen_balls_vals)) if stolen_balls_vals else 0
     
     # Calculate average save percentages and total game scores for goalies
     for goalie, stats in goalie_stats.items():

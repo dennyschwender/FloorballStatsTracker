@@ -14,10 +14,42 @@ from utils.validators import format_date
 
 # Import database + models (models must be imported before db.create_all)
 from models.database import db
-import models  # noqa: F401 — registers GameRecord and RosterPlayer with SQLAlchemy
+import models  # noqa: F401 — registers GameRecord, RosterPlayer, User, TeamPermission, TeamSettings
 
 # Import route blueprints
-from routes import game_bp, roster_bp, stats_bp, api_bp
+from routes import game_bp, roster_bp, stats_bp, api_bp, admin_bp
+
+
+_NEW_TEXT_COLUMNS = {
+    'games': ['block_shots', 'stolen_balls'],
+    'users': None,         # whole table — handled by create_all
+    'team_permissions': None,
+    'team_settings': None,
+}
+
+
+def _migrate_db(database):
+    """Add newly introduced columns to existing SQLite tables.
+
+    SQLAlchemy's create_all only creates *new* tables; it never alters
+    existing ones.  We therefore inspect the live DB and issue
+    ALTER TABLE … ADD COLUMN for any column that is missing.
+    """
+    from sqlalchemy import inspect, text
+    inspector = inspect(database.engine)
+    existing_tables = inspector.get_table_names()
+
+    for table, new_cols in _NEW_TEXT_COLUMNS.items():
+        if new_cols is None or table not in existing_tables:
+            continue
+        existing_cols = {c['name'] for c in inspector.get_columns(table)}
+        for col in new_cols:
+            if col not in existing_cols:
+                with database.engine.connect() as conn:
+                    conn.execute(text(
+                        f"ALTER TABLE {table} ADD COLUMN {col} TEXT NOT NULL DEFAULT '{{}}'"
+                    ))
+                    conn.commit()
 
 
 def create_app():
@@ -39,6 +71,8 @@ def create_app():
         os.makedirs(db_dir, exist_ok=True)
     with app.app_context():
         db.create_all()
+        # Migrate: add any new columns that don't yet exist in the DB
+        _migrate_db(db)
     
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
@@ -66,11 +100,20 @@ def create_app():
         except Exception:
             vid = None
         g.current_game_id = vid
+        # Expose current user object to templates (None for PIN-sessions/tests)
+        from models.auth_models import User as _User
+        uid = session.get('user_id')
+        g.current_user = db.session.get(_User, uid) if uid else None
+        # PIN sessions (and test sessions without user_id) are treated as admin
+        g.is_admin_session = bool(
+            session.get('is_admin_session') or
+            (session.get('authenticated') and not uid)
+        )
     
     @app.before_request
     def require_login():
-        """Protect all routes except static and index/pin"""
-        allowed_routes = ['game.index', 'static']
+        """Protect all routes except static, pin page and user login."""
+        allowed_routes = ['game.index', 'game.user_login', 'static']
         if request.endpoint not in allowed_routes and not session.get('authenticated'):
             return redirect(url_for('game.index'))
     
@@ -125,6 +168,7 @@ def create_app():
     app.register_blueprint(roster_bp)
     app.register_blueprint(stats_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(admin_bp)
     
     return app
 

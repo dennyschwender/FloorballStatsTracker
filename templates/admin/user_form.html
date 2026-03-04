@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4" style="max-width: 700px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ g.t.get('new_user', 'New User') if not user else user.username }}</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-outline-secondary">← Back</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">{{ g.t.get('username', 'Username') }}</label>
+            {% if user %}
+            <input type="text" class="form-control" value="{{ user.username }}" disabled>
+            {% else %}
+            <input type="text" name="username" class="form-control" required>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">{{ g.t.get('password', 'Password') }}
+                {% if user %}<small class="text-muted">(leave blank to keep current)</small>{% endif %}
+            </label>
+            <input type="password" name="password" class="form-control"
+                   {% if not user %}required{% endif %} autocomplete="new-password">
+        </div>
+
+        <div class="mb-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_admin" value="1" id="isAdminCheck"
+                       {% if user and user.is_admin %}checked{% endif %}>
+                <label class="form-check-label" for="isAdminCheck">
+                    {{ g.t.get('is_admin', 'Administrator') }}
+                    <small class="text-muted">(grants access to all teams)</small>
+                </label>
+            </div>
+        </div>
+
+        <h3 class="h5 mb-3">{{ g.t.get('permissions', 'Team Permissions') }}</h3>
+        <table class="table table-bordered align-middle mb-4">
+            <thead class="table-light">
+                <tr>
+                    <th>Team</th>
+                    <th>{{ g.t.get('role', 'Role') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% set perm_map = {} %}
+            {% if user %}
+                {% for p in user.permissions %}{% set _ = perm_map.update({p.category: p.role}) %}{% endfor %}
+            {% endif %}
+            {% for cat in ['*'] + categories %}
+            <tr>
+                <td>{% if cat == '*' %}<em>All Teams (*)</em>{% else %}{{ cat }}{% endif %}</td>
+                <td>
+                    <select name="perm_{{ cat }}" class="form-select form-select-sm">
+                        <option value="" {% if not perm_map.get(cat) %}selected{% endif %}>
+                            {{ g.t.get('no_access', 'No Access') }}
+                        </option>
+                        <option value="viewer" {% if perm_map.get(cat) == 'viewer' %}selected{% endif %}>
+                            {{ g.t.get('viewer', 'Viewer') }}
+                        </option>
+                        <option value="editor" {% if perm_map.get(cat) == 'editor' %}selected{% endif %}>
+                            {{ g.t.get('editor', 'Editor') }}
+                        </option>
+                        <option value="admin" {% if perm_map.get(cat) == 'admin' %}selected{% endif %}>
+                            {{ g.t.get('admin', 'Admin') }}
+                        </option>
+                    </select>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="d-flex gap-2">
+            <button type="submit" name="_action" value="save" class="btn btn-primary">
+                {{ g.t.get('save', 'Save') }}
+            </button>
+            {% if user %}
+            <button type="submit" name="_action" value="delete" class="btn btn-danger"
+                    onclick="return confirm('Delete user {{ user.username }}?')">
+                {{ g.t.get('delete', 'Delete') }}
+            </button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -215,6 +215,8 @@
                     <th class="text-center">{{ g.t['sog'] }}</th>
                     <th class="text-center">{{ g.t['penalty_taken'] }}</th>
                     <th class="text-center">{{ g.t['penalty_drawn'] }}</th>
+                    <th class="text-center">{{ g.t.get('block_shots', 'Blk') }}</th>
+                    <th class="text-center">{{ g.t.get('stolen_balls', 'Stl') }}</th>
                     <th class="text-center view-mode-col">{{ g.t['game_score'] if g.t and 'game_score' in g.t else 'Game Score' }}</th>
                     <th class="actions-col d-none">{{ g.t['actions'] }}</th>
                 </tr>
@@ -256,6 +258,10 @@
                             game.penalties_taken and player in game.penalties_taken else 0 }}</span></td>
                     <td class="text-center"><span class="fw-bold">{{ game.penalties_drawn[player] if
                             game.penalties_drawn and player in game.penalties_drawn else 0 }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ game.block_shots[player] if
+                            game.block_shots and player in game.block_shots else 0 }}</span></td>
+                    <td class="text-center"><span class="fw-bold">{{ game.stolen_balls[player] if
+                            game.stolen_balls and player in game.stolen_balls else 0 }}</span></td>
                     <td class="text-center view-mode-col">
                         {% if game.game_scores and player in game.game_scores %}
                         <span class="fw-bold" style="color: {{ '#28a745' if game.game_scores[player] > 0 else ('#dc3545' if game.game_scores[player] < 0 else '#6c757d') }}">{{ game.game_scores[player] | round(1) }}</span>
@@ -311,11 +317,24 @@
                                         <a href="/action/{{ game_id }}/{{ player }}?action=penalty_taken_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
                                             class="btn btn-outline-danger btn-sm flex-fill">-P.T.</a>
                                     </div>
-                                    <div class="d-flex gap-1">
+                                    <div class="d-flex gap-1 mb-2">
                                         <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
                                             class="btn btn-success btn-sm flex-fill">{{ g.t['penalty_drawn'] }}</a>
                                         <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
                                             class="btn btn-outline-success btn-sm flex-fill">-P.D.</a>
+                                    </div>
+                                    <hr class="dropdown-divider my-1">
+                                    <div class="d-flex gap-1 mb-2">
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=block_shot{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-secondary btn-sm flex-fill">{{ g.t.get('block_shots', 'Blk') }}</a>
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=block_shot_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-secondary btn-sm flex-fill">-Blk</a>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=stolen_ball{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-info btn-sm flex-fill">{{ g.t.get('stolen_balls', 'Stl') }}</a>
+                                        <a href="/action/{{ game_id }}/{{ player }}?action=stolen_ball_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
+                                            class="btn btn-outline-info btn-sm flex-fill">-Stl</a>
                                     </div>
                                 </div>
                             </div>

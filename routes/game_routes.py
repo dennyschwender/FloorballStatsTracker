@@ -14,8 +14,39 @@ from services.game_service import (
 )
 from services.stats_service import recalculate_game_scores
 from models.roster import load_roster, get_all_seasons
+from utils.auth_helpers import require_edit
 
 game_bp = Blueprint('game', __name__)
+
+
+@game_bp.route('/login', methods=['GET', 'POST'])
+def user_login():
+    """Username / password login route."""
+    if session.get('authenticated'):
+        return redirect(url_for('game.index'))
+
+    error = None
+    if request.method == 'POST':
+        from models.auth_models import User
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            session['authenticated'] = True
+            session['user_id'] = user.id
+            session['is_admin_session'] = False
+            session.permanent = True
+            return redirect(url_for('game.index'))
+        error = 'Invalid username or password.'
+
+    return render_template('user_login.html', error=error)
+
+
+@game_bp.route('/logout')
+def logout():
+    """Clear session and redirect to login/pin page."""
+    session.clear()
+    return redirect(url_for('game.index'))
 
 
 @game_bp.route('/', methods=['GET', 'POST'])
@@ -26,6 +57,7 @@ def index():
             # Security: Use timing-safe comparison to prevent timing attacks
             if hmac.compare_digest(pin, REQUIRED_PIN):
                 session['authenticated'] = True
+                session['is_admin_session'] = True
                 session.permanent = True  # Enable session timeout
                 return redirect(url_for('game.index'))
             else:
@@ -282,6 +314,7 @@ def modify_game(game_id):
     game = find_game_by_id(games, game_id)
     if not game:
         return "Game not found", 404
+    require_edit(game)
     
     if request.method == 'POST':
         season = request.form.get('season', '')
@@ -388,6 +421,7 @@ def player_action(game_id, player):
     game = find_game_by_id(games, game_id)
     if not game:
         return "Game not found", 404
+    require_edit(game)
     
     # Track stats in dicts on the game object
     ensure_game_stats(game)
@@ -449,6 +483,16 @@ def player_action(game_id, player):
     elif action == 'penalty_drawn_minus':
         if game['penalties_drawn'][player] > 0:
             game['penalties_drawn'][player] -= 1
+    elif action == 'block_shot':
+        game['block_shots'][player] += 1
+    elif action == 'block_shot_minus':
+        if game['block_shots'][player] > 0:
+            game['block_shots'][player] -= 1
+    elif action == 'stolen_ball':
+        game['stolen_balls'][player] += 1
+    elif action == 'stolen_ball_minus':
+        if game['stolen_balls'][player] > 0:
+            game['stolen_balls'][player] -= 1
     
     # Find and update game by ID
     for i, game_item in enumerate(games):
@@ -473,6 +517,7 @@ def line_action(game_id, line_idx):
     game = find_game_by_id(games, game_id)
     if not game:
         return "Game not found", 404
+    require_edit(game)
     if line_idx < 0 or line_idx >= len(game['lines']):
         return "Line not found", 404
     
@@ -533,6 +578,7 @@ def goalie_action(game_id, goalie):
     game = find_game_by_id(games, game_id)
     if not game:
         return "Game not found", 404
+    require_edit(game)
     
     # Initialize goalie stats if not present
     for stat in ['goalie_plusminus', 'saves', 'goals_conceded', 'assists']:
@@ -592,6 +638,7 @@ def opponent_goalie_action(game_id):
     game = find_game_by_id(games, game_id)
     if not game:
         return "Game not found", 404
+    require_edit(game)
 
     # Always use "Opponent Goalie" as the key
     opponent_goalie = "Opponent Goalie"
@@ -697,6 +744,7 @@ def delete_game(game_id):
     game = find_game_by_id(load_games(), game_id)
     if not game:
         return "Game not found", 404
+    require_edit(game)
     delete_game_by_id(game_id)
     return redirect(url_for('game.index'))
 

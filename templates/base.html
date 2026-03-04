@@ -87,6 +87,9 @@
                     <li class="nav-item"><a class="nav-link" href="/create_game">{{ g.t['create_game'] }}</a></li>
                     <li class="nav-item"><a class="nav-link" href="/stats">{{ g.t['stats'] }}</a></li>
                     <li class="nav-item"><a class="nav-link" href="/roster">{{ g.t['roster'] }}</a></li>
+                    {% if g.is_admin_session or (g.current_user and g.current_user.is_admin) %}
+                    <li class="nav-item"><a class="nav-link" href="/admin/">{{ g.t.get('admin', 'Admin') }}</a></li>
+                    {% endif %}
                 </ul>
                 <form class="d-flex order-2 order-lg-1" method="post" action="/set_language">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -100,6 +103,16 @@
                     <noscript><button class="btn btn-outline-primary" type="submit">{{ g.t['change']
                             }}</button></noscript>
                 </form>
+                {% if session.get('authenticated') %}
+                <div class="ms-2 order-3 d-flex align-items-center gap-2">
+                    {% if g.current_user %}<span class="text-muted small d-none d-lg-inline">{{ g.current_user.username }}</span>{% endif %}
+                    <a href="/logout" class="btn btn-outline-secondary btn-sm">{{ g.t.get('logout', 'Logout') }}</a>
+                </div>
+                {% else %}
+                <div class="ms-2 order-3">
+                    <a href="/login" class="btn btn-outline-primary btn-sm">{{ g.t.get('user_login', 'Login') }}</a>
+                </div>
+                {% endif %}
 
                 {# Desktop: show an All Games link and a game-switch select when there are multiple games #}
                 <div class="ms-3 d-none d-lg-block order-lg-2" style="min-width:160px;">
