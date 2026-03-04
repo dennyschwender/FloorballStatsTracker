@@ -73,6 +73,30 @@ def current_is_admin() -> bool:
     return bool(user and user.is_admin)
 
 
+def require_manage():
+    """Guard for management routes (create/edit games, roster management).
+
+    Global-PIN sessions may only view and track live game stats.
+    Creating/editing games and managing rosters requires either:
+      - Admin-PIN login (is_admin_session=True), or
+      - A user account (user_id in session).
+
+    Returns a redirect Response if access is denied, else None.
+    """
+    from flask import redirect, url_for, flash
+    if not session.get('authenticated'):
+        return redirect(url_for('game.index'))
+    # Admin-PIN session → allowed
+    if session.get('is_admin_session'):
+        return None
+    # Logged-in user account → allowed
+    if session.get('user_id'):
+        return None
+    # Global PIN (view-only) → deny
+    flash('This section requires a user account or the admin PIN.', 'warning')
+    return redirect(url_for('game.user_login'))
+
+
 def require_edit(game_dict: dict):
     """Abort 403 if the current session cannot edit the given game's team.
 

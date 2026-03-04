@@ -3,6 +3,7 @@ Roster management routes blueprint
 """
 import os
 from flask import Blueprint, request, render_template, redirect, url_for, jsonify
+from utils.auth_helpers import require_manage
 from services.game_service import load_games
 from models.roster import (
     load_roster,
@@ -20,6 +21,9 @@ roster_bp = Blueprint('roster', __name__, url_prefix='/roster')
 
 @roster_bp.route('/')
 def roster_list():
+    guard = require_manage()
+    if guard:
+        return guard
     category = request.args.get('category', '')
     season = request.args.get('season', '')
     all_categories = get_all_categories_with_rosters(season)
@@ -71,6 +75,9 @@ def roster_list():
 
 @roster_bp.route('/bulk_import', methods=['GET', 'POST'])
 def roster_bulk_import():
+    guard = require_manage()
+    if guard:
+        return guard
     season = request.args.get('season', '')
     category = request.args.get('category', '')
     
@@ -129,6 +136,9 @@ def roster_bulk_import():
 
 @roster_bp.route('/add', methods=['GET', 'POST'])
 def roster_add():
+    guard = require_manage()
+    if guard:
+        return guard
     category = request.args.get('category', request.form.get('category', ''))
     season = request.args.get('season', request.form.get('season', ''))
     
@@ -166,6 +176,9 @@ def roster_add():
 
 @roster_bp.route('/edit/<player_id>', methods=['GET', 'POST'])
 def roster_edit(player_id):
+    guard = require_manage()
+    if guard:
+        return guard
     category = request.args.get('category', request.form.get('category', ''))
     season = request.args.get('season', request.form.get('season', ''))
     if not category:
@@ -202,6 +215,9 @@ def roster_edit(player_id):
 
 @roster_bp.route('/delete/<player_id>')
 def roster_delete(player_id):
+    guard = require_manage()
+    if guard:
+        return guard
     category = request.args.get('category', '')
     season = request.args.get('season', '')
     if not category:
@@ -215,6 +231,9 @@ def roster_delete(player_id):
 
 @roster_bp.route('/bulk_delete', methods=['POST'])
 def roster_bulk_delete():
+    guard = require_manage()
+    if guard:
+        return guard
     try:
         data = request.get_json()
         category = data.get('category', '')
@@ -236,6 +255,9 @@ def roster_bulk_delete():
 
 @roster_bp.route('/delete_roster', methods=['POST'])
 def delete_roster():
+    guard = require_manage()
+    if guard:
+        return guard
     try:
         data = request.get_json()
         category = data.get('category', '')
@@ -271,6 +293,9 @@ def delete_roster():
 @roster_bp.route('/toggle_player_visibility', methods=['POST'])
 def toggle_player_visibility():
     """Toggle player visibility for game creation"""
+    guard = require_manage()
+    if guard:
+        return guard
     try:
         data = request.get_json()
         player_id = data.get('player_id', '')

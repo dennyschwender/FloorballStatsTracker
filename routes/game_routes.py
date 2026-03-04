@@ -14,7 +14,7 @@ from services.game_service import (
 )
 from services.stats_service import recalculate_game_scores
 from models.roster import load_roster, get_all_seasons
-from utils.auth_helpers import require_edit
+from utils.auth_helpers import require_edit, require_manage
 
 game_bp = Blueprint('game', __name__)
 
@@ -222,6 +222,9 @@ def game_details(game_id):
 
 @game_bp.route('/create_game', methods=['GET', 'POST'])
 def create_game():
+    guard = require_manage()
+    if guard:
+        return guard
     if request.method == 'POST':
         season = request.form.get('season', '')
         team = request.form.get('team')
@@ -317,6 +320,9 @@ def create_game():
 
 @game_bp.route('/modify_game/<int:game_id>', methods=['GET', 'POST'])
 def modify_game(game_id):
+    guard = require_manage()
+    if guard:
+        return guard
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
@@ -697,6 +703,9 @@ def opponent_goalie_action(game_id):
 
 @game_bp.route('/reset_game/<int:game_id>')
 def reset_game(game_id):
+    guard = require_manage()
+    if guard:
+        return guard
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
@@ -748,6 +757,9 @@ def reset_game(game_id):
 
 @game_bp.route('/delete_game/<int:game_id>', methods=['POST'])
 def delete_game(game_id):
+    guard = require_manage()
+    if guard:
+        return guard
     game = find_game_by_id(load_games(), game_id)
     if not game:
         return "Game not found", 404
@@ -778,6 +790,9 @@ def set_period(game_id, period):
 
 @game_bp.route('/game/<int:game_id>/edit_json', methods=['GET', 'POST'])
 def edit_game_json(game_id):
+    guard = require_manage()
+    if guard:
+        return guard
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:

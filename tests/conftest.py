@@ -49,9 +49,10 @@ def client():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing
     with app.test_client() as client:
-        # mark the test session as authenticated so routes are accessible
+        # mark the test session as admin-authenticated so all routes are accessible
         with client.session_transaction() as sess:
             sess['authenticated'] = True
+            sess['is_admin_session'] = True
         yield client
 
 
@@ -81,7 +82,8 @@ def client():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing
     with app.test_client() as client:
-        # mark the test session as authenticated so routes are accessible
+        # mark the test session as admin-authenticated so all routes are accessible
         with client.session_transaction() as sess:
             sess['authenticated'] = True
+            sess['is_admin_session'] = True
         yield client
