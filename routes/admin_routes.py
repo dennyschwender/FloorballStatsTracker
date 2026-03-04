@@ -1,6 +1,7 @@
 """
 Admin routes: user management, team permissions, team settings.
-All routes require is_admin or PIN-based admin session.
+All routes require is_admin_session (admin PIN) or a user account with is_admin=True.
+Global-PIN sessions do NOT have access to admin routes.
 """
 from flask import (
     Blueprint, request, render_template, redirect, url_for,
@@ -20,7 +21,7 @@ def _require_admin():
     """Return a redirect response if the caller is not an admin, else None."""
     if not session.get('authenticated'):
         return redirect(url_for('game.index'))
-    # PIN-authenticated sessions are always admin
+    # Admin-PIN sessions (is_admin_session=True) have admin access
     if session.get('is_admin_session'):
         return None
     user_id = session.get('user_id')

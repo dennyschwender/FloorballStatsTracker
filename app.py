@@ -104,16 +104,13 @@ def create_app():
         from models.auth_models import User as _User
         uid = session.get('user_id')
         g.current_user = db.session.get(_User, uid) if uid else None
-        # PIN sessions (and test sessions without user_id) are treated as admin
-        g.is_admin_session = bool(
-            session.get('is_admin_session') or
-            (session.get('authenticated') and not uid)
-        )
+        # Only sessions explicitly flagged at login (admin PIN or admin user flow)
+        g.is_admin_session = bool(session.get('is_admin_session'))
     
     @app.before_request
     def require_login():
         """Protect all routes except static, pin page and user login."""
-        allowed_routes = ['game.index', 'game.user_login', 'static']
+        allowed_routes = ['game.index', 'game.user_login', 'stats.stats', 'static']
         if request.endpoint not in allowed_routes and not session.get('authenticated'):
             return redirect(url_for('game.index'))
     

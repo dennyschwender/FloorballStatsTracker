@@ -6,7 +6,7 @@ import json
 import hmac
 from datetime import datetime
 from flask import Blueprint, request, render_template, redirect, url_for, session, g, send_file
-from config import REQUIRED_PIN, PERIODS
+from config import REQUIRED_PIN, ADMIN_PIN, PERIODS
 from services.game_service import (
     load_games, save_games, find_game_by_id, ensure_game_ids,
     ensure_game_stats, ensure_player_stats, build_formation_from_form,
@@ -55,10 +55,17 @@ def index():
         if request.method == 'POST':
             pin = request.form.get('pin', '')
             # Security: Use timing-safe comparison to prevent timing attacks
-            if hmac.compare_digest(pin, REQUIRED_PIN):
+            is_admin_pin = bool(ADMIN_PIN) and hmac.compare_digest(pin, ADMIN_PIN)
+            is_regular_pin = hmac.compare_digest(pin, REQUIRED_PIN)
+            if is_admin_pin:
                 session['authenticated'] = True
                 session['is_admin_session'] = True
-                session.permanent = True  # Enable session timeout
+                session.permanent = True
+                return redirect(url_for('game.index'))
+            elif is_regular_pin:
+                session['authenticated'] = True
+                session['is_admin_session'] = False
+                session.permanent = True
                 return redirect(url_for('game.index'))
             else:
                 return render_template('pin.html', error='Incorrect PIN')

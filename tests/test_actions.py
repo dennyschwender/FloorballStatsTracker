@@ -229,6 +229,9 @@ def test_unauthenticated_redirect(client):
         rv = anon.get('/')
         assert rv.status_code == 200
         assert b'PIN' in rv.data or b'Enter Access PIN' in rv.data
-        # protected route should redirect to index
+        # stats page is now public — unauthenticated access is allowed
         rv2 = anon.get('/stats', follow_redirects=False)
-        assert rv2.status_code in (302, 301)
+        assert rv2.status_code == 200
+        # a protected route (game editing) still redirects to login
+        rv3 = anon.get('/new', follow_redirects=False)
+        assert rv3.status_code in (302, 301)

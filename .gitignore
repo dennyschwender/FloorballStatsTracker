@@ -72,8 +72,9 @@ docker-compose.override.yml
 *.sqlite3
 games.json
 
-# JSON data files
+# JSON data files and local database
 gamesFiles/*.json*
+gamesFiles/*.db
 rosters/*.json*
 *games_backup*.json*
 

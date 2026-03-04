@@ -17,6 +17,15 @@ if not REQUIRED_PIN:
 if len(REQUIRED_PIN) < 6:
     raise ValueError("FLOORBALL_PIN must be at least 6 characters for security.")
 
+# Optional: Separate admin PIN for elevated (admin panel) access.
+# If not set, admin panel is only reachable via user accounts with is_admin=True.
+ADMIN_PIN = os.environ.get('ADMIN_PIN', '')
+if ADMIN_PIN:
+    if len(ADMIN_PIN) < 6:
+        raise ValueError("ADMIN_PIN must be at least 6 characters for security.")
+    if ADMIN_PIN == REQUIRED_PIN:
+        raise ValueError("ADMIN_PIN must be different from FLOORBALL_PIN.")
+
 # Security: Force secret key to be set and prevent dev_secret in production
 SECRET_KEY = os.environ.get('FLASK_SECRET_KEY')
 if not SECRET_KEY:
