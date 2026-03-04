@@ -10,7 +10,16 @@ from flask import (
 from models.database import db
 from models.auth_models import User, TeamPermission
 from models.team_settings import TeamSettings, DEFAULTS, get_all_settings, set_setting
-from config import CATEGORIES
+from models.roster import get_all_categories_with_rosters
+
+
+def _roster_categories() -> list[str]:
+    """Return the distinct team/category names that have at least one roster file.
+    Falls back to the config CATEGORIES list if no rosters exist yet.
+    """
+    from config import CATEGORIES as _fallback
+    cats = get_all_categories_with_rosters()
+    return cats if cats else _fallback
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -70,7 +79,7 @@ def new_user():
             flash(f'User "{username}" created.', 'success')
             return redirect(url_for('admin.edit_user', user_id=user.id))
 
-    return render_template('admin/user_form.html', user=None, categories=CATEGORIES)
+    return render_template('admin/user_form.html', user=None, categories=_roster_categories())
 
 
 # ── Edit / delete user ─────────────────────────────────────────────────────────
@@ -99,12 +108,12 @@ def edit_user(user_id):
         if new_password:
             if len(new_password) < 6:
                 flash('Password must be at least 6 characters.', 'danger')
-                return render_template('admin/user_form.html', user=user, categories=CATEGORIES)
+                return render_template('admin/user_form.html', user=user, categories=_roster_categories())
             user.set_password(new_password)
 
         # Rebuild permissions
         TeamPermission.query.filter_by(user_id=user.id).delete()
-        for cat in CATEGORIES + ['*']:
+        for cat in _roster_categories() + ['*']:
             role = request.form.get(f'perm_{cat}', '')
             if role in ('viewer', 'editor', 'admin'):
                 perm = TeamPermission(user_id=user.id, category=cat, role=role)
@@ -126,7 +135,7 @@ def team_settings():
         return guard
 
     if request.method == 'POST':
-        for cat in CATEGORIES:
+        for cat in _roster_categories():
             for key in DEFAULTS:
                 val = '1' if request.form.get(f'{cat}_{key}') == '1' else '0'
                 set_setting(cat, key, val)
@@ -135,10 +144,11 @@ def team_settings():
         return redirect(url_for('admin.team_settings'))
 
     # Build settings dict per category
-    settings_by_cat = {cat: get_all_settings(cat) for cat in CATEGORIES}
+    cats = _roster_categories()
+    settings_by_cat = {cat: get_all_settings(cat) for cat in cats}
     return render_template(
         'admin/team_settings.html',
-        categories=CATEGORIES,
+        categories=cats,
         settings_by_cat=settings_by_cat,
         setting_keys=list(DEFAULTS.keys()),
     )
