@@ -711,7 +711,7 @@
     {% endif %}
 </div>
 
-<script>
+<script nonce="{{ g.csp_nonce }}">
     let sortDirection = {};
 
     // ── Collapsible stat sections ──────────────────────────────────────────────

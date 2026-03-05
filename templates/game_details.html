@@ -509,7 +509,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ g.csp_nonce }}">
     // On page load, check for ?edit=1 and show edit mode if present
     document.addEventListener('DOMContentLoaded', function () {
         if (new URLSearchParams(window.location.search).get('edit') === '1') {

@@ -5,7 +5,7 @@ import io
 import json
 import hmac
 from datetime import datetime
-from flask import Blueprint, request, render_template, redirect, url_for, session, g, send_file
+from flask import Blueprint, request, render_template, redirect, url_for, session, g, send_file, abort
 from config import REQUIRED_PIN, ADMIN_PIN, PERIODS
 from services.game_service import (
     load_games, save_games, find_game_by_id, ensure_game_ids,
@@ -15,11 +15,13 @@ from services.game_service import (
 from services.stats_service import recalculate_game_scores
 from models.roster import load_roster, get_all_seasons
 from utils.auth_helpers import require_edit, require_manage
+from extensions import limiter
 
 game_bp = Blueprint('game', __name__)
 
 
 @game_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute", methods=["POST"])
 def user_login():
     """Username / password login route."""
     if session.get('authenticated'):
@@ -50,6 +52,7 @@ def logout():
 
 
 @game_bp.route('/', methods=['GET', 'POST'])
+@limiter.limit("20 per minute", methods=["POST"])
 def index():
     if not session.get('authenticated'):
         if request.method == 'POST':
@@ -75,14 +78,14 @@ def index():
     if ensure_game_ids(games):
         save_games(games)
     
-    # Sort games by date (descending, newest first), then by creation order (id)
+    # Sort games by date (descending, newest first), then by id as tiebreaker
     def game_sort_key(game):
         date_str = game.get('date')
         try:
             date_val = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.min
         except Exception:
             date_val = datetime.min
-        return (date_val, -games.index(game))
+        return (date_val, game.get('id', 0))
 
     games_sorted = sorted(games, key=game_sort_key, reverse=True)
     
@@ -107,8 +110,8 @@ def index():
     
     latest_game_id = None
     if filtered_games:
-        # Find the latest game for the selected team (or all games)
-        latest_game_id = games.index(filtered_games[0])
+        # Use the actual game id, not the list index
+        latest_game_id = filtered_games[0].get('id')
     
     return render_template(
         'index.html',
@@ -127,7 +130,7 @@ def game_details(game_id):
         save_games(games)
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
+        abort(404)
     
     # ensure current game id is available to templates (fallback)
     g.current_game_id = game_id
@@ -329,7 +332,7 @@ def modify_game(game_id):
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
+        abort(404)
     require_edit(game)
     
     if request.method == 'POST':
@@ -436,7 +439,7 @@ def player_action(game_id, player):
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
+        abort(404)
     require_edit(game)
     
     # Track stats in dicts on the game object
@@ -532,7 +535,7 @@ def line_action(game_id, line_idx):
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
+        abort(404)
     require_edit(game)
     if line_idx < 0 or line_idx >= len(game['lines']):
         return "Line not found", 404
@@ -593,7 +596,7 @@ def goalie_action(game_id, goalie):
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
+        abort(404)
     require_edit(game)
     
     # Initialize goalie stats if not present
@@ -653,7 +656,7 @@ def opponent_goalie_action(game_id):
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
+        abort(404)
     require_edit(game)
 
     # Always use "Opponent Goalie" as the key
@@ -712,7 +715,7 @@ def reset_game(game_id):
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
+        abort(404)
     
     # Reset player stats
     ensure_game_stats(game)
@@ -776,7 +779,7 @@ def set_period(game_id, period):
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
+        abort(404)
     
     if period not in PERIODS:
         return f"Invalid period '{period}'", 400
@@ -799,7 +802,7 @@ def edit_game_json(game_id):
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
-        return "Game not found", 404
+        abort(404)
     
     if request.method == 'POST':
         try:

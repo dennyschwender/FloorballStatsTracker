@@ -5,8 +5,8 @@ services:
     ports:
       - "5000:5000"
     volumes:
+      # Persist the SQLite database and any backup files
       - ./gamesFiles/:/app/gamesFiles/
-      - ./rosters/:/app/rosters/
       - ./logs/:/app/logs/
     env_file:
       - .env

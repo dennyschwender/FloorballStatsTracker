@@ -15,27 +15,18 @@ Logic:
 - Username/password sessions → permissions derived from User.has_role().
 - Unauthenticated → deny everything (public routes bypass require_login).
 """
-from flask import session, g
+from flask import session, g, flash, redirect, url_for
 from functools import wraps
 from flask import abort
 
 
 def _is_admin_session() -> bool:
-    """Return True only when the session was explicitly elevated to admin.
-
-    This is set to True only when logging in with the ADMIN_PIN or when
-    an admin user logs in via username/password (handled in current_is_admin).
-    Global-PIN sessions have is_admin_session=False.
-    """
+    """Return True only when the session was explicitly elevated to admin."""
     return bool(session.get('is_admin_session'))
 
 
 def _is_global_pin_session() -> bool:
-    """Return True for global-PIN sessions and test sessions.
-
-    These sessions have authenticated=True but carry no user_id.
-    They get full view/edit rights but NOT admin rights.
-    """
+    """Return True for global-PIN sessions and test sessions."""
     return bool(session.get('authenticated') and not session.get('user_id'))
 
 
@@ -83,28 +74,44 @@ def require_manage():
 
     Returns a redirect Response if access is denied, else None.
     """
-    from flask import redirect, url_for, flash
     if not session.get('authenticated'):
         return redirect(url_for('game.index'))
-    # Admin-PIN session → allowed
     if session.get('is_admin_session'):
         return None
-    # Logged-in user account → allowed
     if session.get('user_id'):
         return None
-    # Global PIN (view-only) → deny
     flash('This section requires a user account or the admin PIN.', 'warning')
     return redirect(url_for('game.user_login'))
+
+
+def require_manage_deco(f):
+    """Decorator version of require_manage() for cleaner route definitions.
+
+    Usage::
+
+        @game_bp.route('/create_game', methods=['GET', 'POST'])
+        @require_manage_deco
+        def create_game():
+            ...
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        guard = require_manage()
+        if guard is not None:
+            return guard
+        return f(*args, **kwargs)
+    return decorated
 
 
 def require_edit(game_dict: dict):
     """Abort 403 if the current session cannot edit the given game's team.
 
-    Call this at the top of any game-write route after fetching the game:
+    Call this at the top of any game-write route after fetching the game::
 
         game = find_game_by_id(games, game_id)
         require_edit(game)
     """
     category = game_dict.get('team', '')
     if not current_can_edit(category):
+        flash('You do not have permission to edit this game.', 'danger')
         abort(403)

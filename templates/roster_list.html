@@ -98,7 +98,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ g.csp_nonce }}">
         // Helper function to get CSRF token
         function getCsrfToken() {
             return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -246,7 +246,7 @@
         }
     </style>
 
-    <script>
+    <script nonce="{{ g.csp_nonce }}">
         // Helper function to get CSRF token - defined globally
         function getCsrfToken() {
             const csrfMeta = document.querySelector('meta[name="csrf-token"]');
@@ -390,7 +390,7 @@
     <div class="alert alert-info">{{ g.t['no_players'] }}</div>
     {% endif %}
 
-    <script>
+    <script nonce="{{ g.csp_nonce }}">
         function deleteEntireRoster() {
             const category = '{{ selected_category }}';
 

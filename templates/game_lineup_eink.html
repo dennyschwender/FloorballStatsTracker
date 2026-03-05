@@ -487,7 +487,7 @@
 
 </div>{# /app #}
 
-<script>
+<script nonce="{{ g.csp_nonce }}">
     const TOTAL = {{ total_pages }};
     const PAGE_NAMES = {{ pages.list | map(attribute='title') | list | tojson }};
     let current = 0;

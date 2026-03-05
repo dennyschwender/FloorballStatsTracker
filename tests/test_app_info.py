@@ -80,7 +80,7 @@ except ImportError as e:
     print(f'   ✗ services module error: {e}')
 
 try:
-    from utils import cache, security, validators
+    from utils import security, validators
     print(f'   ✓ utils module loaded')
 except ImportError as e:
     print(f'   ✗ utils module error: {e}')

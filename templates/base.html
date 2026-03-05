@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
     <link rel="manifest" href="/static/site.webmanifest">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <style>
         /* Navbar dropdown and select responsive tweaks */
         .navbar .dropdown-toggle.btn-sm {
@@ -47,7 +47,7 @@
         }
     </style>
     {% block head %}{% endblock %}
-    <script>
+    <script nonce="{{ g.csp_nonce }}">
         ;(function () {
             var src = 'https://cdn.jsdelivr.net/npm/eruda';
             try {
@@ -77,23 +77,23 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4" aria-label="Main navigation">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">{{ g.t['brand'] }}</a>
+            <a class="navbar-brand" href="{{ url_for('game.index') }}">{{ g.t['brand'] }}</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/stats">{{ g.t['stats'] }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('stats.stats') }}">{{ g.t['stats'] }}</a></li>
                     {% if g.is_admin_session or g.current_user %}
-                    <li class="nav-item"><a class="nav-link" href="/create_game">{{ g.t['create_game'] }}</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/roster">{{ g.t['roster'] }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('game.create_game') }}">{{ g.t['create_game'] }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('roster.roster_list') }}">{{ g.t['roster'] }}</a></li>
                     {% endif %}
                     {% if g.is_admin_session or (g.current_user and g.current_user.is_admin) %}
-                    <li class="nav-item"><a class="nav-link" href="/admin/">{{ g.t.get('admin', 'Admin') }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.index') }}">{{ g.t.get('admin', 'Admin') }}</a></li>
                     {% endif %}
                 </ul>
-                <form class="d-flex order-2 order-lg-1" method="post" action="/set_language">
+                <form class="d-flex order-2 order-lg-1" method="post" action="{{ url_for('set_language_route') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <select name="lang" class="form-select me-2" aria-label="Change language"
                         onchange="this.form.submit()">
@@ -108,11 +108,11 @@
                 {% if session.get('authenticated') %}
                 <div class="ms-2 order-3 d-flex align-items-center gap-2">
                     {% if g.current_user %}<span class="text-muted small d-none d-lg-inline">{{ g.current_user.username }}</span>{% endif %}
-                    <a href="/logout" class="btn btn-outline-secondary btn-sm">{{ g.t.get('logout', 'Logout') }}</a>
+                    <a href="{{ url_for('game.logout') }}" class="btn btn-outline-secondary btn-sm">{{ g.t.get('logout', 'Logout') }}</a>
                 </div>
                 {% else %}
                 <div class="ms-2 order-3">
-                    <a href="/login" class="btn btn-outline-primary btn-sm">{{ g.t.get('user_login', 'Login') }}</a>
+                    <a href="{{ url_for('game.user_login') }}" class="btn btn-outline-primary btn-sm">{{ g.t.get('user_login', 'Login') }}</a>
                 </div>
                 {% endif %}
 
@@ -164,7 +164,7 @@
         {% endwith %}
         {% block content %}{% endblock %}
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     <!-- Confirm Reset Modal (used by Reset action in navbar) -->
     <div class="modal fade" id="confirmResetModal" tabindex="-1" aria-labelledby="confirmResetModalLabel"
         aria-hidden="true">
@@ -184,7 +184,7 @@
             </div>
         </div>
     </div>
-    <script>
+    <script nonce="{{ g.csp_nonce }}">
         // Navbar helpers: reset confirmation and switch games
         document.addEventListener('DOMContentLoaded', function () {
             // Reset modal handling
@@ -215,7 +215,7 @@
             if (switchEl) {
                 switchEl.addEventListener('change', function () {
                     if (this.value) {
-                        window.location.href = '/game/' + this.value;
+                        window.location.href = '{{ url_for("game.game_details", game_id=0) }}'.replace('/0', '/' + this.value);
                     }
                 });
             }
@@ -224,7 +224,7 @@
             if (switchMobile) {
                 switchMobile.addEventListener('change', function () {
                     if (this.value) {
-                        window.location.href = '/game/' + this.value;
+                        window.location.href = '{{ url_for("game.game_details", game_id=0) }}'.replace('/0', '/' + this.value);
                     }
                 });
             }

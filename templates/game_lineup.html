@@ -582,7 +582,7 @@
         </div>
 
         <!-- Hidden data for JavaScript -->
-        <script>
+        <script nonce="{{ g.csp_nonce }}">
             const playerData = {{ player_map| tojson }};
             const gameData = {
                 lines: {{ game.lines | default([]) | tojson }},
@@ -1167,7 +1167,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ g.csp_nonce }}">
         function printPage() {
             // Use setTimeout to ensure mobile browsers don't block the print dialog
             setTimeout(function() {

@@ -46,8 +46,7 @@
         </form>
         {% endif %}
         {% if latest_game_id is not none %}
-        <a href="/game/{{ latest_game_id }}" class="btn btn-success btn-sm">{{ g.t['go_to_latest_game'] if g.t is
-            defined else 'Go to Latest Game' }}</a>
+        <a href="{{ url_for('game.game_details', game_id=latest_game_id) }}" class="btn btn-success btn-sm">{{ g.t['go_to_latest_game'] }}</a>
         {% endif %}
     </div>
     <h1 class="mb-3" style="font-size:1.2rem;">{{ g.t['title'] if g.t is defined else 'Floorball Stats Tracker' }}</h1>
@@ -82,7 +81,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="/game/{{ game.id }}" class="btn btn-outline-secondary btn-sm">{{ g.t['view'] if g.t is defined else 'View' }}</a>
+                        <a href="{{ url_for('game.game_details', game_id=game.id) }}" class="btn btn-outline-secondary btn-sm">{{ g.t['view'] }}</a>
                     </td>
                 </tr>
                 {% endif %}
@@ -95,7 +94,7 @@
     {% endif %}
 </div>
 
-<script>
+<script nonce="{{ g.csp_nonce }}">
     let sortDirection = {};
 
     function sortTable(columnIndex) {

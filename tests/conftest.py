@@ -54,36 +54,3 @@ def client():
             sess['authenticated'] = True
             sess['is_admin_session'] = True
         yield client
-
-
-# Ensure project root is on sys.path so tests can import app
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
-
-import pytest  # noqa: E402
-from app import app  # noqa: E402  – triggers create_app() and db.create_all()
-from models.database import db  # noqa: E402
-
-
-@pytest.fixture(autouse=True)
-def clean_db():
-    """Truncate all table data between tests so they run in isolation."""
-    with app.app_context():
-        for table in reversed(db.metadata.sorted_tables):
-            db.session.execute(table.delete())
-        db.session.commit()
-    yield
-    # post-test cleanup (nothing extra needed; next test does pre-test truncate)
-
-
-@pytest.fixture
-def client():
-    app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing
-    with app.test_client() as client:
-        # mark the test session as admin-authenticated so all routes are accessible
-        with client.session_transaction() as sess:
-            sess['authenticated'] = True
-            sess['is_admin_session'] = True
-        yield client

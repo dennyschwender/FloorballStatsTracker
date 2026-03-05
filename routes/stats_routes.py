@@ -3,7 +3,7 @@ Statistics routes blueprint
 """
 from datetime import datetime
 from flask import Blueprint, request, render_template
-from services.game_service import load_games, save_games, ensure_game_stats
+from services.game_service import load_games, ensure_game_stats
 from services.stats_service import calculate_stats_optimized
 from models.roster import get_all_seasons
 
@@ -13,37 +13,25 @@ stats_bp = Blueprint('stats', __name__)
 @stats_bp.route('/stats')
 def stats():
     games = load_games()
-    # Data checking and defaulting for missing fields
-    changed = False
+    # Normalise in-memory dicts for the template — do NOT write back to DB on a GET.
     for game in games:
-        old_changed = changed
         ensure_game_stats(game)
-        # Check if game was modified
-        if not old_changed and any(stat not in game or not isinstance(game[stat], dict) 
-                                   for stat in ['plusminus', 'goals', 'assists', 'unforced_errors',
-                                               'shots_on_goal', 'penalties_taken', 'penalties_drawn',
-                                               'saves', 'goals_conceded']):
-            changed = True
         if 'lines' not in game or not isinstance(game['lines'], list):
             game['lines'] = []
-            changed = True
         if 'goalies' not in game or not isinstance(game['goalies'], list):
             game['goalies'] = []
-            changed = True
-    if changed:
-        save_games(games)
-    
-    # Sort games by date (oldest first)
+
+    # Sort games by date (oldest first), use game id as stable tiebreaker
     def game_sort_key(game):
         date_str = game.get('date')
         try:
             date_val = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.min
         except Exception:
             date_val = datetime.min
-        return (date_val, -games.index(game))
+        return (date_val, game.get('id', 0))
 
     games_sorted = sorted(games, key=game_sort_key, reverse=False)
-    
+
     # Filter by season
     seasons = get_all_seasons()
     from models.team_settings import get_current_season as _cur_season
@@ -53,7 +41,7 @@ def stats():
         games_sorted = [
             game for game in games_sorted if game.get('season') == selected_season
         ]
-    
+
     # Filter by team/category
     teams = sorted(set(game.get('team', '') for game in games if game.get('team')))
     selected_team = request.args.get('team')
@@ -61,7 +49,7 @@ def stats():
         games_sorted = [
             game for game in games_sorted if game.get('team') == selected_team
         ]
-    
+
     # Get filter parameters
     hide_zero_stats = request.args.get('hide_zero_stats', 'false') == 'true'
     hide_future_games = request.args.get('hide_future_games', 'false') == 'true'

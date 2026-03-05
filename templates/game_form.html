@@ -809,7 +809,7 @@
         </div>
     </form>
     {% if modify %}
-    <form id="delete-game-form" method="post" action="/delete_game/{{ game_id }}" class="mt-3">
+    <form id="delete-game-form" method="post" action="{{ url_for('game.delete_game', game_id=game_id) }}" class="mt-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <button type="submit" class="btn btn-danger btn-sm">{{ g.t['delete_game'] }}</button>
     </form>
@@ -818,7 +818,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ g.csp_nonce }}">
     // Store roster globally
     var currentRoster = [];
     var isPopulatingData = false; // Flag to prevent rebuild during data population

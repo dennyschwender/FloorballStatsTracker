@@ -50,7 +50,7 @@
     </form>
 </div>
 
-<script>
+<script nonce="{{ g.csp_nonce }}">
 function validateJSON() {
     const textarea = document.getElementById('json_data');
     const jsonData = textarea.value;

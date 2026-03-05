@@ -1,51 +1,21 @@
 """
-Performance optimization: In-memory cache for games.json
+DEPRECATED — GameCache was used by the legacy JSON file backend.
+
+The application now uses SQLite (via Flask-SQLAlchemy) which handles
+caching and concurrency natively. This module is retained only to avoid
+breaking any third-party scripts that may import it; it will be removed
+in a future release.
 """
-import os
-import threading
 
 
 class GameCache:
-    """In-memory cache for games.json with file modification time-based invalidation"""
-    
-    def __init__(self):
-        self._cache = None
-        self._mtime = None
-        self._lock = threading.Lock()
-    
-    def get(self, filepath):
-        """Get cached games if valid, otherwise return None"""
-        with self._lock:
-            if self._cache is None:
-                return None
-            
-            # Check if file has been modified
-            try:
-                current_mtime = os.path.getmtime(filepath)
-                if self._mtime != current_mtime:
-                    # File has been modified, invalidate cache
-                    self._cache = None
-                    self._mtime = None
-                    return None
-            except OSError:
-                # File doesn't exist or can't be accessed
-                return None
-            
-            return self._cache
-    
-    def set(self, filepath, games):
-        """Store games in cache with current file modification time"""
-        with self._lock:
-            try:
-                self._mtime = os.path.getmtime(filepath)
-                self._cache = games
-            except OSError:
-                # If we can't get mtime, don't cache
-                self._cache = None
-                self._mtime = None
-    
+    """No-op stub retained for backward compatibility. Do not use."""
+
+    def get(self, filepath):  # noqa: ARG002
+        return None
+
+    def set(self, filepath, games):  # noqa: ARG002
+        pass
+
     def invalidate(self):
-        """Invalidate the cache (call after writes)"""
-        with self._lock:
-            self._cache = None
-            self._mtime = None
+        pass

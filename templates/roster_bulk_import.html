@@ -48,7 +48,7 @@
         <small class="form-text text-muted">{{ g.t['select_or_create_roster'] }}</small>
     </div>
 
-    <script>
+    <script nonce="{{ g.csp_nonce }}">
         function updateSeasonInForm(season) {
             document.getElementById('seasonField').value = season;
         }
