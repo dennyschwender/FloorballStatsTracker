@@ -108,7 +108,10 @@
                 {% if session.get('authenticated') %}
                 <div class="ms-2 order-3 d-flex align-items-center gap-2">
                     {% if g.current_user %}<span class="text-muted small d-none d-lg-inline">{{ g.current_user.username }}</span>{% endif %}
-                    <a href="{{ url_for('game.logout') }}" class="btn btn-outline-secondary btn-sm">{{ g.t.get('logout', 'Logout') }}</a>
+                    <form method="post" action="{{ url_for('game.logout') }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">{{ g.t.get('logout', 'Logout') }}</button>
+                    </form>
                 </div>
                 {% else %}
                 <div class="ms-2 order-3">
@@ -205,7 +208,16 @@
                 confirmBtn.addEventListener('click', function (e) {
                     var url = confirmBtn.getAttribute('data-reset-url');
                     if (url && url !== '#') {
-                        window.location.href = url;
+                        var form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = url;
+                        var csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = 'csrf_token';
+                        csrfInput.value = '{{ csrf_token() }}';
+                        form.appendChild(csrfInput);
+                        document.body.appendChild(form);
+                        form.submit();
                     }
                 });
             }
@@ -229,9 +241,18 @@
                 });
             }
 
-            // Handle delete confirmations
+            // Handle delete confirmations for links
             document.querySelectorAll('a[data-confirm]').forEach(function (link) {
                 link.addEventListener('click', function (e) {
+                    var message = this.getAttribute('data-confirm');
+                    if (!confirm(message)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+            // Handle delete confirmations for forms
+            document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+                form.addEventListener('submit', function (e) {
                     var message = this.getAttribute('data-confirm');
                     if (!confirm(message)) {
                         e.preventDefault();

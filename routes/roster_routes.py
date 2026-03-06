@@ -213,16 +213,16 @@ def roster_edit(player_id):
     )
 
 
-@roster_bp.route('/delete/<player_id>')
+@roster_bp.route('/delete/<player_id>', methods=['POST'])
 def roster_delete(player_id):
     guard = require_manage()
     if guard:
         return guard
-    category = request.args.get('category', '')
-    season = request.args.get('season', '')
+    category = request.form.get('category', '')
+    season = request.form.get('season', '')
     if not category:
         return redirect(url_for('roster.roster_list', season=season))
-    
+
     roster = load_roster(category, season)
     roster = [p for p in roster if p['id'] != player_id]
     save_roster(roster, category, season)
