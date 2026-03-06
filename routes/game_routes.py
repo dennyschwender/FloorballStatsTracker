@@ -784,7 +784,7 @@ def set_period(game_id, period):
     require_edit(game)
 
     if period not in PERIODS:
-        return f"Invalid period '{period}'", 400
+        return "Invalid period", 400
 
     game['current_period'] = period
     # Find and update game by ID

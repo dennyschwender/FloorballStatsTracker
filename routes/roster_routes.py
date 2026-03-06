@@ -249,8 +249,8 @@ def roster_bulk_delete():
         save_roster(roster, category, season)
         
         return jsonify({'success': True, 'deleted_count': len(player_ids)})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+    except Exception:
+        return jsonify({'success': False, 'error': 'An error occurred while deleting players'})
 
 
 @roster_bp.route('/delete_roster', methods=['POST'])
@@ -285,9 +285,9 @@ def delete_roster():
             return jsonify({'success': True, 'message': 'Roster deleted successfully'})
         else:
             return jsonify({'success': False, 'error': 'Roster not found or already empty'})
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+
+    except Exception:
+        return jsonify({'success': False, 'error': 'An error occurred while deleting roster'})
 
 
 @roster_bp.route('/toggle_player_visibility', methods=['POST'])
@@ -317,5 +317,5 @@ def toggle_player_visibility():
         save_roster(roster, category, season)
         
         return jsonify({'success': True, 'hidden': hidden})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+    except Exception:
+        return jsonify({'success': False, 'error': 'An error occurred while updating player visibility'})
