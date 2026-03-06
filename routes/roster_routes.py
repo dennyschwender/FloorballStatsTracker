@@ -3,7 +3,7 @@ Roster management routes blueprint
 """
 import logging
 import os
-from flask import Blueprint, request, render_template, redirect, url_for, jsonify
+from flask import Blueprint, request, render_template, redirect, url_for, jsonify, current_app
 from utils.auth_helpers import require_manage
 from services.game_service import load_games
 from models.roster import (
@@ -221,8 +221,8 @@ def roster_delete(player_id):
     guard = require_manage()
     if guard:
         return guard
-    category = request.form.get('category', '')
-    season = request.form.get('season', '')
+    category = request.form.get('category', request.args.get('category', ''))
+    season = request.form.get('season', request.args.get('season', ''))
     if not category:
         return redirect(url_for('roster.roster_list', season=season))
 
@@ -252,8 +252,8 @@ def roster_bulk_delete():
         save_roster(roster, category, season)
         
         return jsonify({'success': True, 'deleted_count': len(player_ids)})
-    except Exception:
-        logger.exception('roster_bulk_delete failed')
+    except Exception as e:
+        current_app.logger.exception('Error deleting players: %s', e)
         return jsonify({'success': False, 'error': 'An error occurred while deleting players'})
 
 
@@ -290,8 +290,8 @@ def delete_roster():
         else:
             return jsonify({'success': False, 'error': 'Roster not found or already empty'})
 
-    except Exception:
-        logger.exception('delete_roster failed')
+    except Exception as e:
+        current_app.logger.exception('Error deleting roster: %s', e)
         return jsonify({'success': False, 'error': 'An error occurred while deleting roster'})
 
 
@@ -322,6 +322,6 @@ def toggle_player_visibility():
         save_roster(roster, category, season)
         
         return jsonify({'success': True, 'hidden': hidden})
-    except Exception:
-        logger.exception('toggle_player_visibility failed')
+    except Exception as e:
+        current_app.logger.exception('Error updating player visibility: %s', e)
         return jsonify({'success': False, 'error': 'An error occurred while updating player visibility'})
