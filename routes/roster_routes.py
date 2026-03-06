@@ -1,6 +1,7 @@
 """
 Roster management routes blueprint
 """
+import logging
 import os
 from flask import Blueprint, request, render_template, redirect, url_for, jsonify
 from utils.auth_helpers import require_manage
@@ -15,6 +16,8 @@ from models.roster import (
     get_roster_file,          # deprecated stub - kept for any residual calls
     delete_roster_category,
 )
+
+logger = logging.getLogger(__name__)
 
 roster_bp = Blueprint('roster', __name__, url_prefix='/roster')
 
@@ -250,6 +253,7 @@ def roster_bulk_delete():
         
         return jsonify({'success': True, 'deleted_count': len(player_ids)})
     except Exception:
+        logger.exception('roster_bulk_delete failed')
         return jsonify({'success': False, 'error': 'An error occurred while deleting players'})
 
 
@@ -287,6 +291,7 @@ def delete_roster():
             return jsonify({'success': False, 'error': 'Roster not found or already empty'})
 
     except Exception:
+        logger.exception('delete_roster failed')
         return jsonify({'success': False, 'error': 'An error occurred while deleting roster'})
 
 
@@ -318,4 +323,5 @@ def toggle_player_visibility():
         
         return jsonify({'success': True, 'hidden': hidden})
     except Exception:
+        logger.exception('toggle_player_visibility failed')
         return jsonify({'success': False, 'error': 'An error occurred while updating player visibility'})
