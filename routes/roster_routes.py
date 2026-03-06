@@ -218,8 +218,8 @@ def roster_delete(player_id):
     guard = require_manage()
     if guard:
         return guard
-    category = request.form.get('category', '')
-    season = request.form.get('season', '')
+    category = request.form.get('category', request.args.get('category', ''))
+    season = request.form.get('season', request.args.get('season', ''))
     if not category:
         return redirect(url_for('roster.roster_list', season=season))
 
