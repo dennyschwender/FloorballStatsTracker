@@ -334,4 +334,3 @@ def toggle_player_visibility():
                          data.get('season', '') if data else '',
                          data.get('player_id', '') if data else '')
         return jsonify({'success': False, 'error': 'An error occurred while updating player visibility'})
-        return jsonify({'success': False, 'error': 'An error occurred while updating player visibility'})
