@@ -1,8 +1,9 @@
 """
 Roster management routes blueprint
 """
+import logging
 import os
-from flask import Blueprint, request, render_template, redirect, url_for, jsonify
+from flask import Blueprint, request, render_template, redirect, url_for, jsonify, current_app
 from utils.auth_helpers import require_manage
 from services.game_service import load_games
 from models.roster import (
@@ -15,6 +16,8 @@ from models.roster import (
     get_roster_file,          # deprecated stub - kept for any residual calls
     delete_roster_category,
 )
+
+logger = logging.getLogger(__name__)
 
 roster_bp = Blueprint('roster', __name__, url_prefix='/roster')
 
@@ -213,16 +216,16 @@ def roster_edit(player_id):
     )
 
 
-@roster_bp.route('/delete/<player_id>')
+@roster_bp.route('/delete/<player_id>', methods=['POST'])
 def roster_delete(player_id):
     guard = require_manage()
     if guard:
         return guard
-    category = request.args.get('category', '')
-    season = request.args.get('season', '')
+    category = request.form.get('category', request.args.get('category', ''))
+    season = request.form.get('season', request.args.get('season', ''))
     if not category:
         return redirect(url_for('roster.roster_list', season=season))
-    
+
     roster = load_roster(category, season)
     roster = [p for p in roster if p['id'] != player_id]
     save_roster(roster, category, season)
@@ -249,8 +252,12 @@ def roster_bulk_delete():
         save_roster(roster, category, season)
         
         return jsonify({'success': True, 'deleted_count': len(player_ids)})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+    except Exception:
+        logger.exception('roster_bulk_delete failed for category=%s season=%s count=%s',
+                         data.get('category', '') if data else '',
+                         data.get('season', '') if data else '',
+                         len(data.get('player_ids', [])) if data else '')
+        return jsonify({'success': False, 'error': 'An error occurred while deleting players'})
 
 
 @roster_bp.route('/delete_roster', methods=['POST'])
@@ -285,9 +292,13 @@ def delete_roster():
             return jsonify({'success': True, 'message': 'Roster deleted successfully'})
         else:
             return jsonify({'success': False, 'error': 'Roster not found or already empty'})
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+
+    except Exception:
+        logger.exception('delete_roster failed for category=%s season=%s force=%s',
+                         data.get('category', '') if data else '',
+                         data.get('season', '') if data else '',
+                         data.get('force', False) if data else '')
+        return jsonify({'success': False, 'error': 'An error occurred while deleting roster'})
 
 
 @roster_bp.route('/toggle_player_visibility', methods=['POST'])
@@ -317,5 +328,9 @@ def toggle_player_visibility():
         save_roster(roster, category, season)
         
         return jsonify({'success': True, 'hidden': hidden})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+    except Exception:
+        logger.exception('toggle_player_visibility failed for category=%s season=%s player_id=%s',
+                         data.get('category', '') if data else '',
+                         data.get('season', '') if data else '',
+                         data.get('player_id', '') if data else '')
+        return jsonify({'success': False, 'error': 'An error occurred while updating player visibility'})

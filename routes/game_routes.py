@@ -44,7 +44,7 @@ def user_login():
     return render_template('user_login.html', error=error)
 
 
-@game_bp.route('/logout')
+@game_bp.route('/logout', methods=['POST'])
 def logout():
     """Clear session and redirect to login/pin page."""
     session.clear()
@@ -707,7 +707,7 @@ def opponent_goalie_action(game_id):
     return redirect(url_for('game.game_details', game_id=game_id))
 
 
-@game_bp.route('/reset_game/<int:game_id>')
+@game_bp.route('/reset_game/<int:game_id>', methods=['POST'])
 def reset_game(game_id):
     guard = require_manage()
     if guard:
@@ -716,7 +716,8 @@ def reset_game(game_id):
     game = find_game_by_id(games, game_id)
     if not game:
         abort(404)
-    
+    require_edit(game)
+
     # Reset player stats
     ensure_game_stats(game)
     for line in game.get('lines', []):
@@ -755,8 +756,8 @@ def reset_game(game_id):
     # Recalculate game scores after reset
     recalculate_game_scores(game)
     save_games(games)
-    
-    if request.args.get('edit') == '1':
+
+    if request.form.get('edit') == '1':
         return redirect(url_for('game.game_details', game_id=game_id, edit=1))
     return redirect(url_for('game.game_details', game_id=game_id))
 
@@ -780,9 +781,10 @@ def set_period(game_id, period):
     game = find_game_by_id(games, game_id)
     if not game:
         abort(404)
-    
+    require_edit(game)
+
     if period not in PERIODS:
-        return f"Invalid period '{period}'", 400
+        return "Invalid period", 400
 
     game['current_period'] = period
     # Find and update game by ID

@@ -214,9 +214,12 @@
                             <a href="{{ url_for('roster.roster_edit', player_id=player.id, category=selected_category, season=selected_season) }}"
                                 class="btn btn-sm btn-warning">{{
                                 g.t['edit_player'] }}</a>
-                            <a href="{{ url_for('roster.roster_delete', player_id=player.id, category=selected_category, season=selected_season) }}"
-                                class="btn btn-sm btn-danger" data-confirm="{{ g.t['delete_confirm'] }}">{{
-                                g.t['delete_player'] }}</a>
+                            <form method="post" action="{{ url_for('roster.roster_delete', player_id=player.id) }}" style="display:inline;" data-confirm="{{ g.t['delete_confirm'] }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="category" value="{{ selected_category }}">
+                                <input type="hidden" name="season" value="{{ selected_season }}">
+                                <button type="submit" class="btn btn-sm btn-danger">{{ g.t['delete_player'] }}</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
