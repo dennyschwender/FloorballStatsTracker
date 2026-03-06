@@ -1,6 +1,7 @@
 """
 Roster management routes blueprint
 """
+import logging
 import os
 from flask import Blueprint, request, render_template, redirect, url_for, jsonify, current_app
 from utils.auth_helpers import require_manage
@@ -15,6 +16,8 @@ from models.roster import (
     get_roster_file,          # deprecated stub - kept for any residual calls
     delete_roster_category,
 )
+
+logger = logging.getLogger(__name__)
 
 roster_bp = Blueprint('roster', __name__, url_prefix='/roster')
 
