@@ -3,7 +3,7 @@ Roster management routes blueprint
 """
 import logging
 import os
-from flask import Blueprint, request, render_template, redirect, url_for, jsonify
+from flask import Blueprint, request, render_template, redirect, url_for, jsonify, current_app
 from utils.auth_helpers import require_manage
 from services.game_service import load_games
 from models.roster import (
@@ -221,8 +221,8 @@ def roster_delete(player_id):
     guard = require_manage()
     if guard:
         return guard
-    category = request.form.get('category', '')
-    season = request.form.get('season', '')
+    category = request.form.get('category', request.args.get('category', ''))
+    season = request.form.get('season', request.args.get('season', ''))
     if not category:
         return redirect(url_for('roster.roster_list', season=season))
 
