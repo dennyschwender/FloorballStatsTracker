@@ -252,8 +252,11 @@ def roster_bulk_delete():
         save_roster(roster, category, season)
         
         return jsonify({'success': True, 'deleted_count': len(player_ids)})
-    except Exception as e:
-        current_app.logger.exception('Error deleting players: %s', e)
+    except Exception:
+        logger.exception('roster_bulk_delete failed for category=%s season=%s count=%s',
+                         data.get('category', '') if data else '',
+                         data.get('season', '') if data else '',
+                         len(data.get('player_ids', [])) if data else '')
         return jsonify({'success': False, 'error': 'An error occurred while deleting players'})
 
 
@@ -290,8 +293,11 @@ def delete_roster():
         else:
             return jsonify({'success': False, 'error': 'Roster not found or already empty'})
 
-    except Exception as e:
-        current_app.logger.exception('Error deleting roster: %s', e)
+    except Exception:
+        logger.exception('delete_roster failed for category=%s season=%s force=%s',
+                         data.get('category', '') if data else '',
+                         data.get('season', '') if data else '',
+                         data.get('force', False) if data else '')
         return jsonify({'success': False, 'error': 'An error occurred while deleting roster'})
 
 
@@ -322,6 +328,9 @@ def toggle_player_visibility():
         save_roster(roster, category, season)
         
         return jsonify({'success': True, 'hidden': hidden})
-    except Exception as e:
-        current_app.logger.exception('Error updating player visibility: %s', e)
+    except Exception:
+        logger.exception('toggle_player_visibility failed for category=%s season=%s player_id=%s',
+                         data.get('category', '') if data else '',
+                         data.get('season', '') if data else '',
+                         data.get('player_id', '') if data else '')
         return jsonify({'success': False, 'error': 'An error occurred while updating player visibility'})
