@@ -87,10 +87,12 @@
                 {{ g.t.get('save', 'Save') }}
             </button>
             {% if user %}
-            <button type="submit" name="_action" value="delete" class="btn btn-danger"
-                    onclick="return confirm('Delete user {{ user.username }}?')">
-                {{ g.t.get('delete', 'Delete') }}
-            </button>
+            <button type="button" id="deleteUserBtn" class="btn btn-danger">{{ g.t.get('delete_user', 'Delete User') }}</button>
+            <div id="deleteConfirmSection" style="display:none;" class="mt-2">
+                <span class="text-danger me-2">{{ g.t.get('confirm_delete', 'Are you sure?') }}</span>
+                <button type="submit" name="_action" value="delete" class="btn btn-danger btn-sm">{{ g.t.get('yes_delete', 'Yes, Delete') }}</button>
+                <button type="button" id="cancelDeleteBtn" class="btn btn-secondary btn-sm">{{ g.t.get('cancel', 'Cancel') }}</button>
+            </div>
             {% endif %}
         </div>
     </form>
@@ -104,6 +106,21 @@
     }
     adminCheck.addEventListener('change', toggle);
     toggle(); // apply on page load
+
+    var deleteUserBtn = document.getElementById('deleteUserBtn');
+    var cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    if (deleteUserBtn) {
+        deleteUserBtn.addEventListener('click', function() {
+            document.getElementById('deleteConfirmSection').style.display = 'block';
+            this.style.display = 'none';
+        });
+    }
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', function() {
+            document.getElementById('deleteConfirmSection').style.display = 'none';
+            document.getElementById('deleteUserBtn').style.display = 'inline-block';
+        });
+    }
 })();
 </script>
 {% endblock %}

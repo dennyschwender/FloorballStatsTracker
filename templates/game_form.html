@@ -661,7 +661,7 @@
             <!-- Lines Section -->
             {% for line_num in range(1, 5) %}
             <div class="formation-section" id="lineSection{{ line_num }}" data-section-type="line">
-                <div class="section-header" onclick="toggleSection('lineSection{{ line_num }}')">
+                <div class="section-header" data-toggle-section="lineSection{{ line_num }}">
                     <div style="display: flex; align-items: center;">
                         <h5 style="margin: 0;">{{ g.t['line'] }} {{ line_num }}</h5>
                         <span class="completion-badge" id="badge-l{{ line_num }}">0/5</span>
@@ -671,11 +671,11 @@
                 <div class="section-content" id="content-lineSection{{ line_num }}">
                     <div class="quick-actions">
                         {% if line_num > 1 %}
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyLine({{ line_num - 1 }}, {{ line_num }})">
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-copy-from="{{ line_num - 1 }}" data-copy-to="{{ line_num }}">
                             ← Copy from L{{ line_num - 1 }}
                         </button>
                         {% endif %}
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearLine({{ line_num }})">
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-clear-line="{{ line_num }}">
                             Clear Line
                         </button>
                     </div>
@@ -729,7 +729,7 @@
             ] %}
             {% for formation_key, formation_name in formations %}
             <div class="formation-section" id="formation{{ formation_key }}" data-section-type="formation">
-                <div class="section-header" onclick="toggleSection('formation{{ formation_key }}')">
+                <div class="section-header" data-toggle-section="formation{{ formation_key }}">
                     <div style="display: flex; align-items: center;">
                         <h5 style="margin: 0;">{{ formation_name }}</h5>
                         <span class="completion-badge" id="badge-{{ formation_key }}">
@@ -740,7 +740,7 @@
                 </div>
                 <div class="section-content" id="content-formation{{ formation_key }}">
                     <div class="quick-actions">
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearFormation('{{ formation_key }}')">
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-clear-formation="{{ formation_key }}">
                             Clear {{ formation_name }}
                         </button>
                     </div>
@@ -2289,6 +2289,31 @@
     document.head.appendChild(style);
 
     // ===== END NEW UX FEATURES =====
+
+    // Section toggles
+    document.querySelectorAll('[data-toggle-section]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            toggleSection(this.getAttribute('data-toggle-section'));
+        });
+    });
+    // Copy line buttons
+    document.querySelectorAll('[data-copy-from]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            copyLine(parseInt(this.getAttribute('data-copy-from')), parseInt(this.getAttribute('data-copy-to')));
+        });
+    });
+    // Clear line buttons
+    document.querySelectorAll('[data-clear-line]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            clearLine(parseInt(this.getAttribute('data-clear-line')));
+        });
+    });
+    // Clear formation buttons
+    document.querySelectorAll('[data-clear-formation]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            clearFormation(this.getAttribute('data-clear-formation'));
+        });
+    });
 
 </script>
 {% endblock %}

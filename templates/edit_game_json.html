@@ -43,7 +43,7 @@
             <a href="{{ url_for('game.game_details', game_id=game_id) }}" class="btn btn-secondary">
                 <i class="bi bi-x-circle"></i> Cancel
             </a>
-            <button type="button" class="btn btn-info" onclick="validateJSON()">
+            <button type="button" class="btn btn-info" id="validateJsonBtn">
                 <i class="bi bi-check-circle"></i> Validate JSON
             </button>
         </div>
@@ -62,6 +62,10 @@ function validateJSON() {
         alert('✗ Invalid JSON:\n\n' + e.message);
     }
 }
+
+document.getElementById('validateJsonBtn').addEventListener('click', function() {
+    validateJSON();
+});
 
 // Auto-format JSON on page load
 document.addEventListener('DOMContentLoaded', function() {

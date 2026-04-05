@@ -30,7 +30,7 @@
         <label for="seasonInput" class="form-label"><strong>{{ g.t['season'] }}</strong></label>
         <input type="text" class="form-control" id="seasonInput"
             placeholder="e.g., 2024-25" value="{{ season if season else '' }}"
-            oninput="updateSeasonInForm(this.value)">
+            >
         <small class="form-text text-muted">Enter season name</small>
     </div>
 
@@ -39,7 +39,7 @@
         <label for="categoryInput" class="form-label"><strong>{{ g.t['select_roster'] }}</strong></label>
         <input type="text" class="form-control" id="categoryInput" list="categoryList"
             placeholder="-- {{ g.t['select_category'] }} --" value="{{ category if category else '' }}"
-            oninput="updateCategoryInForm(this.value)">
+            >
         <datalist id="categoryList">
             {% for cat in categories %}
             <option value="{{ cat }}">
@@ -56,6 +56,13 @@
         function updateCategoryInForm(category) {
             document.getElementById('categoryField').value = category;
         }
+
+        document.getElementById('seasonInput').addEventListener('input', function() {
+            updateSeasonInForm(this.value);
+        });
+        document.getElementById('categoryInput').addEventListener('input', function() {
+            updateCategoryInForm(this.value);
+        });
 
         // Initialize on load
         if (document.getElementById('seasonInput').value) {
