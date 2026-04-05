@@ -231,6 +231,85 @@
         <button type="button" id="expandAllBtn" class="btn btn-outline-secondary btn-sm">{{ g.t.get('expand_all', 'Expand All') }}</button>
         <button type="button" id="collapseAllBtn" class="btn btn-outline-secondary btn-sm">{{ g.t.get('collapse_all', 'Collapse All') }}</button>
     </div>
+
+    <!-- Charts Section -->
+    <div id="charts-section" class="mb-5">
+        <h2 class="mb-4">{{ g.t['stats_overview'] }}</h2>
+
+        <!-- Player Picker and Stat Selector -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Player Picker Column -->
+                    <div class="col-md-8">
+                        <label class="form-label">Select Players</label>
+                        <div class="input-group">
+                            <input
+                                type="text"
+                                id="player-search"
+                                class="form-control"
+                                placeholder="Search and select players..."
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div id="player-suggestions" class="list-group mt-2" style="display: none; max-height: 200px; overflow-y: auto;"></div>
+
+                        <!-- Selected Players Pills -->
+                        <div id="selected-players" class="mt-3 d-flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <!-- Stat Selector Column -->
+                    <div class="col-md-4">
+                        <label class="form-label">{{ g.t['stats_overview'] }}</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="stat-selector" id="stat-game-score" value="game_score" checked>
+                            <label class="btn btn-outline-primary" for="stat-game-score">Game Score</label>
+
+                            <input type="radio" class="btn-check" name="stat-selector" id="stat-goals-assists" value="goals_assists">
+                            <label class="btn btn-outline-primary" for="stat-goals-assists">Goals & Assists</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Show Chart Button -->
+                <div class="mt-3">
+                    <button
+                        id="show-chart-btn"
+                        class="btn btn-primary"
+                        disabled
+                    >
+                        {{ g.t['stats'] }}
+                    </button>
+                    <div id="chart-loading" class="spinner-border spinner-border-sm ms-2" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Display Area -->
+        <div id="chart-container" class="card" style="display: none;">
+            <div class="card-body">
+                <canvas id="stats-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Message Area (empty state, errors) -->
+        <div id="chart-message" class="alert alert-info" style="display: none;"></div>
+    </div>
+
+    <!-- Add Chart.js via CDN in a script tag with nonce -->
+    <script nonce="{{ g.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <!-- Import the stats-charts.js module -->
+    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/stats-charts.js') }}"></script>
+
+    <!-- Initialize chart on page load -->
+    <script nonce="{{ g.csp_nonce }}">
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartUI = new StatsChartUI({{ players | tojson }});
+            chartUI.init();
+        });
+    </script>
+
     <h3>{{ g.t['game_score'] }}</h3>
     <div class="stat-info-box">
         <i class="bi bi-info-circle"></i>{{ g.t['game_score_explanation'] }}
