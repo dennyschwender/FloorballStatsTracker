@@ -43,6 +43,13 @@ def view_game_lineup_eink(game_id):
     return render_template('game_lineup_eink.html', game=game, roster=roster, player_map=player_map)
 
 
+# ── Special formations keys and labels ──────────────────────────────────────
+SPEC_KEYS = [
+    ('pp1', 'PP1'), ('pp2', 'PP2'),
+    ('bp1', 'BP1'), ('bp2', 'BP2'),
+    ('6vs5', '6 vs 5'), ('stress_line', 'Stress Line'),
+]
+
 # ── Device profiles for e-reader PDF export ────────────────────────────────
 # Page dimensions are the physical screen area.
 # Tolino Shine (6"): 1448×1072 px @ 300 ppi → ~122.7×90.7 mm
@@ -179,11 +186,6 @@ def download_lineup_pdf(game_id):
         return tbl
 
     # ── Content helpers ──────────────────────────────────────────────────────
-    SPEC_KEYS = [
-        ('pp1', 'PP1'), ('pp2', 'PP2'),
-        ('bp1', 'BP1'), ('bp2', 'BP2'),
-        ('6vs5', '6 vs 5'), ('stress_line', 'Stress Line'),
-    ]
     spec    = [(label, game[k]) for k, label in SPEC_KEYS if game.get(k)]
     goalies = game.get('goalies', [])
     lines   = [l for l in game.get('lines', []) if l]
@@ -329,11 +331,6 @@ def download_lineup_epub(game_id):
         )
 
     # ── Content helpers ──────────────────────────────────────────────────────
-    SPEC_KEYS = [
-        ('pp1', 'PP1'), ('pp2', 'PP2'),
-        ('bp1', 'BP1'), ('bp2', 'BP2'),
-        ('6vs5', '6 vs 5'), ('stress_line', 'Stress Line'),
-    ]
     spec    = [(label, game[k]) for k, label in SPEC_KEYS if game.get(k)]
     goalies = game.get('goalies', [])
     lines   = [l for l in game.get('lines', []) if l]
