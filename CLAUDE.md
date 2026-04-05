@@ -34,12 +34,14 @@ docker compose up -d --build
 
 ### Application Structure
 
-Flask application factory in `app.py` (`create_app()`). Five blueprints registered at startup:
-- `game_bp` — core game CRUD, stat tracking, lineup views (`routes/game_routes.py`, ~1400 lines)
+Flask application factory in `app.py` (`create_app()`). Seven blueprints registered at startup:
+- `game_bp` — core game CRUD and stat tracking (`routes/game_routes.py`)
 - `roster_bp` — roster CRUD and bulk import (`routes/roster_routes.py`)
 - `stats_bp` — aggregated statistics display (`routes/stats_routes.py`)
 - `admin_bp` — user/permission management, app settings (`routes/admin_routes.py`)
 - `api_bp` — minimal internal API (`routes/api_routes.py`)
+- `lineup_bp` — lineup views and PDF/EPUB export (`routes/lineup_routes.py`)
+- `json_bp` — direct JSON game editor (`routes/json_routes.py`)
 
 Business logic lives in `services/`: `game_service.py`, `stats_service.py`.
 

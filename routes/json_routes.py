@@ -6,7 +6,7 @@ from flask import Blueprint, request, render_template, redirect, url_for, abort
 from services.game_service import load_games, save_games, find_game_by_id
 from utils.auth_helpers import require_manage
 
-json_bp = Blueprint('json', __name__)
+json_bp = Blueprint('game_json', __name__)
 
 
 @json_bp.route('/game/<int:game_id>/edit_json', methods=['GET', 'POST'])
