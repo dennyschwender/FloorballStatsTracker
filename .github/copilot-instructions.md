@@ -27,7 +27,7 @@ Optional: `ADMIN_PIN` (elevated access, must differ from `FLOORBALL_PIN`), `SESS
 **Application factory** in `app.py` (`create_app()`). Seven blueprints:
 - `game_bp` — game CRUD, stat tracking (`routes/game_routes.py`)
 - `lineup_bp` — lineup views, PDF/EPUB export (`routes/lineup_routes.py`)
-- `game_json_bp` — direct JSON game editor (`routes/json_routes.py`)
+- `json_bp` — direct JSON game editor (`routes/json_routes.py`)
 - `roster_bp` — roster CRUD, bulk import (`routes/roster_routes.py`)
 - `stats_bp` — aggregated statistics (`routes/stats_routes.py`)
 - `admin_bp` — user/permission management (`routes/admin_routes.py`)
