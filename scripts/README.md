@@ -4,13 +4,12 @@ Utility scripts for managing the Floorball Stats Tracker.
 
 ## backup_games.py
 
-Creates a timestamped backup of the SQLite database.
+Creates a timestamped backup of `gamesFiles/games.json` by copying it to `gamesFiles/games_backup_YYYYMMDD_HHMMSS.json`.
 
 ```bash
 python scripts/backup_games.py
 ```
 
-Creates `gamesFiles/games_backup_YYYYMMDD_HHMMSS.db` (or `.json` for legacy installs).
 Run before major updates, data migrations, or at the start of each season.
 
 ## docker_deploy.sh

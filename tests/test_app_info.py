@@ -74,7 +74,7 @@ except ImportError as e:
     print(f'   ✗ routes module error: {e}')
 
 try:
-    from services import game_service, stats_service, file_service
+    from services import game_service, stats_service
     print(f'   ✓ services module loaded')
 except ImportError as e:
     print(f'   ✗ services module error: {e}')
