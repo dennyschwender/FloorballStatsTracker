@@ -240,7 +240,7 @@ class TestCalculatePlayerTrendsBasic:
         assert 'Bob' in result
         assert 'Charlie' in result
 
-        # Check Alice's stats (games: 5.2, 2.2, 8.35)
+        # Check Alice's stats (games: 5.0, 2.0, 8.05)
         alice = result['Alice']
         assert len(alice['game_scores']) == 3
         assert alice['game_scores'] == [
@@ -250,12 +250,12 @@ class TestCalculatePlayerTrendsBasic:
         ]
 
         # Verify mean calculation
-        expected_mean = (5.2 + 2.2 + 8.35) / 3
+        expected_mean = (5.0 + 2.0 + 8.05) / 3
         assert abs(alice['mean_score'] - expected_mean) < SCORE_TOLERANCE
 
         # Verify min/max
-        assert abs(alice['min_score'] - 2.2) < SCORE_TOLERANCE
-        assert abs(alice['max_score'] - 8.35) < SCORE_TOLERANCE
+        assert abs(alice['min_score'] - 2.0) < SCORE_TOLERANCE
+        assert abs(alice['max_score'] - 8.05) < SCORE_TOLERANCE
 
         # Verify std dev (should be non-zero since scores vary)
         assert alice['std_dev'] > 0

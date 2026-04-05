@@ -1,7 +1,7 @@
 """
 Statistics calculation for player and goalie performance metrics
 """
-from statistics import median
+from statistics import median, mean, pstdev, StatisticsError
 from config import PERIODS
 
 
@@ -377,3 +377,104 @@ def calculate_stats_optimized(games_sorted, hide_zero_stats=False):
         'opponent_goalie_data': opponent_goalie_stats,
         'games_with_calculated_stats': games_with_stats
     }
+
+
+def calculate_player_trends(games, players=None):
+    """
+    Calculate player performance trends across games.
+
+    Args:
+        games: List of game dicts (already filtered by season/team/date range)
+        players: Optional list of player names to include (default: all players in games)
+
+    Returns:
+        Dictionary mapping player name to trends data with:
+        - game_scores: List of floats in chronological order
+        - game_ids: List of game IDs in chronological order
+        - mean_score: Mean Game Score
+        - std_dev: Standard deviation
+        - min_score: Minimum Game Score
+        - max_score: Maximum Game Score
+        - outliers: List of dicts with {game_id, score, z_score, type}
+            where type is "high" or "low" and |z_score| > 1.0
+        - insufficient_data: True if player in fewer than 3 games
+    """
+    if not games:
+        return {}
+
+    # Sort games by date to maintain chronological order
+    sorted_games = sorted(games, key=lambda g: g.get('date', ''))
+
+    # Step 1: Determine which players to analyze
+    if players is None:
+        # Extract all unique player names from games
+        all_players = set()
+        for game in sorted_games:
+            game_scores = game.get('game_scores', {})
+            all_players.update(game_scores.keys())
+        players_to_analyze = sorted(all_players)
+    else:
+        players_to_analyze = players
+
+    # Step 2: Build result dictionary
+    result = {}
+
+    for player_name in players_to_analyze:
+        # Extract game scores for this player in chronological order
+        game_scores = []
+        game_ids = []
+
+        for game in sorted_games:
+            game_score_dict = game.get('game_scores', {})
+            if player_name in game_score_dict:
+                score = game_score_dict[player_name]
+                game_scores.append(score)
+                game_ids.append(game['id'])
+
+        # Skip if player not in any game
+        if not game_scores:
+            continue
+
+        # Calculate basic statistics
+        min_score = min(game_scores)
+        max_score = max(game_scores)
+        mean_score = mean(game_scores)
+
+        # Calculate standard deviation (handle case where all scores are identical)
+        try:
+            std_dev = pstdev(game_scores)
+        except StatisticsError:
+            # All scores are identical
+            std_dev = 0.0
+
+        # Identify outliers (|z_score| > 1.0)
+        # Only calculate outliers if std_dev is meaningful (not too small)
+        outliers = []
+        if std_dev > 0.01:  # Only calculate outliers if std_dev is significant
+            for game_id, score in zip(game_ids, game_scores):
+                z_score = (score - mean_score) / std_dev
+                if abs(z_score) > 1.0:
+                    outlier_type = "high" if z_score > 0 else "low"
+                    outliers.append({
+                        'game_id': game_id,
+                        'score': score,
+                        'z_score': z_score,
+                        'type': outlier_type
+                    })
+
+        # Check if insufficient data (fewer than 3 games)
+        insufficient_data = len(game_scores) < 3
+
+        # Build player result
+        result[player_name] = {
+            'game_scores': game_scores,
+            'game_ids': game_ids,
+            'mean_score': mean_score,
+            'std_dev': std_dev,
+            'min_score': min_score,
+            'max_score': max_score,
+            'outliers': outliers,
+            'insufficient_data': insufficient_data
+        }
+
+    return result
