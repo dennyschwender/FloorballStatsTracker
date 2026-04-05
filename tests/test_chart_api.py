@@ -264,3 +264,16 @@ class TestChartDataEndpoint:
         # Should only have 1 game from 2024-25 season (game3)
         assert len(data['games']) == 1
         assert data['games'][0]['game_id'] == 3
+
+
+class TestChartIntegration:
+    """Integration tests for the chart feature."""
+
+    def test_stats_page_includes_charts_section(self, client):
+        """Stats page includes the charts HTML section."""
+        response = client.get('/stats')
+        assert response.status_code == 200
+        assert b'charts-section' in response.data
+        assert b'player-search' in response.data
+        assert b'show-chart-btn' in response.data
+        assert b'StatsChartUI' in response.data  # JavaScript initialization
