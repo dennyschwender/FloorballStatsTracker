@@ -135,7 +135,3 @@ def get_all_tesser_values():
         return []
 
 
-def get_roster_file(category, season=None):
-    """Deprecated stub kept so old import paths do not crash."""
-    logger.warning("get_roster_file() is deprecated; use delete_roster_category()")
-    return None

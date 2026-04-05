@@ -13,7 +13,6 @@ from models.roster import (
     get_all_seasons,
     get_all_rosters_with_seasons,
     get_all_tesser_values,
-    get_roster_file,          # deprecated stub - kept for any residual calls
     delete_roster_category,
 )
 
