@@ -108,10 +108,13 @@ class StatsChartUI {
             closeBtn.className = 'btn-close btn-close-white';
             closeBtn.style.padding = '0';
             closeBtn.style.fontSize = '0.75rem';
-            closeBtn.onclick = (e) => {
+            closeBtn.dataset.player = player;
+
+            // Use addEventListener instead of onclick
+            closeBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.removeSelectedPlayer(player);
-            };
+            });
 
             pill.appendChild(label);
             pill.appendChild(closeBtn);
