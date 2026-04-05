@@ -138,7 +138,7 @@ def create_app():
             "default-src 'self'; "
             f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "img-src 'self' data:; "
+            "img-src 'self' data: blob:; "
             "font-src 'self' https://cdn.jsdelivr.net; "
             "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
             "frame-ancestors 'none';"

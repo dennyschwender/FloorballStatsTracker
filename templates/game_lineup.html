@@ -545,8 +545,7 @@
         <div class="no-print mb-3">
             <div class="d-flex flex-wrap gap-2 align-items-center">
                 <label for="formatSelect" class="fw-bold">{{ g.t.get('format', 'Format') }}:</label>
-                <select id="formatSelect" class="form-select" style="width: auto; min-width: 140px;"
-                    onchange="changeFormat(this.value)">
+                <select id="formatSelect" class="form-select" style="width: auto; min-width: 140px;">
                     <option value="format-1">{{ g.t.get('simple_list', 'Simple List') }}</option>
                     <option value="format-2">{{ g.t.get('table_layout', 'Table Layout') }}</option>
                     <option value="format-3">{{ g.t.get('player_roster', 'Player Roster') }}</option>
@@ -558,8 +557,8 @@
                         📄 {{ g.t.get('export', 'Export') }}
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" onclick="printPage(); return false;">🖨️ {{ g.t.get('print', 'Print') }}</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="generatePDF(); return false;">📄 {{ g.t.get('generate_pdf', 'Generate PDF') }}</a></li>
+                        <li><a class="dropdown-item" href="#" id="printPageBtn">🖨️ {{ g.t.get('print', 'Print') }}</a></li>
+                        <li><a class="dropdown-item" href="#" id="generatePDFBtn">📄 {{ g.t.get('generate_pdf', 'Generate PDF') }}</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">📖 Tolino Shine (6")</h6></li>
                         <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='tolino') }}">PDF</a></li>
@@ -571,13 +570,12 @@
                 </div>
 
                 <label for="nameDisplay" class="fw-bold ms-0 ms-sm-2">{{ g.t.get('display_names', 'Display') }}:</label>
-                <select id="nameDisplay" class="form-select" style="width: auto; min-width: 120px;"
-                    onchange="changeNameDisplay(this.value)">
+                <select id="nameDisplay" class="form-select" style="width: auto; min-width: 120px;">
                     <option value="full">{{ g.t.get('full_names', 'Full Names') }}</option>
                     <option value="nickname">{{ g.t.get('nicknames', 'Nicknames') }}</option>
                 </select>
 
-                <button onclick="window.close()" class="btn btn-secondary ms-0 ms-sm-2">✖️ {{ g.t.get('close', 'Close') }}</button>
+                <button id="closeWindowBtn" class="btn btn-secondary ms-0 ms-sm-2">✖️ {{ g.t.get('close', 'Close') }}</button>
             </div>
         </div>
 
@@ -1086,19 +1084,19 @@
                         Category
                     </label>
                 </div>
-                <button class="copy-button" onclick="copyTableToClipboard()">📋 Copy to Clipboard</button>
+                <button class="copy-button" id="copyTableBtn">📋 Copy to Clipboard</button>
             </div>
             
             <div class="roster-table-wrapper">
                 <table class="roster-table" id="rosterTable">
                     <thead>
                         <tr>
-                            <th class="sortable" onclick="sortRosterTable(0)" data-column="0">#</th>
-                            <th class="sortable" onclick="sortRosterTable(1)" data-column="1">Nr.</th>
-                            <th class="sortable" onclick="sortRosterTable(2)" data-column="2">Surname</th>
-                            <th class="sortable" onclick="sortRosterTable(3)" data-column="3">Name</th>
-                            <th class="sortable" onclick="sortRosterTable(4)" data-column="4">Nickname</th>
-                            <th class="sortable" onclick="sortRosterTable(5)" data-column="5">Category</th>
+                            <th class="sortable" data-column="0">#</th>
+                            <th class="sortable" data-column="1">Nr.</th>
+                            <th class="sortable" data-column="2">Surname</th>
+                            <th class="sortable" data-column="3">Name</th>
+                            <th class="sortable" data-column="4">Nickname</th>
+                            <th class="sortable" data-column="5">Category</th>
                         </tr>
                     </thead>
                 <tbody>
@@ -1756,6 +1754,33 @@
             // Open PDF in new window instead of downloading
             window.open(doc.output('bloburl'), '_blank');
         }
+
+        // Wire up controls (replaces inline event handlers)
+        document.getElementById('formatSelect').addEventListener('change', function() {
+            changeFormat(this.value);
+        });
+        document.getElementById('nameDisplay').addEventListener('change', function() {
+            changeNameDisplay(this.value);
+        });
+        document.getElementById('closeWindowBtn').addEventListener('click', function() {
+            window.close();
+        });
+        document.getElementById('printPageBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            printPage();
+        });
+        document.getElementById('generatePDFBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            generatePDF();
+        });
+        document.getElementById('copyTableBtn').addEventListener('click', function() {
+            copyTableToClipboard();
+        });
+        document.querySelectorAll('#rosterTable thead th.sortable').forEach(function(th) {
+            th.addEventListener('click', function() {
+                sortRosterTable(parseInt(this.getAttribute('data-column')));
+            });
+        });
     </script>
 </body>
 
