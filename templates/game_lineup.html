@@ -561,11 +561,11 @@
                         <li><a class="dropdown-item" href="#" id="generatePDFBtn">📄 {{ g.t.get('generate_pdf', 'Generate PDF') }}</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">📖 Tolino Shine (6")</h6></li>
-                        <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='tolino') }}">PDF</a></li>
-                        <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_epub', game_id=game.id, device='tolino') }}">EPUB (fixed)</a></li>
+                        <li><a class="dropdown-item ps-4" href="{{ url_for('lineup.download_lineup_pdf', game_id=game.id, device='tolino') }}">PDF</a></li>
+                        <li><a class="dropdown-item ps-4" href="{{ url_for('lineup.download_lineup_epub', game_id=game.id, device='tolino') }}">EPUB (fixed)</a></li>
                         <li><h6 class="dropdown-header">📱 Xteink X4 (4.3")</h6></li>
-                        <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_pdf', game_id=game.id, device='xteink') }}">PDF</a></li>
-                        <li><a class="dropdown-item ps-4" href="{{ url_for('game.download_lineup_epub', game_id=game.id, device='xteink') }}">EPUB (fixed)</a></li>
+                        <li><a class="dropdown-item ps-4" href="{{ url_for('lineup.download_lineup_pdf', game_id=game.id, device='xteink') }}">PDF</a></li>
+                        <li><a class="dropdown-item ps-4" href="{{ url_for('lineup.download_lineup_epub', game_id=game.id, device='xteink') }}">EPUB (fixed)</a></li>
                     </ul>
                 </div>
 
@@ -1173,7 +1173,7 @@
             }, 100);
         }
 
-        const EINK_URL = "{{ url_for('game.view_game_lineup_eink', game_id=game.id) }}";
+        const EINK_URL = "{{ url_for('lineup.view_game_lineup_eink', game_id=game.id) }}";
 
         function changeFormat(format) {
             if (format === 'eink') {

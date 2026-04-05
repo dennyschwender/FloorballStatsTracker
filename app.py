@@ -19,7 +19,7 @@ from models.database import db
 import models  # noqa: F401 — registers GameRecord, RosterPlayer, User, TeamPermission, TeamSettings
 
 # Import route blueprints
-from routes import game_bp, roster_bp, stats_bp, api_bp, admin_bp
+from routes import game_bp, roster_bp, stats_bp, api_bp, admin_bp, lineup_bp, json_bp
 
 # Import shared extensions
 from extensions import limiter
@@ -199,6 +199,8 @@ def create_app():
     app.register_blueprint(stats_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(lineup_bp)
+    app.register_blueprint(json_bp)
 
     return app
 
