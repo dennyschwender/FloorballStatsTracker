@@ -95,8 +95,7 @@
                 </ul>
                 <form class="d-flex order-2 order-lg-1" method="post" action="{{ url_for('set_language_route') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <select name="lang" class="form-select me-2" aria-label="Change language"
-                        onchange="this.form.submit()">
+                    <select name="lang" id="langSelect" class="form-select me-2" aria-label="Change language">
                         <option value="en" {% if g.get('lang', 'en' )=='en' %}selected{% endif %}>{{ g.t['lang_en'] }}
                         </option>
                         <option value="it" {% if g.get('lang', 'en' )=='it' %}selected{% endif %}>{{ g.t['lang_it'] }}
@@ -189,6 +188,9 @@
     </div>
     <script nonce="{{ g.csp_nonce }}">
         // Navbar helpers: reset confirmation and switch games
+        document.getElementById('langSelect').addEventListener('change', function() {
+            this.form.submit();
+        });
         document.addEventListener('DOMContentLoaded', function () {
             // Reset modal handling
             document.querySelectorAll('.reset-game-link').forEach(function (el) {

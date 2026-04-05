@@ -30,13 +30,13 @@
     <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
         {% if games %}
         <form method="get" action="/" class="d-inline-flex gap-2 align-items-center">
-            <select class="form-select form-select-sm w-auto" name="season" onchange="this.form.submit()">
+            <select class="form-select form-select-sm w-auto auto-submit" name="season">
                 <option value="">{{ g.t['all_seasons'] if g.t is defined else 'All Seasons' }}</option>
                 {% for s in seasons %}
                 <option value="{{ s }}" {% if s==selected_season %}selected{% endif %}>{{ s }}</option>
                 {% endfor %}
             </select>
-            <select class="form-select form-select-sm w-auto" name="team" onchange="this.form.submit()">
+            <select class="form-select form-select-sm w-auto auto-submit" name="team">
                 <option value="">{{ g.t['all_teams'] if g.t is defined else 'All Teams' }}</option>
                 {% set teams = games | map(attribute='team') | list | unique | sort %}
                 {% for team in teams %}
@@ -57,11 +57,11 @@
             <thead>
                 <tr>
                     {% if not selected_team %}
-                    <th class="sortable" onclick="sortTable(0)" style="cursor: pointer;">{{ g.t['category'] if g.t is defined else 'Category' }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0" style="cursor: pointer;">{{ g.t['category'] if g.t is defined else 'Category' }} <span class="sort-icon"></span></th>
                     {% endif %}
-                    <th class="sortable" onclick="sortTable({% if not selected_team %}1{% else %}0{% endif %})" style="cursor: pointer;">{{ g.t['date'] if g.t is defined else 'Date' }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortTable({% if not selected_team %}2{% else %}1{% endif %})" style="cursor: pointer;">{{ g.t['home_team'] if g.t is defined else 'Home' }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortTable({% if not selected_team %}3{% else %}2{% endif %})" style="cursor: pointer;">{{ g.t['away_team'] if g.t is defined else 'Away' }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{% if not selected_team %}1{% else %}0{% endif %}" style="cursor: pointer;">{{ g.t['date'] if g.t is defined else 'Date' }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{% if not selected_team %}2{% else %}1{% endif %}" style="cursor: pointer;">{{ g.t['home_team'] if g.t is defined else 'Home' }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{% if not selected_team %}3{% else %}2{% endif %}" style="cursor: pointer;">{{ g.t['away_team'] if g.t is defined else 'Away' }} <span class="sort-icon"></span></th>
                     <th>{{ g.t['actions'] if g.t is defined else 'Actions' }}</th>
                 </tr>
             </thead>
@@ -95,6 +95,16 @@
 </div>
 
 <script nonce="{{ g.csp_nonce }}">
+    document.querySelectorAll('.auto-submit').forEach(function(el) {
+        el.addEventListener('change', function() { this.form.submit(); });
+    });
+    document.querySelectorAll('th.sortable').forEach(function(th) {
+        th.addEventListener('click', function() {
+            const col = parseInt(this.getAttribute('data-column'));
+            sortTable(col);
+        });
+    });
+
     let sortDirection = {};
 
     function sortTable(columnIndex) {
