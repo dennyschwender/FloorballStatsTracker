@@ -178,7 +178,7 @@
                 <label for="season" class="form-label mb-0">{{ g.t['season'] }}</label>
             </div>
             <div class="col-auto">
-                <select class="form-select form-select-sm" id="season" name="season" onchange="this.form.submit()">
+                <select class="form-select form-select-sm auto-submit" id="season" name="season">
                     <option value="">{{ g.t['all_seasons'] }}</option>
                     {% for s in seasons %}
                     <option value="{{ s }}" {% if s==selected_season %}selected{% endif %}>{{ s }}</option>
@@ -189,7 +189,7 @@
                 <label for="team" class="form-label mb-0">{{ g.t['category'] }}</label>
             </div>
             <div class="col-auto">
-                <select class="form-select form-select-sm" id="team" name="team" onchange="this.form.submit()">
+                <select class="form-select form-select-sm auto-submit" id="team" name="team">
                     <option value="">{{ g.t['all'] }}</option>
                     {% for t in teams %}
                     <option value="{{ t }}" {% if t==selected_team %}selected{% endif %}>{{ t }}</option>
@@ -200,7 +200,7 @@
                 <label for="last_n_games" class="form-label mb-0">{{ g.t.get('last_games', 'Last') }}</label>
             </div>
             <div class="col-auto">
-                <select class="form-select form-select-sm" id="last_n_games" name="last_n_games" onchange="this.form.submit()">
+                <select class="form-select form-select-sm auto-submit" id="last_n_games" name="last_n_games">
                     <option value="" {% if not last_n_games %}selected{% endif %}>{{ g.t.get('all_games', 'All') }}</option>
                     <option value="3" {% if last_n_games == '3' %}selected{% endif %}>3</option>
                     <option value="5" {% if last_n_games == '5' %}selected{% endif %}>5</option>
@@ -209,8 +209,8 @@
             </div>
             <div class="col-auto">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="hide_zero_stats" name="hide_zero_stats" 
-                           value="true" {% if hide_zero_stats %}checked{% endif %} onchange="this.form.submit()">
+                    <input class="form-check-input auto-submit" type="checkbox" id="hide_zero_stats" name="hide_zero_stats"
+                           value="true" {% if hide_zero_stats %}checked{% endif %}>
                     <label class="form-check-label" for="hide_zero_stats">
                         {{ g.t['hide_zeros'] }}
                     </label>
@@ -218,8 +218,8 @@
             </div>
             <div class="col-auto">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="hide_future_games" name="hide_future_games" 
-                           value="true" {% if hide_future_games %}checked{% endif %} onchange="this.form.submit()">
+                    <input class="form-check-input auto-submit" type="checkbox" id="hide_future_games" name="hide_future_games"
+                           value="true" {% if hide_future_games %}checked{% endif %}>
                     <label class="form-check-label" for="hide_future_games">
                         {{ g.t['hide_future_games'] }}
                     </label>
@@ -228,8 +228,8 @@
         </div>
     </form>
     <div class="d-flex gap-2 mb-3">
-        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAllSections(true)">{{ g.t.get('expand_all', 'Expand All') }}</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAllSections(false)">{{ g.t.get('collapse_all', 'Collapse All') }}</button>
+        <button type="button" id="expandAllBtn" class="btn btn-outline-secondary btn-sm">{{ g.t.get('expand_all', 'Expand All') }}</button>
+        <button type="button" id="collapseAllBtn" class="btn btn-outline-secondary btn-sm">{{ g.t.get('collapse_all', 'Collapse All') }}</button>
     </div>
     <h3>{{ g.t['game_score'] }}</h3>
     <div class="stat-info-box">
@@ -239,15 +239,15 @@
         <table class="table table-bordered align-middle text-center" id="gameScoreTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('gameScoreTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('gameScoreTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -295,15 +295,15 @@
         <table class="table table-bordered align-middle text-center" id="goalsAssistsTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('goalsAssistsTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('goalsAssistsTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -339,15 +339,15 @@
         <table class="table table-bordered align-middle text-center" id="plusMinusTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('plusMinusTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('plusMinusTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('plusMinusTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('plusMinusTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('plusMinusTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -380,15 +380,15 @@
         <table class="table table-bordered align-middle text-center" id="unforcedErrorsTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('unforcedErrorsTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -421,15 +421,15 @@
         <table class="table table-bordered align-middle text-center" id="shotsOnGoalTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('shotsOnGoalTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -462,15 +462,15 @@
         <table class="table table-bordered align-middle text-center" id="blockShotsTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('blockShotsTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('blockShotsTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('blockShotsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('blockShotsTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('blockShotsTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -503,15 +503,15 @@
         <table class="table table-bordered align-middle text-center" id="stolenBallsTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('stolenBallsTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('stolenBallsTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('stolenBallsTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('stolenBallsTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('stolenBallsTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -544,15 +544,15 @@
         <table class="table table-bordered align-middle text-center" id="penaltiesTakenTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('penaltiesTakenTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -585,15 +585,15 @@
         <table class="table table-bordered align-middle text-center" id="penaltiesDrawnTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', 0)" style="cursor: pointer;">{{ g.t['player'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['player'] }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t['total'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('penaltiesDrawnTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t['total'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('avg_per_game', 'Avg/Game') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -627,16 +627,16 @@
         <table class="table table-bordered align-middle text-center" id="goalieTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th class="sortable" onclick="sortStatsTable('goalieTable', 0)" style="cursor: pointer;">{{ g.t['goalie'] if g.t is defined else 'Goalie' }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="0">{{ g.t['goalie'] if g.t is defined else 'Goalie' }} <span class="sort-icon"></span></th>
                     {% for game in games %}
-                    <th class="rotate sortable" onclick="sortStatsTable('goalieTable', {{ loop.index }})" style="cursor: pointer;">
+                    <th class="rotate sortable" data-column="{{ loop.index }}">
                         <div>{{ format_date(game.date) }} - {{ game.home_team }} vs {{ game.away_team }} <span class="sort-icon"></span></div>
                     </th>
                     {% endfor %}
-                    <th class="sortable" onclick="sortStatsTable('goalieTable', {{ games|length + 1 }})" style="cursor: pointer;">{{ g.t.get('total_shots', 'Shots') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('goalieTable', {{ games|length + 2 }})" style="cursor: pointer;">{{ g.t.get('goals_conceded', 'Goals') }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('goalieTable', {{ games|length + 3 }})" style="cursor: pointer;">{{ g.t['average'] }} <span class="sort-icon"></span></th>
-                    <th class="sortable" onclick="sortStatsTable('goalieTable', {{ games|length + 4 }})" style="cursor: pointer;">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 1 }}">{{ g.t.get('total_shots', 'Shots') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 2 }}">{{ g.t.get('goals_conceded', 'Goals') }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 3 }}">{{ g.t['average'] }} <span class="sort-icon"></span></th>
+                    <th class="sortable" data-column="{{ games|length + 4 }}">{{ g.t.get('median', 'Median') }} <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -764,7 +764,34 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', initStatCollapses);
+    document.addEventListener('DOMContentLoaded', function() {
+        initStatCollapses();
+
+        // Auto-submit form elements
+        document.querySelectorAll('.auto-submit').forEach(function(el) {
+            el.addEventListener('change', function() { this.form.submit(); });
+        });
+
+        // Expand/Collapse all buttons
+        var expandAllBtn = document.getElementById('expandAllBtn');
+        if (expandAllBtn) {
+            expandAllBtn.addEventListener('click', function() { toggleAllSections(true); });
+        }
+        var collapseAllBtn = document.getElementById('collapseAllBtn');
+        if (collapseAllBtn) {
+            collapseAllBtn.addEventListener('click', function() { toggleAllSections(false); });
+        }
+
+        // Sortable table headers (event delegation)
+        document.querySelectorAll('.sortable').forEach(function(th) {
+            th.addEventListener('click', function() {
+                var table = this.closest('table');
+                if (!table) return;
+                var col = parseInt(this.getAttribute('data-column'), 10);
+                sortStatsTable(table.id, col);
+            });
+        });
+    });
     // ──────────────────────────────────────────────────────────────────────────
 
     function sortStatsTable(tableId, columnIndex) {
