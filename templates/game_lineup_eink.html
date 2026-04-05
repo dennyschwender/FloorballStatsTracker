@@ -336,7 +336,7 @@
     <!-- Top bar -->
     <div id="topbar">
         <span class="game-title">{{ game.home_team }} — {{ game.away_team }}</span>
-        <button id="name-toggle" onclick="toggleNames()" title="Switch full names / nicknames">Full</button>
+        <button id="name-toggle" title="Switch full names / nicknames">Full</button>
         <span class="page-indicator" id="top-indicator">1 / {{ total_pages }}</span>
     </div>
 
@@ -459,12 +459,12 @@
 
     <!-- Navigation bar -->
     <div id="navbar">
-        <button id="btn-prev" onclick="goPage(-1)" disabled>&#8592;</button>
+        <button id="btn-prev" disabled>&#8592;</button>
         <div class="page-label">
             <div class="pname-label" id="nav-section-name">Game Info</div>
             <div class="pnum-label" id="nav-page-num">1 / {{ total_pages }}</div>
         </div>
-        <button id="btn-next" onclick="goPage(1)">&#8594;</button>
+        <button id="btn-next">&#8594;</button>
     </div>
 
     <!-- Download bar -->
@@ -547,6 +547,10 @@
     }
 
     updateNav();
+
+    document.getElementById('btn-prev').addEventListener('click', function() { goPage(-1); });
+    document.getElementById('btn-next').addEventListener('click', function() { goPage(1); });
+    document.getElementById('name-toggle').addEventListener('click', function() { toggleNames(); });
 </script>
 </body>
 </html>
