@@ -2,6 +2,7 @@
 Statistics calculation for player and goalie performance metrics
 """
 from statistics import median, mean, pstdev, StatisticsError
+from itertools import combinations
 from config import PERIODS
 
 
@@ -478,3 +479,163 @@ def calculate_player_trends(games, players=None):
         }
 
     return result
+
+
+def calculate_lineup_combinations(games, combo_size_range=(5, 7), limit=10):
+    """
+    Identify core player combinations and their performance metrics.
+
+    Args:
+        games: List of game dicts (filtered by season/team)
+        combo_size_range: Tuple (min_size, max_size) for combo sizes (default: 5-7)
+        limit: Max combos to return per combo size (default: 10)
+
+    Returns:
+        List of combo dicts sorted by avg_aggregate_game_score descending:
+        [{
+            "combo_id": "combo_1",
+            "players": ["7 - Player Seven", "12 - Player Twelve", ...],
+            "combo_size": 5,
+            "games_played_together": 12,
+            "wins": 9,
+            "losses": 3,
+            "win_percentage": 75.0,
+            "avg_goal_differential": 2.1,
+            "avg_aggregate_game_score": 42.3,
+            "game_ids": [1, 2, 4, 5, ...]
+        }]
+    """
+    # Handle empty games list
+    if not games:
+        return []
+
+    # Get all unique players from games and calculate their total game scores
+    player_total_scores = {}
+    for game in games:
+        game_scores = game.get('game_scores', {})
+        for player, score in game_scores.items():
+            if player not in player_total_scores:
+                player_total_scores[player] = 0
+            player_total_scores[player] += score
+
+    # If no players found, return empty list
+    if not player_total_scores:
+        return []
+
+    # Sort players by total game score (descending)
+    sorted_players = sorted(player_total_scores.items(), key=lambda x: x[1], reverse=True)
+    all_players = [player for player, _ in sorted_players]
+
+    results = []
+    combo_id_counter = 1
+
+    min_size, max_size = combo_size_range
+
+    # Process each combo size
+    for combo_size in range(min_size, max_size + 1):
+        # Generate combinations of this size from top players
+        # We need enough players to form combos
+        if len(all_players) < combo_size:
+            continue
+
+        combos_for_size = []
+
+        # Generate all combinations of this size
+        for combo_tuple in combinations(all_players, combo_size):
+            combo_players = list(combo_tuple)
+            combo_player_set = set(combo_players)
+
+            # Find games where ALL players in combo were present
+            games_played_together = []
+
+            for game in games:
+                game_scores = game.get('game_scores', {})
+                # Check if all combo players are in this game's game_scores
+                if all(player in game_scores for player in combo_players):
+                    games_played_together.append(game)
+
+            # Calculate metrics for games where all players were together
+            if games_played_together:
+                wins = 0
+                losses = 0
+                goal_differentials = []
+                aggregate_scores = []
+                game_ids = []
+
+                for game in games_played_together:
+                    game_ids.append(game['id'])
+
+                    # Calculate final team and opponent goals from result field
+                    result = game.get('result', {})
+                    team_goals = 0
+                    opponent_goals = 0
+
+                    # Sum goals from all periods (1, 2, 3, OT)
+                    for period in ['1', '2', '3', 'OT']:
+                        if period in result:
+                            team_goals += result[period].get('home', 0)
+                            opponent_goals += result[period].get('away', 0)
+
+                    # Count wins/losses
+                    if team_goals > opponent_goals:
+                        wins += 1
+                    elif team_goals < opponent_goals:
+                        losses += 1
+
+                    # Calculate goal differential
+                    goal_diff = team_goals - opponent_goals
+                    goal_differentials.append(goal_diff)
+
+                    # Calculate aggregate game score for this combo in this game
+                    game_scores = game.get('game_scores', {})
+                    combo_game_score = sum(game_scores.get(player, 0) for player in combo_players)
+                    aggregate_scores.append(combo_game_score)
+
+                # Calculate averages
+                avg_goal_differential = mean(goal_differentials) if goal_differentials else 0
+                avg_aggregate_game_score = mean(aggregate_scores) if aggregate_scores else 0
+
+                # Calculate win percentage
+                games_count = len(games_played_together)
+                if games_count > 0:
+                    win_percentage = (wins / games_count) * 100
+                else:
+                    win_percentage = 0
+            else:
+                # Combo never played together
+                wins = 0
+                losses = 0
+                avg_goal_differential = 0
+                avg_aggregate_game_score = 0
+                win_percentage = 0
+                game_ids = []
+
+            # Build combo result dict
+            combo_result = {
+                'combo_id': f'combo_{combo_id_counter}',
+                'players': sorted(combo_players),  # Sort player names for consistency
+                'combo_size': combo_size,
+                'games_played_together': len(games_played_together),
+                'wins': wins,
+                'losses': losses,
+                'win_percentage': win_percentage,
+                'avg_goal_differential': avg_goal_differential,
+                'avg_aggregate_game_score': avg_aggregate_game_score,
+                'game_ids': game_ids
+            }
+
+            combos_for_size.append(combo_result)
+            combo_id_counter += 1
+
+        # Sort combos for this size by avg_aggregate_game_score descending
+        combos_for_size.sort(
+            key=lambda x: x['avg_aggregate_game_score'],
+            reverse=True
+        )
+
+        # Limit to specified number
+        combos_for_size = combos_for_size[:limit]
+
+        results.extend(combos_for_size)
+
+    return results
