@@ -3,6 +3,7 @@ API endpoints blueprint
 """
 from flask import Blueprint, request, jsonify
 from models.roster import get_all_categories_with_rosters, load_roster
+from services.stats_service import calculate_player_trends, calculate_lineup_combinations
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -123,4 +124,110 @@ def chart_data():
     return jsonify({
         'players': players_input,
         'games': result_games,
+    }), 200
+
+
+@api_bp.route('/player-trends', methods=['GET'])
+def player_trends():
+    """Return player performance trends for selected players.
+
+    Query parameters:
+    - season (required): Season name like "2025-26"
+    - team (required): Team/category like "U21"
+    - players (required): Comma-separated list of player names
+
+    Returns JSON with player trends including game scores, statistics, and outliers.
+    """
+    from services.game_service import load_games
+
+    # 1. Validate required parameters
+    season = request.args.get('season', '').strip()
+    team = request.args.get('team', '').strip()
+    players_param = request.args.get('players', '').strip()
+
+    # Return 400 for missing required parameters
+    if not season:
+        return jsonify({'error': 'season parameter is required'}), 400
+    if not team:
+        return jsonify({'error': 'team parameter is required'}), 400
+    if not players_param:
+        return jsonify({'error': 'players parameter is required'}), 400
+
+    # Parse comma-separated player list
+    players_list = [p.strip() for p in players_param.split(',') if p.strip()]
+    if not players_list:
+        return jsonify({'error': 'players parameter cannot be empty'}), 400
+
+    # 2. Load and filter games
+    games = load_games()
+    filtered_games = [g for g in games if g.get('season') == season and g.get('team') == team]
+
+    # 3. Calculate player trends
+    trends_result = calculate_player_trends(filtered_games, players=players_list)
+
+    # 4. Return response
+    return jsonify({
+        'success': True,
+        'data': trends_result
+    }), 200
+
+
+@api_bp.route('/lineup-combos', methods=['GET'])
+def lineup_combos():
+    """Return lineup combination analysis for the specified season and team.
+
+    Query parameters:
+    - season (required): Season name like "2025-26"
+    - team (required): Team/category like "U21"
+    - combo_size_range (optional): Comma-separated min,max (default "5,7")
+    - limit (optional): Max combos per size (default 10)
+
+    Returns JSON with lineup combinations and their performance metrics.
+    """
+    from services.game_service import load_games
+
+    # 1. Validate required parameters
+    season = request.args.get('season', '').strip()
+    team = request.args.get('team', '').strip()
+
+    # Return 400 for missing required parameters
+    if not season:
+        return jsonify({'error': 'season parameter is required'}), 400
+    if not team:
+        return jsonify({'error': 'team parameter is required'}), 400
+
+    # 2. Parse optional parameters
+    combo_size_range_str = request.args.get('combo_size_range', '5,7').strip()
+    limit_str = request.args.get('limit', '10').strip()
+
+    # Parse combo_size_range
+    try:
+        combo_parts = combo_size_range_str.split(',')
+        if len(combo_parts) != 2:
+            return jsonify({'error': 'combo_size_range must be format "min,max"'}), 400
+        min_size = int(combo_parts[0].strip())
+        max_size = int(combo_parts[1].strip())
+        combo_size_range = (min_size, max_size)
+    except ValueError:
+        return jsonify({'error': 'combo_size_range values must be integers'}), 400
+
+    # Parse limit
+    try:
+        limit = int(limit_str)
+        if limit < 1:
+            return jsonify({'error': 'limit must be at least 1'}), 400
+    except ValueError:
+        return jsonify({'error': 'limit must be an integer'}), 400
+
+    # 3. Load and filter games
+    games = load_games()
+    filtered_games = [g for g in games if g.get('season') == season and g.get('team') == team]
+
+    # 4. Calculate lineup combinations
+    combos_result = calculate_lineup_combinations(filtered_games, combo_size_range=combo_size_range, limit=limit)
+
+    # 5. Return response
+    return jsonify({
+        'success': True,
+        'data': combos_result
     }), 200
