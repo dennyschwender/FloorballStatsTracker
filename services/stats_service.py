@@ -633,9 +633,15 @@ def calculate_lineup_combinations(games, combo_size_range=(5, 7), limit=10):
             reverse=True
         )
 
-        # Limit to specified number
-        combos_for_size = combos_for_size[:limit]
+        # Limit to specified number per combo size
+        combos_for_size_limited = combos_for_size[:limit]
 
-        results.extend(combos_for_size)
+        results.extend(combos_for_size_limited)
+
+    # Sort all results by avg_aggregate_game_score descending (across all combo sizes)
+    results.sort(
+        key=lambda x: x['avg_aggregate_game_score'],
+        reverse=True
+    )
 
     return results
