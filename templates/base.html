@@ -210,11 +210,11 @@
                 confirmBtn.addEventListener('click', function (e) {
                     var resetUrl = confirmBtn.getAttribute('data-reset-url');
                     // Validate URL only accepts relative paths (starts with /)
-                    if (resetUrl && resetUrl !== '#' && resetUrl.startsWith('/')) {
+                    if (resetUrl && resetUrl !== '#' && /^\/[^\s]*$/.test(resetUrl)) {
+                        // URL validated: must start with / and contain no whitespace
                         var form = document.createElement('form');
                         form.method = 'POST';
-                        // Safe to use: URL has been validated as relative path
-                        form.action = resetUrl;
+                        form.setAttribute('action', resetUrl);
                         var csrfInput = document.createElement('input');
                         csrfInput.type = 'hidden';
                         csrfInput.name = 'csrf_token';
