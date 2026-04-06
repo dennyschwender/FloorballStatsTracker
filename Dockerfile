@@ -1,5 +1,5 @@
-# Use official Python image
-FROM python:3.11-slim
+# Use official Python image (latest security patches)
+FROM python:3.12-slim
 
 # Set work directory
 WORKDIR /app
