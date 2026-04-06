@@ -1,16 +1,16 @@
 # Minimal runtime requirements for the Floorball Stats Tracker
-# Strict version pinning for security compliance (CVE-2024-56201, CVE-2024-56326, CVE-2024-34069)
+# Pinned to specific secure versions (CVE-2024-56201, CVE-2024-56326, CVE-2024-34069)
 
-Flask>=3.1.0
-Flask-WTF>=1.2.1
-Flask-SQLAlchemy>=3.1.1
-Flask-Limiter>=3.7.0
-python-dotenv>=1.0.1
-gunicorn>=22.0.0
-reportlab>=4.0.9
-Werkzeug>=3.0.3
-Jinja2>=3.1.5
-markupsafe>=2.1.5
-click>=8.1.0
-itsdangerous>=2.1.0
-SQLAlchemy>=2.0.0
+Flask==3.1.0
+Flask-WTF==1.2.1
+Flask-SQLAlchemy==3.1.1
+Flask-Limiter==3.8.1
+python-dotenv==1.0.1
+gunicorn==22.0.0
+reportlab==4.2.0
+Werkzeug==3.0.3
+Jinja2==3.1.5
+markupsafe==2.1.5
+click==8.1.7
+itsdangerous==2.1.2
+SQLAlchemy==2.0.29
