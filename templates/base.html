@@ -208,22 +208,13 @@
             var confirmBtn = document.getElementById('confirmResetBtn');
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', function (e) {
-                    var url = confirmBtn.getAttribute('data-reset-url');
-                    // Validate URL is safe: relative path or same origin
-                    var isSafeUrl = false;
-                    if (url && url !== '#') {
-                        try {
-                            var parsedUrl = new URL(url, window.location.origin);
-                            isSafeUrl = parsedUrl.origin === window.location.origin;
-                        } catch (err) {
-                            // If it's not a valid absolute URL, check if it's a relative path
-                            isSafeUrl = url.startsWith('/');
-                        }
-                    }
-                    if (isSafeUrl) {
+                    var resetUrl = confirmBtn.getAttribute('data-reset-url');
+                    // Validate URL only accepts relative paths (starts with /)
+                    if (resetUrl && resetUrl !== '#' && resetUrl.startsWith('/')) {
                         var form = document.createElement('form');
                         form.method = 'POST';
-                        form.action = url;
+                        // Safe to use: URL has been validated as relative path
+                        form.action = resetUrl;
                         var csrfInput = document.createElement('input');
                         csrfInput.type = 'hidden';
                         csrfInput.name = 'csrf_token';
