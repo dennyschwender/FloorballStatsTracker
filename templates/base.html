@@ -209,8 +209,18 @@
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', function (e) {
                     var url = confirmBtn.getAttribute('data-reset-url');
-                    // Validate URL is relative (starts with /) or matches current origin
-                    if (url && url !== '#' && (url.startsWith('/') || url.startsWith(window.location.origin))) {
+                    // Validate URL is safe: relative path or same origin
+                    var isSafeUrl = false;
+                    if (url && url !== '#') {
+                        try {
+                            var parsedUrl = new URL(url, window.location.origin);
+                            isSafeUrl = parsedUrl.origin === window.location.origin;
+                        } catch (err) {
+                            // If it's not a valid absolute URL, check if it's a relative path
+                            isSafeUrl = url.startsWith('/');
+                        }
+                    }
+                    if (isSafeUrl) {
                         var form = document.createElement('form');
                         form.method = 'POST';
                         form.action = url;
