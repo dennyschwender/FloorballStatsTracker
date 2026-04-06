@@ -209,7 +209,8 @@
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', function (e) {
                     var url = confirmBtn.getAttribute('data-reset-url');
-                    if (url && url !== '#') {
+                    // Validate URL is relative (starts with /) or matches current origin
+                    if (url && url !== '#' && (url.startsWith('/') || url.startsWith(window.location.origin))) {
                         var form = document.createElement('form');
                         form.method = 'POST';
                         form.action = url;
@@ -228,8 +229,8 @@
             var switchEl = document.getElementById('navbar-game-switch');
             if (switchEl) {
                 switchEl.addEventListener('change', function () {
-                    if (this.value) {
-                        window.location.href = '{{ url_for("game.game_details", game_id=0) }}'.replace('/0', '/' + this.value);
+                    if (this.value && /^\d+$/.test(this.value)) {
+                        window.location.href = '{{ url_for("game.game_details", game_id=0) }}'.replace('/0', '/' + encodeURIComponent(this.value));
                     }
                 });
             }
@@ -237,8 +238,8 @@
             var switchMobile = document.getElementById('navbar-game-switch-mobile');
             if (switchMobile) {
                 switchMobile.addEventListener('change', function () {
-                    if (this.value) {
-                        window.location.href = '{{ url_for("game.game_details", game_id=0) }}'.replace('/0', '/' + this.value);
+                    if (this.value && /^\d+$/.test(this.value)) {
+                        window.location.href = '{{ url_for("game.game_details", game_id=0) }}'.replace('/0', '/' + encodeURIComponent(this.value));
                     }
                 });
             }
