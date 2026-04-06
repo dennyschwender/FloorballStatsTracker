@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   test:
@@ -17,6 +18,11 @@ jobs:
         python-version: ["3.11", "3.10"]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'javascript-typescript,python'
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -40,3 +46,6 @@ jobs:
       - name: Run tests
         run: |
           python -m pytest -q
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
