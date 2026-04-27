@@ -2,7 +2,7 @@
 # Use with a virtual environment and tools like pip-compile for pinning.
 
 pytest>=7.4.0,<10.0
-pip-tools>=7.3.0,<8.0
+pip-tools>=7.5.3,<8.0
 pip-audit>=2.6.1,<3.0
 black>=26.3.1,<27.0
 ruff>=0.2.0,<0.3
