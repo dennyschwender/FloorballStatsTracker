@@ -103,15 +103,11 @@ def test_last_game_lineup_wrong_category(client):
 
 
 def test_last_game_lineup_requires_auth():
-    """Unauthenticated request is denied (redirect to login or 401)."""
-    flask_app.config['TESTING'] = True
-    flask_app.config['WTF_CSRF_ENABLED'] = False
+    """Unauthenticated request is redirected (302) by the global before_request hook."""
     with flask_app.test_client() as unauthed:
         with flask_app.app_context():
             rv = unauthed.get(
                 '/api/last_game_lineup?season=2025-26&category=U21',
                 follow_redirects=False,
             )
-            # The app's global before_request hook redirects unauthenticated
-            # requests (302). The route-level check would return 401 if reached.
-            assert rv.status_code in (401, 302)
+            assert rv.status_code == 302

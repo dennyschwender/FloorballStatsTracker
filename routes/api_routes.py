@@ -1,7 +1,7 @@
 """
 API endpoints blueprint
 """
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 from models.roster import get_all_categories_with_rosters, load_roster
 from services.stats_service import calculate_player_trends, calculate_lineup_combinations
 
@@ -243,9 +243,6 @@ def last_game_lineup():
 
     Requires authenticated session.
     """
-    if not session.get('authenticated'):
-        return jsonify({'error': 'unauthorized'}), 401
-
     season = request.args.get('season', '').strip()
     category = request.args.get('category', '').strip()
 
