@@ -11,6 +11,7 @@ from services.game_service import (
     delete_game_by_id,
 )
 from services.stats_service import recalculate_game_scores
+from services import undo_store
 from models.roster import load_roster, get_all_seasons
 from utils.auth_helpers import require_edit, require_manage
 from extensions import limiter
@@ -456,6 +457,7 @@ def player_action(game_id, player):
     if not game:
         abort(404)
     require_edit(game)
+    undo_store.push(game_id, game)
     
     # Track stats in dicts on the game object
     ensure_game_stats(game)
@@ -555,6 +557,7 @@ def line_action(game_id, line_idx):
     if not game:
         abort(404)
     require_edit(game)
+    undo_store.push(game_id, game)
     if line_idx < 0 or line_idx >= len(game['lines']):
         return "Line not found", 404
     
@@ -619,6 +622,7 @@ def goalie_action(game_id, goalie):
     if not game:
         abort(404)
     require_edit(game)
+    undo_store.push(game_id, game)
     
     # Initialize goalie stats if not present
     for stat in ['goalie_plusminus', 'saves', 'goals_conceded', 'assists']:
@@ -682,6 +686,7 @@ def opponent_goalie_action(game_id):
     if not game:
         abort(404)
     require_edit(game)
+    undo_store.push(game_id, game)
 
     # Always use "Opponent Goalie" as the key
     opponent_goalie = "Opponent Goalie"
@@ -732,6 +737,27 @@ def opponent_goalie_action(game_id):
         return redirect(url_for('game.game_details', game_id=game_id, edit=1))
     return redirect(url_for('game.game_details', game_id=game_id))
 
+
+
+
+@game_bp.route('/undo/<int:game_id>')
+def undo_action(game_id):
+    """Restore game stats to the state before the last action."""
+    games = load_games()
+    game = find_game_by_id(games, game_id)
+    if not game:
+        abort(404)
+    require_edit(game)
+
+    snapshot = undo_store.pop(game_id)
+    if snapshot is None:
+        return jsonify({'ok': False, 'error': 'nothing_to_undo'})
+
+    for field, value in snapshot.items():
+        game[field] = value
+
+    save_games(games)
+    return jsonify(_game_stats_response(game))
 
 @game_bp.route('/reset_game/<int:game_id>', methods=['POST'])
 def reset_game(game_id):
