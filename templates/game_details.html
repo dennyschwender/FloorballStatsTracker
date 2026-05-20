@@ -104,7 +104,7 @@
     <div class="mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
             <h1 class="mb-2 mb-md-0" style="font-size:1.2rem;">{{ game.home_team }} vs {{ game.away_team }}</h1>
-            <div class="result-summary bg-light border rounded px-3 py-2 ms-md-3" style="min-width: 320px;">
+            <div id="score-summary" class="result-summary bg-light border rounded px-3 py-2 ms-md-3" style="min-width: 320px;">
                 {% set periods = ['1', '2', '3', 'OT'] %}
                 {% set home_total = namespace(val=0) %}
                 {% set away_total = namespace(val=0) %}
@@ -263,9 +263,9 @@
                         <div class="d-flex flex-column gap-2">
                             <span>{{ g.t['line'] }} {{ line_idx + 1 }}</span>
                             <a href="/action_line/{{ game_id }}/{{ line_idx }}?action=plus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-success btn-sm mb-1 line-action d-none">{{ g.t['plus_all'] }}</a>
+                                class="btn btn-success btn-sm mb-1 line-action d-none ajax-action">{{ g.t['plus_all'] }}</a>
                             <a href="/action_line/{{ game_id }}/{{ line_idx }}?action=minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-danger btn-sm mb-1 line-action d-none">{{ g.t['minus_all'] }}</a>
+                                class="btn btn-danger btn-sm mb-1 line-action d-none ajax-action">{{ g.t['minus_all'] }}</a>
                         </div>
                     </td>
                     {% endif %}
@@ -276,23 +276,23 @@
                             {{ player }}
                         </span>
                     </td>
-                    <td class="text-center"><span class="fw-bold">{{ game.plusminus[player] if game.plusminus and player
+                    <td class="text-center" data-player="{{ player }}" data-stat="plusminus"><span class="fw-bold">{{ game.plusminus[player] if game.plusminus and player
                             in game.plusminus else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.goals[player] if game.goals and player in
+                    <td class="text-center" data-player="{{ player }}" data-stat="goals"><span class="fw-bold">{{ game.goals[player] if game.goals and player in
                             game.goals else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.assists[player] if game.assists and player in
+                    <td class="text-center" data-player="{{ player }}" data-stat="assists"><span class="fw-bold">{{ game.assists[player] if game.assists and player in
                             game.assists else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.unforced_errors[player] if
+                    <td class="text-center" data-player="{{ player }}" data-stat="unforced_errors"><span class="fw-bold">{{ game.unforced_errors[player] if
                             game.unforced_errors and player in game.unforced_errors else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.shots_on_goal[player] if
+                    <td class="text-center" data-player="{{ player }}" data-stat="shots_on_goal"><span class="fw-bold">{{ game.shots_on_goal[player] if
                             game.shots_on_goal and player in game.shots_on_goal else 0 }}</span></td>
-                    <td class="text-center stat-secondary"><span class="fw-bold">{{ game.penalties_taken[player] if
+                    <td class="text-center stat-secondary" data-player="{{ player }}" data-stat="penalties_taken"><span class="fw-bold">{{ game.penalties_taken[player] if
                             game.penalties_taken and player in game.penalties_taken else 0 }}</span></td>
-                    <td class="text-center stat-secondary"><span class="fw-bold">{{ game.penalties_drawn[player] if
+                    <td class="text-center stat-secondary" data-player="{{ player }}" data-stat="penalties_drawn"><span class="fw-bold">{{ game.penalties_drawn[player] if
                             game.penalties_drawn and player in game.penalties_drawn else 0 }}</span></td>
-                    <td class="text-center stat-secondary"><span class="fw-bold">{{ game.block_shots[player] if
+                    <td class="text-center stat-secondary" data-player="{{ player }}" data-stat="block_shots"><span class="fw-bold">{{ game.block_shots[player] if
                             game.block_shots and player in game.block_shots else 0 }}</span></td>
-                    <td class="text-center stat-secondary"><span class="fw-bold">{{ game.stolen_balls[player] if
+                    <td class="text-center stat-secondary" data-player="{{ player }}" data-stat="stolen_balls"><span class="fw-bold">{{ game.stolen_balls[player] if
                             game.stolen_balls and player in game.stolen_balls else 0 }}</span></td>
                     <td class="text-center view-mode-col">
                         {% if game.game_scores and player in game.game_scores %}
@@ -305,11 +305,11 @@
                         <div class="btn-group btn-group-sm action-buttons d-none" role="group">
                             <!-- Quick action buttons always visible -->
                             <a href="/action/{{ game_id }}/{{ player }}?action=goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-primary quick-action-btn" title="{{ g.t['goal'] }}">⚽</a>
+                                class="btn btn-primary quick-action-btn ajax-action" title="{{ g.t['goal'] }}">⚽</a>
                             <a href="/action/{{ game_id }}/{{ player }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-info quick-action-btn" title="{{ g.t['assists'] }}">👍</a>
+                                class="btn btn-info quick-action-btn ajax-action" title="{{ g.t['assists'] }}">👍</a>
                             <a href="/action/{{ game_id }}/{{ player }}?action=shot_on_goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-success quick-action-btn" title="{{ g.t['sog'] }}">🎯</a>
+                                class="btn btn-success quick-action-btn ajax-action" title="{{ g.t['sog'] }}">🎯</a>
                             
                             <!-- Dropdown for additional actions -->
                             <div class="btn-group btn-group-sm" role="group">
@@ -321,52 +321,52 @@
                                     style="min-width: 160px; overflow: visible; max-height: none;">
                                     <div class="d-flex gap-1 mb-2">
                                         <a href="/action/{{ game_id }}/{{ player }}?action=plus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-success btn-sm flex-fill">+1</a>
+                                            class="btn btn-success btn-sm flex-fill ajax-action">+1</a>
                                         <a href="/action/{{ game_id }}/{{ player }}?action=minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-danger btn-sm flex-fill">-1</a>
+                                            class="btn btn-danger btn-sm flex-fill ajax-action">-1</a>
                                     </div>
                                     <hr class="dropdown-divider my-1">
                                     <div class="d-flex gap-1 mb-2">
                                         <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-warning btn-sm flex-fill">{{ g.t['errors'] }}</a>
+                                            class="btn btn-warning btn-sm flex-fill ajax-action">{{ g.t['errors'] }}</a>
                                         <a href="/action/{{ game_id }}/{{ player }}?action=unforced_error_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-warning btn-sm flex-fill">-{{ g.t['errors'] }}</a>
+                                            class="btn btn-outline-warning btn-sm flex-fill ajax-action">-{{ g.t['errors'] }}</a>
                                     </div>
                                     <div class="d-flex gap-1 mb-2">
                                         <a href="/action/{{ game_id }}/{{ player }}?action=assist_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-info btn-sm flex-fill">-{{ g.t['assists'] }}</a>
+                                            class="btn btn-outline-info btn-sm flex-fill ajax-action">-{{ g.t['assists'] }}</a>
                                         <a href="/action/{{ game_id }}/{{ player }}?action=shot_on_goal_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-success btn-sm flex-fill">-{{ g.t['sog'] }}</a>
+                                            class="btn btn-outline-success btn-sm flex-fill ajax-action">-{{ g.t['sog'] }}</a>
                                     </div>
                                     <div class="d-flex gap-1 mb-2">
                                         <a href="/action/{{ game_id }}/{{ player }}?action=goal_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-primary btn-sm flex-fill">-{{ g.t['goal'] }}</a>
+                                            class="btn btn-outline-primary btn-sm flex-fill ajax-action">-{{ g.t['goal'] }}</a>
                                     </div>
                                     <hr class="dropdown-divider my-1">
                                     <div class="d-flex gap-1 mb-1">
                                         <a href="/action/{{ game_id }}/{{ player }}?action=penalty_taken{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-danger btn-sm flex-fill">{{ g.t['penalty_taken'] }}</a>
+                                            class="btn btn-danger btn-sm flex-fill ajax-action">{{ g.t['penalty_taken'] }}</a>
                                         <a href="/action/{{ game_id }}/{{ player }}?action=penalty_taken_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-danger btn-sm flex-fill">-P.T.</a>
+                                            class="btn btn-outline-danger btn-sm flex-fill ajax-action">-P.T.</a>
                                     </div>
                                     <div class="d-flex gap-1 mb-2">
                                         <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-success btn-sm flex-fill">{{ g.t['penalty_drawn'] }}</a>
+                                            class="btn btn-success btn-sm flex-fill ajax-action">{{ g.t['penalty_drawn'] }}</a>
                                         <a href="/action/{{ game_id }}/{{ player }}?action=penalty_drawn_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-success btn-sm flex-fill">-P.D.</a>
+                                            class="btn btn-outline-success btn-sm flex-fill ajax-action">-P.D.</a>
                                     </div>
                                     <hr class="dropdown-divider my-1">
                                     <div class="d-flex gap-1 mb-2">
                                         <a href="/action/{{ game_id }}/{{ player }}?action=block_shot{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-secondary btn-sm flex-fill">{{ g.t.get('block_shots', 'Blk') }}</a>
+                                            class="btn btn-secondary btn-sm flex-fill ajax-action">{{ g.t.get('block_shots', 'Blk') }}</a>
                                         <a href="/action/{{ game_id }}/{{ player }}?action=block_shot_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-secondary btn-sm flex-fill">-Blk</a>
+                                            class="btn btn-outline-secondary btn-sm flex-fill ajax-action">-Blk</a>
                                     </div>
                                     <div class="d-flex gap-1">
                                         <a href="/action/{{ game_id }}/{{ player }}?action=stolen_ball{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-info btn-sm flex-fill">{{ g.t.get('stolen_balls', 'Stl') }}</a>
+                                            class="btn btn-info btn-sm flex-fill ajax-action">{{ g.t.get('stolen_balls', 'Stl') }}</a>
                                         <a href="/action/{{ game_id }}/{{ player }}?action=stolen_ball_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-info btn-sm flex-fill">-Stl</a>
+                                            class="btn btn-outline-info btn-sm flex-fill ajax-action">-Stl</a>
                                     </div>
                                 </div>
                             </div>
@@ -439,9 +439,9 @@
                         <div class="btn-group btn-group-sm goalie-action-buttons d-none" role="group">
                             <!-- Quick action buttons for goalies -->
                             <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-primary quick-action-btn" title="{{ g.t['goalie_save'] }}">🧤</a>
+                                class="btn btn-primary quick-action-btn ajax-action" title="{{ g.t['goalie_save'] }}">🧤</a>
                             <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-danger quick-action-btn" title="{{ g.t['goals_conceded'] }}">⛔</a>
+                                class="btn btn-danger quick-action-btn ajax-action" title="{{ g.t['goals_conceded'] }}">⛔</a>
                             
                             <!-- Dropdown for additional actions -->
                             <div class="btn-group btn-group-sm" role="group">
@@ -453,16 +453,16 @@
                                     style="min-width: 160px; overflow: visible; max-height: none;">
                                     <div class="d-flex gap-1 mb-2">
                                         <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=save_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-primary btn-sm flex-fill">-{{ g.t['goalie_save'] }}</a>
+                                            class="btn btn-outline-primary btn-sm flex-fill ajax-action">-{{ g.t['goalie_save'] }}</a>
                                         <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=goal_conceded_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-danger btn-sm flex-fill">-{{ g.t['goals_conceded'] }}</a>
+                                            class="btn btn-outline-danger btn-sm flex-fill ajax-action">-{{ g.t['goals_conceded'] }}</a>
                                     </div>
                                     <hr class="dropdown-divider my-1">
                                     <div class="d-flex gap-1">
                                         <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-info btn-sm flex-fill">{{ g.t['assists'] }}</a>
+                                            class="btn btn-info btn-sm flex-fill ajax-action">{{ g.t['assists'] }}</a>
                                         <a href="/action_goalie/{{ game_id }}/{{ goalie }}?action=assist_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                            class="btn btn-outline-info btn-sm flex-fill">-{{ g.t['assists'] }}</a>
+                                            class="btn btn-outline-info btn-sm flex-fill ajax-action">-{{ g.t['assists'] }}</a>
                                     </div>
                                 </div>
                             </div>
@@ -517,14 +517,14 @@
                             <div class="dropdown-menu dropdown-menu-end p-2 text-center"
                                 style="min-width: 140px; overflow: visible; max-height: none;">
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=save{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-primary btn-sm my-1">{{ g.t['goalie_save'] }}</a>
+                                    class="btn btn-primary btn-sm my-1 ajax-action">{{ g.t['goalie_save'] }}</a>
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=save_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-primary btn-sm my-1">-{{ g.t['goalie_save'] }}</a>
+                                    class="btn btn-outline-primary btn-sm my-1 ajax-action">-{{ g.t['goalie_save'] }}</a>
                                 <hr class="dropdown-divider">
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=goal_conceded{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-danger btn-sm my-1">{{ g.t['goals_conceded'] }}</a>
+                                    class="btn btn-danger btn-sm my-1 ajax-action">{{ g.t['goals_conceded'] }}</a>
                                 <a href="/action_opponent_goalie/{{ game_id }}?action=goal_conceded_minus{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                    class="btn btn-outline-danger btn-sm my-1">-{{ g.t['goals_conceded'] }}</a>
+                                    class="btn btn-outline-danger btn-sm my-1 ajax-action">-{{ g.t['goals_conceded'] }}</a>
                             </div>
                         </div>
                     </td>
@@ -541,6 +541,167 @@
 {% endblock %}
 
 {% block scripts %}
+<script nonce="{{ g.csp_nonce }}">
+(function () {
+    'use strict';
+
+    var GAME_ID = {{ game_id }};
+
+    // ── Stat cell update ─────────────────────────────────────────────────────
+    function updateStatCells(stats) {
+        Object.keys(stats).forEach(function (field) {
+            var fieldData = stats[field];
+            if (!fieldData || typeof fieldData !== 'object') return;
+            Object.keys(fieldData).forEach(function (player) {
+                var selector = 'td[data-stat="' + CSS.escape(field) + '"][data-player="' + CSS.escape(player) + '"] span';
+                var cell = document.querySelector(selector);
+                if (cell) cell.textContent = String(fieldData[player]);
+            });
+        });
+    }
+
+    // ── Score summary update ─────────────────────────────────────────────────
+    function updateScore(result) {
+        var summary = document.getElementById('score-summary');
+        if (!summary || !result) return;
+        var periods = ['1', '2', '3', 'OT'];
+        var homeTotal = 0, awayTotal = 0, parts = [];
+        periods.forEach(function (p) {
+            var pd = result[p] || {home: 0, away: 0};
+            homeTotal += (pd.home || 0);
+            awayTotal += (pd.away || 0);
+            parts.push((p === 'OT' ? 'OT' : 'P' + p) + ':' + (pd.home || 0) + '-' + (pd.away || 0));
+        });
+        var homeSpan = summary.querySelector('.text-primary');
+        var awaySpan = summary.querySelector('.text-danger');
+        var periodDiv = summary.querySelector('.text-muted');
+        if (homeSpan) homeSpan.textContent = String(homeTotal);
+        if (awaySpan) awaySpan.textContent = String(awayTotal);
+        if (periodDiv) periodDiv.textContent = '(' + parts.join(' | ') + ')';
+    }
+
+    window.updateStatCells = updateStatCells;
+    window.updateScore = updateScore;
+
+    // ── Toast utility ─────────────────────────────────────────────────────────
+    var _toastEl = null;
+    window.showToast = function (msg, type, duration) {
+        if (_toastEl) { _toastEl.remove(); _toastEl = null; }
+        var el = document.createElement('div');
+        el.className = 'alert alert-' + (type || 'info') + ' py-2 px-3 mb-0';
+        el.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:1055;min-width:220px;';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        _toastEl = el;
+        if (duration) {
+            setTimeout(function () { if (_toastEl === el) { el.remove(); _toastEl = null; } }, duration);
+        }
+    };
+
+    // ── Undo toast ────────────────────────────────────────────────────────────
+    var _undoTimer = null;
+    function showUndoToast(actionName) {
+        if (_toastEl) { _toastEl.remove(); _toastEl = null; }
+        if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'alert alert-secondary py-2 px-3 mb-0 d-flex align-items-center gap-3';
+        wrapper.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:1055;min-width:240px;';
+
+        var label = document.createElement('span');
+        label.textContent = '\u238C Undo ' + actionName;
+        wrapper.appendChild(label);
+
+        var undoBtn = document.createElement('button');
+        undoBtn.type = 'button';
+        undoBtn.className = 'btn btn-sm btn-outline-light ms-auto';
+        undoBtn.textContent = 'Undo';
+        wrapper.appendChild(undoBtn);
+
+        var closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'btn-close btn-close-white ms-1';
+        closeBtn.setAttribute('aria-label', 'Close');
+        wrapper.appendChild(closeBtn);
+
+        document.body.appendChild(wrapper);
+        _toastEl = wrapper;
+
+        undoBtn.addEventListener('click', function () {
+            wrapper.remove(); _toastEl = null;
+            if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
+            fetch('/undo/' + GAME_ID, {
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                credentials: 'same-origin'
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    updateStatCells(data.stats);
+                    updateScore(data.result);
+                } else {
+                    window.showToast('Nothing to undo', 'warning', 3000);
+                }
+            });
+        });
+
+        closeBtn.addEventListener('click', function () {
+            wrapper.remove(); _toastEl = null;
+            if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
+        });
+
+        _undoTimer = setTimeout(function () {
+            if (_toastEl === wrapper) { wrapper.remove(); _toastEl = null; }
+            _undoTimer = null;
+        }, 5000);
+    }
+
+    // ── Core action fetch ─────────────────────────────────────────────────────
+    function handleAction(url, btn) {
+        if (btn) { btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
+
+        return fetch(url, {
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            credentials: 'same-origin'
+        })
+        .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        })
+        .then(function (data) {
+            if (!data.ok) throw new Error('Server error');
+            if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+            updateStatCells(data.stats);
+            updateScore(data.result);
+            return data;
+        })
+        .catch(function (err) {
+            if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+            if (window.offlineQueue) {
+                window.offlineQueue.enqueue(url);
+                window.showToast('Offline \u2014 action queued', 'warning', 4000);
+            } else {
+                window.showToast('Action failed \u2014 check connection', 'danger', 4000);
+            }
+            throw err;
+        });
+    }
+
+    // ── Intercept ajax-action clicks ──────────────────────────────────────────
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('a.ajax-action');
+        if (!btn) return;
+        e.preventDefault();
+        var url = btn.getAttribute('href');
+        handleAction(url, btn)
+            .then(function (data) {
+                var params = new URLSearchParams(new URL(url, location.href).search);
+                showUndoToast(params.get('action') || 'action');
+            })
+            .catch(function () {});
+    });
+})();
+</script>
 <script nonce="{{ g.csp_nonce }}">
     // On page load, check for ?edit=1 and show edit mode if present
     document.addEventListener('DOMContentLoaded', function () {
