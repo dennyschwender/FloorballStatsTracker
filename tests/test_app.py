@@ -328,7 +328,7 @@ def test_reset_stats(client):
     assert game['goals'].get('69 - Bazzuri Andrea', 0) > 0
     
     # Reset stats
-    response = client.get(f'/reset_game/{game_id}', follow_redirects=True)
+    response = client.post(f'/reset_game/{game_id}', data={}, follow_redirects=True)
     assert response.status_code == 200
     
     # Verify stats are reset

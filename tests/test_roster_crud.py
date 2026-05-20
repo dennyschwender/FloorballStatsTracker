@@ -70,7 +70,7 @@ def test_roster_delete_player(client):
     save_roster(roster_data, 'TestTeam', '')
     
     # Delete player
-    response = client.get('/roster/delete/1?category=TestTeam', follow_redirects=True)
+    response = client.post('/roster/delete/1?category=TestTeam', data={}, follow_redirects=True)
     assert response.status_code == 200
     
     # Verify player was deleted

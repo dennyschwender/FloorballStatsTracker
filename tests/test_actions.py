@@ -138,7 +138,7 @@ def test_reset_and_delete_game(client):
     saved_games[0] = g
     _write_games(saved_games)
 
-    rv = client.get(f'/reset_game/{game_id_1}', follow_redirects=True)
+    rv = client.post(f'/reset_game/{game_id_1}', data={}, follow_redirects=True)
     assert rv.status_code == 200
     g = _read_games()[0]
     assert g['goals']['P1'] == 0

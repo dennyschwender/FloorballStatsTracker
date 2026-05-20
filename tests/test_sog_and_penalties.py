@@ -154,7 +154,7 @@ def test_reset_game_includes_new_stats(client):
     assert g['penalties_drawn']['P3'] == 1
 
     # Reset game
-    rv = client.get('/reset_game/0', follow_redirects=True)
+    rv = client.post('/reset_game/0', data={}, follow_redirects=True)
     assert rv.status_code == 200
 
     # Verify all stats are reset

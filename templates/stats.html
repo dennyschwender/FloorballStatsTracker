@@ -731,7 +731,7 @@
                     <td>
                         {% set save_pct = game.save_percentages.get(goalie) %}
                         {% if save_pct is not none %}
-                        {{ "%.1f"|format(save_pct) }}
+                        {{ "%.1f%%"|format(save_pct) }}
                         {% else %}
                         -
                         {% endif %}
@@ -742,7 +742,7 @@
                     <td class="fw-bold">
                         {% set avg_pct = goalie_data[goalie]['average_save_percentage'] %}
                         {% if avg_pct is not none %}
-                        {{ "%.1f"|format(avg_pct) }}
+                        {{ "%.1f%%"|format(avg_pct) }}
                         {% else %}
                         -
                         {% endif %}
@@ -750,7 +750,7 @@
                     <td class="fw-bold">
                         {% set median_pct = goalie_data[goalie]['median_save_percentage'] %}
                         {% if median_pct is not none %}
-                        {{ "%.1f"|format(median_pct) }}
+                        {{ "%.1f%%"|format(median_pct) }}
                         {% else %}
                         -
                         {% endif %}
@@ -765,7 +765,7 @@
                         {% if game.get('opponent_goalie_enabled', false) %}
                         {% set opponent_save_pct = game.opponent_save_percentage %}
                         {% if opponent_save_pct is not none %}
-                        {{ "%.1f"|format(opponent_save_pct) }}
+                        {{ "%.1f%%"|format(opponent_save_pct) }}
                         {% else %}
                         -
                         {% endif %}
@@ -779,7 +779,7 @@
                     <td class="fw-bold">
                         {% set opponent_avg_pct = opponent_goalie_data['average_save_percentage'] %}
                         {% if opponent_avg_pct is not none %}
-                        {{ "%.1f"|format(opponent_avg_pct) }}
+                        {{ "%.1f%%"|format(opponent_avg_pct) }}
                         {% else %}
                         -
                         {% endif %}
