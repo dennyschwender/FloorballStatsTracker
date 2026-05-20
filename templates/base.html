@@ -273,6 +273,14 @@
         });
     </script>
     {% block scripts %}{% endblock %}
+<script src="/static/js/offline-queue.js" nonce="{{ g.csp_nonce }}"></script>
+<script nonce="{{ g.csp_nonce }}">
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(function (err) {
+            console.warn('SW registration failed:', err);
+        });
+    }
+</script>
 </body>
 
 </html>
