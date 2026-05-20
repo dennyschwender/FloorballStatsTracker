@@ -582,6 +582,15 @@
         <div class="lineup-section" id="lineupSection" style="display: {% if modify %}block{% else %}none{% endif %};">
             <h4>{{ g.t['lineup'] }}</h4>
 
+            {% if not modify %}
+            <div id="copyLineupContainer" class="mb-3" style="display:none;">
+                <button type="button" id="copyLineupBtn" class="btn btn-outline-secondary btn-sm">
+                    &#x21ba; Copy lineup from last game
+                </button>
+                <span id="copyLineupStatus" class="ms-2 text-muted small"></span>
+            </div>
+            {% endif %}
+
             <!-- Duplicate Warning Container -->
             <div id="duplicateWarningContainer"></div>
 
@@ -1944,6 +1953,108 @@
     {% if modify and game %}
     populateExistingGameData();
     {% endif %}
+
+        // ---- Copy lineup from last game ----
+        (function () {
+            var copyContainer = document.getElementById('copyLineupContainer');
+            var copyBtn = document.getElementById('copyLineupBtn');
+            var copyStatus = document.getElementById('copyLineupStatus');
+            if (!copyContainer || !copyBtn) return;
+
+            var seasonEl = document.getElementById('season');
+            var teamEl = document.getElementById('team');
+
+            function updateCopyBtnVisibility() {
+                var season = seasonEl ? seasonEl.value : '';
+                var category = teamEl ? teamEl.value : '';
+                copyContainer.style.display = (season && category) ? '' : 'none';
+            }
+
+            if (seasonEl) { seasonEl.addEventListener('change', updateCopyBtnVisibility); }
+            if (teamEl) { teamEl.addEventListener('change', updateCopyBtnVisibility); }
+            updateCopyBtnVisibility();
+
+            copyBtn.addEventListener('click', function () {
+                var season = seasonEl ? seasonEl.value : '';
+                var category = teamEl ? teamEl.value : '';
+                if (!season || !category) return;
+
+                copyBtn.disabled = true;
+                copyStatus.textContent = 'Loading\u2026';
+
+                fetch('/api/last_game_lineup?season=' + encodeURIComponent(season) + '&category=' + encodeURIComponent(category))
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        copyBtn.disabled = false;
+                        if (!data.found) {
+                            copyStatus.textContent = 'No previous game found';
+                            return;
+                        }
+                        applyLineupData(data);
+                        copyStatus.textContent = '\u2713 Lineup copied from ' + data.date;
+                    })
+                    .catch(function () {
+                        copyBtn.disabled = false;
+                        copyStatus.textContent = 'Failed to load \u2014 retry';
+                    });
+            });
+
+            function applyLineupData(data) {
+                if (!currentRoster || currentRoster.length === 0) return;
+
+                var nameToIdMap = {};
+                currentRoster.forEach(function (player) {
+                    var fullName = player.number + ' - ' + player.surname + ' ' + player.name;
+                    nameToIdMap[fullName] = player.id;
+                });
+
+                isPopulatingData = true;
+
+                (data.lines || []).forEach(function (line) {
+                    line.forEach(function (playerName) {
+                        var pid = nameToIdMap[playerName];
+                        if (!pid) return;
+                        var cb = document.getElementById('convocato_' + pid);
+                        if (cb) { cb.checked = true; }
+                    });
+                });
+                (data.goalies || []).forEach(function (goalieName) {
+                    var pid = nameToIdMap[goalieName];
+                    if (!pid) return;
+                    var cb = document.getElementById('convocato_' + pid);
+                    if (cb) { cb.checked = true; }
+                });
+
+                if (typeof rebuildLineAndFormationSectionsWithoutInit === 'function') {
+                    rebuildLineAndFormationSectionsWithoutInit(currentRoster);
+                }
+
+                (data.lines || []).forEach(function (linePlayers, lineIndex) {
+                    var lineNum = lineIndex + 1;
+                    linePlayers.forEach(function (playerName, position) {
+                        var pid = nameToIdMap[playerName];
+                        if (!pid) return;
+                        var input = document.querySelector('input[name="l' + lineNum + '_' + pid + '"]');
+                        if (input) { input.value = String(position + 1); }
+                    });
+                });
+
+                (data.goalies || []).forEach(function (goalieName, index) {
+                    var goalieNum = index + 1;
+                    var pid = nameToIdMap[goalieName];
+                    if (!pid) return;
+                    var hidden = document.getElementById('goalie' + goalieNum);
+                    if (hidden) { hidden.value = pid; }
+                    var radio = document.querySelector('input[name="goalie' + goalieNum + '"][value="' + pid + '"]');
+                    if (radio) { radio.checked = true; }
+                });
+
+                isPopulatingData = false;
+
+                if (typeof updateCategoryCounter === 'function') { updateCategoryCounter(); }
+            }
+        }());
+        // ---- end copy lineup ----
     });
 
     // ===== NEW UX FEATURES =====
