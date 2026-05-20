@@ -549,6 +549,7 @@ def player_action(game_id, player):
 @game_bp.route('/action_line/<int:game_id>/<int:line_idx>')
 def line_action(game_id, line_idx):
     action = request.args.get('action')
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
@@ -602,6 +603,8 @@ def line_action(game_id, line_idx):
     recalculate_game_scores(game)
     save_games(games)
     
+    if is_ajax:
+        return jsonify(_game_stats_response(game))
     if request.args.get('edit') == '1':
         return redirect(url_for('game.game_details', game_id=game_id, edit=1))
     return redirect(url_for('game.game_details', game_id=game_id))
@@ -610,6 +613,7 @@ def line_action(game_id, line_idx):
 @game_bp.route('/action_goalie/<int:game_id>/<goalie>')
 def goalie_action(game_id, goalie):
     action = request.args.get('action')
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
@@ -662,6 +666,8 @@ def goalie_action(game_id, goalie):
     recalculate_game_scores(game)
     save_games(games)
     
+    if is_ajax:
+        return jsonify(_game_stats_response(game))
     if request.args.get('edit') == '1':
         return redirect(url_for('game.game_details', game_id=game_id, edit=1))
     return redirect(url_for('game.game_details', game_id=game_id))
@@ -670,6 +676,7 @@ def goalie_action(game_id, goalie):
 @game_bp.route('/action_opponent_goalie/<int:game_id>')
 def opponent_goalie_action(game_id):
     action = request.args.get('action')
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
@@ -719,6 +726,8 @@ def opponent_goalie_action(game_id):
     recalculate_game_scores(game)
     save_games(games)
     
+    if is_ajax:
+        return jsonify(_game_stats_response(game))
     if request.args.get('edit') == '1':
         return redirect(url_for('game.game_details', game_id=game_id, edit=1))
     return redirect(url_for('game.game_details', game_id=game_id))
