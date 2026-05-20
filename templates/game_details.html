@@ -46,6 +46,28 @@
         text-overflow: ellipsis;
     }
     
+    /* Tablet: sticky actions column + hide secondary stat columns */
+    @media (max-width: 991px) {
+        .actions-col {
+            position: sticky;
+            right: 0;
+            background-color: var(--bs-table-bg, #212529);
+            z-index: 2;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+        }
+        th.actions-col {
+            background-color: #343a40;
+        }
+        .stat-secondary {
+            display: none;
+        }
+        .period-btn {
+            min-height: 44px !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 1rem !important;
+        }
+    }
+
     /* Mobile optimizations */
     @media (max-width: 768px) {
         .quick-action-btn {
@@ -166,43 +188,53 @@
             <span class="fw-bold">{{ 'Period:' }}</span>
             {% for p in ['1', '2', '3', 'OT'] %}
             {% if game.current_period == p %}
-            <span class="btn btn-primary btn-sm">{{ 'OT' if p == 'OT' else 'Period ' ~ p }}</span>
+            <span class="btn btn-primary period-btn">{{ 'OT' if p == 'OT' else 'Period ' ~ p }}</span>
             {% else %}
             <a href="/set_period/{{ game_id }}/{{ p }}{% if request.args.get('edit') == '1' %}?edit=1{% endif %}"
-                class="btn btn-outline-primary btn-sm">{{ 'OT' if p == 'OT' else 'Period ' ~ p }}</a>
+                class="btn btn-outline-primary period-btn">{{ 'OT' if p == 'OT' else 'Period ' ~ p }}</a>
             {% endif %}
             {% endfor %}
         </div>
     </div>
-    <div class="alert alert-info mb-3" role="alert">
-        <strong>{{ g.t.get('plusminus_rules_title', 'Plus/Minus Rules') }}:</strong> {{ g.t.get('plusminus_rules_text', 'A player gets +1 for each even-strength or shorthanded goal their team scores while on the ice, and -1 for each such goal by the opposing team. Power-play goals and penalty shots do not affect plus/minus. Goalies do not have a plus/minus rating.') }}
-    </div>
-    <div class="alert alert-info mb-3" role="alert">
-        <h6 class="alert-heading mb-2"><i class="bi bi-info-circle"></i> {{ g.t.get('quick_actions_help_title', 'Quick Actions Guide') }}</h6>
-        <p class="mb-1 small">{{ g.t.get('quick_actions_help_text', 'Use the quick action buttons for fast stat entry during the game:') }}</p>
-        <div class="row">
-            <div class="col-md-6">
-                <strong class="small">{{ g.t.get('players', 'Players') }}:</strong>
-                <ul class="mb-2 small">
-                    <li><strong>⚽ {{ g.t['goal'] }}</strong> - Record a goal</li>
-                    <li><strong>🎯 {{ g.t['sog'] }}</strong> - Record a shot on goal</li>
-                    <li><strong>👍 {{ g.t['assists'] }}</strong> - Record an assist</li>
-                    <li><strong>⋮ {{ g.t.get('more_actions', 'More') }}</strong> - Access all other actions (+1, -1, errors, penalties, etc.)</li>
-                </ul>
-            </div>
-            <div class="col-md-6">
-                <strong class="small">{{ g.t['goalies'] }}:</strong>
-                <ul class="mb-0 small">
-                    <li><strong>🧤 {{ g.t['goalie_save'] }}</strong> - Record a save</li>
-                    <li><strong>⛔ {{ g.t['goals_conceded'] }}</strong> - Record a goal conceded</li>
-                    <li><strong>⋮ {{ g.t.get('more_actions', 'More') }}</strong> - Access minus actions and assists</li>
-                </ul>
+    <details class="mb-3">
+        <summary class="btn btn-outline-info btn-sm">
+            ℹ️ {{ g.t.get('plusminus_rules_title', 'Plus/Minus Rules') }}
+        </summary>
+        <div class="alert alert-info mt-2" role="alert">
+            {{ g.t.get('plusminus_rules_text', 'A player gets +1 for each even-strength or shorthanded goal their team scores while on the ice, and -1 for each such goal by the opposing team. Power-play goals and penalty shots do not affect plus/minus. Goalies do not have a plus/minus rating.') }}
+        </div>
+    </details>
+    <details class="mb-3">
+        <summary class="btn btn-outline-info btn-sm">
+            ℹ️ {{ g.t.get('quick_actions_help_title', 'Quick Actions Guide') }}
+        </summary>
+        <div class="alert alert-info mt-2" role="alert">
+            <h6 class="alert-heading mb-2"><i class="bi bi-info-circle"></i> {{ g.t.get('quick_actions_help_title', 'Quick Actions Guide') }}</h6>
+            <p class="mb-1 small">{{ g.t.get('quick_actions_help_text', 'Use the quick action buttons for fast stat entry during the game:') }}</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong class="small">{{ g.t.get('players', 'Players') }}:</strong>
+                    <ul class="mb-2 small">
+                        <li><strong>⚽ {{ g.t['goal'] }}</strong> - Record a goal</li>
+                        <li><strong>🎯 {{ g.t['sog'] }}</strong> - Record a shot on goal</li>
+                        <li><strong>👍 {{ g.t['assists'] }}</strong> - Record an assist</li>
+                        <li><strong>⋮ {{ g.t.get('more_actions', 'More') }}</strong> - Access all other actions (+1, -1, errors, penalties, etc.)</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <strong class="small">{{ g.t['goalies'] }}:</strong>
+                    <ul class="mb-0 small">
+                        <li><strong>🧤 {{ g.t['goalie_save'] }}</strong> - Record a save</li>
+                        <li><strong>⛔ {{ g.t['goals_conceded'] }}</strong> - Record a goal conceded</li>
+                        <li><strong>⋮ {{ g.t.get('more_actions', 'More') }}</strong> - Access minus actions and assists</li>
+                    </ul>
+                </div>
             </div>
         </div>
-    </div>
+    </details>
     {% endif %}
 
-    <div class="table-responsive-sm mb-4 mx-lg-5">
+    <div class="table-responsive mb-4 mx-lg-5">
         <table class="table table-bordered align-middle">
             <thead class="table-light">
                 <tr>
@@ -213,10 +245,10 @@
                     <th class="text-center">{{ g.t['assists'] }}</th>
                     <th class="text-center">{{ g.t['errors'] }}</th>
                     <th class="text-center">{{ g.t['sog'] }}</th>
-                    <th class="text-center">{{ g.t['penalty_taken'] }}</th>
-                    <th class="text-center">{{ g.t['penalty_drawn'] }}</th>
-                    <th class="text-center">{{ g.t.get('block_shots', 'Blk') }}</th>
-                    <th class="text-center">{{ g.t.get('stolen_balls', 'Stl') }}</th>
+                    <th class="text-center stat-secondary">{{ g.t['penalty_taken'] }}</th>
+                    <th class="text-center stat-secondary">{{ g.t['penalty_drawn'] }}</th>
+                    <th class="text-center stat-secondary">{{ g.t.get('block_shots', 'Blk') }}</th>
+                    <th class="text-center stat-secondary">{{ g.t.get('stolen_balls', 'Stl') }}</th>
                     <th class="text-center view-mode-col">{{ g.t['game_score'] if g.t and 'game_score' in g.t else 'Game Score' }}</th>
                     <th class="actions-col d-none">{{ g.t['actions'] }}</th>
                 </tr>
@@ -254,13 +286,13 @@
                             game.unforced_errors and player in game.unforced_errors else 0 }}</span></td>
                     <td class="text-center"><span class="fw-bold">{{ game.shots_on_goal[player] if
                             game.shots_on_goal and player in game.shots_on_goal else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.penalties_taken[player] if
+                    <td class="text-center stat-secondary"><span class="fw-bold">{{ game.penalties_taken[player] if
                             game.penalties_taken and player in game.penalties_taken else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.penalties_drawn[player] if
+                    <td class="text-center stat-secondary"><span class="fw-bold">{{ game.penalties_drawn[player] if
                             game.penalties_drawn and player in game.penalties_drawn else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.block_shots[player] if
+                    <td class="text-center stat-secondary"><span class="fw-bold">{{ game.block_shots[player] if
                             game.block_shots and player in game.block_shots else 0 }}</span></td>
-                    <td class="text-center"><span class="fw-bold">{{ game.stolen_balls[player] if
+                    <td class="text-center stat-secondary"><span class="fw-bold">{{ game.stolen_balls[player] if
                             game.stolen_balls and player in game.stolen_balls else 0 }}</span></td>
                     <td class="text-center view-mode-col">
                         {% if game.game_scores and player in game.game_scores %}

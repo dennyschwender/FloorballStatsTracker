@@ -21,6 +21,10 @@
         width: 100%;
     }
 
+    @media (max-width: 991px) {
+        .form-actions .btn { min-height: 44px; font-size: 1rem; }
+    }
+
     /* Fix Bootstrap row negative margins on mobile */
     @media (max-width: 575.98px) {
         .row {
@@ -801,7 +805,7 @@
         </div>
 
         <div class="d-flex justify-content-between align-items-center">
-            <div>
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary btn-sm">{{ g.t['save_changes'] if modify else g.t['save']
                     }}</button>
                 <a href="/" class="btn btn-secondary btn-sm ms-2">{{ g.t['cancel'] }}</a>

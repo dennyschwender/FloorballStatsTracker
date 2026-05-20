@@ -44,6 +44,12 @@
                 font-size: 1rem !important;
                 text-align: left;
             }
+
+            .navbar-nav .nav-link {
+                padding: 10px 16px;
+                font-size: 1.05rem;
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+            }
         }
     </style>
     {% block head %}{% endblock %}
@@ -93,6 +99,7 @@
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.index') }}">{{ g.t.get('admin', 'Admin') }}</a></li>
                     {% endif %}
                 </ul>
+                <div class="d-lg-none border-top my-2"></div>
                 <form class="d-flex order-2 order-lg-1" method="post" action="{{ url_for('set_language_route') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <select name="lang" id="langSelect" class="form-select me-2" aria-label="Change language">

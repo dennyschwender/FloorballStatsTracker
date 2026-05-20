@@ -3,6 +3,11 @@
 
 {% block head %}
 <style>
+    #gamesTable th { white-space: nowrap; }
+    #gamesTable td { padding: 6px 8px; }
+    @media (max-width: 991px) {
+        #gamesTable tbody tr { cursor: pointer; }
+    }
     .sortable {
         cursor: pointer;
         position: relative;
@@ -49,7 +54,6 @@
         <a href="{{ url_for('game.game_details', game_id=latest_game_id) }}" class="btn btn-success btn-sm">{{ g.t['go_to_latest_game'] }}</a>
         {% endif %}
     </div>
-    <h1 class="mb-3" style="font-size:1.2rem;">{{ g.t['title'] if g.t is defined else 'Floorball Stats Tracker' }}</h1>
     {% if games %}
     <h2 class="mb-3">{{ g.t['all_games'] if not selected_team else g.t['all_games_for'] ~ ' ' ~ selected_team }}</h2>
     <div class="table-responsive">
@@ -72,7 +76,7 @@
                     {% if not selected_team %}
                     <td><span class="badge bg-info text-dark">{{ game.team if game.team else '' }}</span></td>
                     {% endif %}
-                    <td>{{ game.date if game.date else '' }}</td>
+                    <td style="white-space:nowrap">{{ game.date if game.date else '' }}</td>
                     <td>{{ game.home_team }}</td>
                     <td>
                         {{ game.away_team }}
@@ -156,6 +160,15 @@
         const dateColumnIndex = {% if not selected_team %}1{% else %}0{% endif %};
         sortDirection[dateColumnIndex] = 'asc'; // Set to asc so the toggle makes it desc
         sortTable(dateColumnIndex);
+    });
+
+    // Make entire row tappable on tablet
+    document.querySelectorAll('#gamesTable tbody tr').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+            var link = row.querySelector('a.btn');
+            if (link) window.location.href = link.href;
+        });
     });
 </script>
 {% endblock %}
