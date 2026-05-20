@@ -1983,7 +1983,10 @@
                 copyStatus.textContent = 'Loading\u2026';
 
                 fetch('/api/last_game_lineup?season=' + encodeURIComponent(season) + '&category=' + encodeURIComponent(category))
-                    .then(function (res) { return res.json(); })
+                    .then(function (res) {
+                        if (!res.ok) { throw new Error(res.status); }
+                        return res.json();
+                    })
                     .then(function (data) {
                         copyBtn.disabled = false;
                         if (!data.found) {
@@ -2052,6 +2055,7 @@
                 isPopulatingData = false;
 
                 if (typeof updateCategoryCounter === 'function') { updateCategoryCounter(); }
+                if (typeof initializePositionSelectors === 'function') { initializePositionSelectors(true); }
             }
         }());
         // ---- end copy lineup ----
