@@ -202,6 +202,12 @@ def create_app():
     app.register_blueprint(lineup_bp)
     app.register_blueprint(json_bp)
 
+    from flask import send_from_directory as _sfd
+
+    @app.route('/sw.js')
+    def service_worker():
+        return _sfd(app.static_folder, 'sw.js', mimetype='application/javascript')
+
     return app
 
 
