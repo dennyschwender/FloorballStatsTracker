@@ -450,6 +450,7 @@ def modify_game(game_id):
 @game_bp.route('/action/<int:game_id>/<player>')
 def player_action(game_id, player):
     action = request.args.get('action')
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     games = load_games()
     game = find_game_by_id(games, game_id)
     if not game:
@@ -538,6 +539,8 @@ def player_action(game_id, player):
     save_games(games)
     
     # Preserve edit mode if present
+    if is_ajax:
+        return jsonify(_game_stats_response(game))
     if request.args.get('edit') == '1':
         return redirect(url_for('game.game_details', game_id=game_id, edit=1))
     return redirect(url_for('game.game_details', game_id=game_id))
