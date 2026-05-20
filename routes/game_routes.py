@@ -3,7 +3,7 @@ Game management routes blueprint
 """
 import hmac
 from datetime import datetime
-from flask import Blueprint, request, render_template, redirect, url_for, session, g, abort
+from flask import Blueprint, request, render_template, redirect, url_for, session, g, abort, jsonify
 from config import REQUIRED_PIN, ADMIN_PIN, PERIODS
 from services.game_service import (
     load_games, save_games, find_game_by_id, ensure_game_ids,
@@ -16,6 +16,22 @@ from utils.auth_helpers import require_edit, require_manage
 from extensions import limiter
 
 game_bp = Blueprint('game', __name__)
+_STAT_FIELDS = [
+    'goals', 'assists', 'plusminus', 'shots_on_goal', 'unforced_errors',
+    'penalties_taken', 'penalties_drawn', 'block_shots', 'stolen_balls',
+    'saves', 'goals_conceded', 'game_scores', 'goalie_game_scores',
+    'opponent_goalie_saves', 'opponent_goalie_goals_conceded',
+]
+
+
+def _game_stats_response(game):
+    """Return JSON-serialisable dict of all game stats + result."""
+    return {
+        'ok': True,
+        'stats': {field: game.get(field, {}) for field in _STAT_FIELDS},
+        'result': game.get('result', {}),
+    }
+
 
 
 @game_bp.route('/login', methods=['GET', 'POST'])
