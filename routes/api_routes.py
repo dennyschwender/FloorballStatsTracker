@@ -1,7 +1,7 @@
 """
 API endpoints blueprint
 """
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from models.roster import get_all_categories_with_rosters, load_roster
 from services.stats_service import calculate_player_trends, calculate_lineup_combinations
 
@@ -231,3 +231,45 @@ def lineup_combos():
         'success': True,
         'data': combos_result
     }), 200
+
+
+@api_bp.route('/last_game_lineup')
+def last_game_lineup():
+    """Return lines + goalies from the most recent game for a given season/category.
+
+    Query parameters:
+    - season (required)
+    - category (required)
+
+    Requires authenticated session.
+    """
+    if not session.get('authenticated'):
+        return jsonify({'error': 'unauthorized'}), 401
+
+    season = request.args.get('season', '').strip()
+    category = request.args.get('category', '').strip()
+
+    if not season:
+        return jsonify({'error': 'season parameter is required'}), 400
+    if not category:
+        return jsonify({'error': 'category parameter is required'}), 400
+
+    from services.game_service import load_games
+
+    games = load_games()
+    matching = [
+        g for g in games
+        if g.get('team') == category and g.get('season') == season
+    ]
+
+    if not matching:
+        return jsonify({'found': False})
+
+    latest = sorted(matching, key=lambda g: g.get('date', ''), reverse=True)[0]
+
+    return jsonify({
+        'found': True,
+        'date': latest.get('date', ''),
+        'lines': latest.get('lines', []),
+        'goalies': latest.get('goalies', []),
+    })
