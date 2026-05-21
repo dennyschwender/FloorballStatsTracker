@@ -178,3 +178,22 @@ def test_event_response_contains_stats_and_result(client):
     assert 'stats' in data
     assert 'result' in data
     assert 'ok' in data
+
+
+def test_event_period_change_can_be_undone(client):
+    _write_games([make_sample_game()])  # current_period = '1'
+    # advance period
+    _post(client, 0, {'type': 'period_change'})
+    g = _read_games()[0]
+    assert g['current_period'] == '2'
+    # undo
+    rv = client.get('/undo/0', headers={'X-Requested-With': 'XMLHttpRequest'})
+    assert rv.status_code == 200
+    g = _read_games()[0]
+    assert g['current_period'] == '1'
+
+
+def test_event_goal_ours_missing_scorer_returns_400(client):
+    _write_games([make_sample_game()])
+    rv = _post(client, 0, {'type': 'goal', 'team': 'ours', 'plusminus_players': []})
+    assert rv.status_code == 400

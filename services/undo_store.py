@@ -19,6 +19,7 @@ _SNAPSHOT_FIELDS = [
     'penalties_taken', 'penalties_drawn', 'block_shots', 'stolen_balls',
     'saves', 'goals_conceded', 'game_scores', 'goalie_game_scores',
     'opponent_goalie_saves', 'opponent_goalie_goals_conceded', 'result',
+    'current_period',
 ]
 
 

@@ -875,9 +875,10 @@ def record_event(game_id):
         if team == 'ours':
             scorer = payload.get('scorer')
             assist = payload.get('assist')
-            if scorer:
-                ensure_player_stats(game, scorer)
-                game['goals'][scorer] += 1
+            if not scorer:
+                return jsonify({'ok': False, 'error': 'goal for ours requires scorer'}), 400
+            ensure_player_stats(game, scorer)
+            game['goals'][scorer] += 1
             if period not in game['result']:
                 game['result'][period] = {'home': 0, 'away': 0}
             game['result'][period]['home'] += 1
