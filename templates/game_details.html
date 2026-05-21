@@ -1105,7 +1105,10 @@
             if (!team) { wizard.idx = Math.max(0, idx - 1); renderStep(wizard.idx); return; }
             var branchSteps = buildGoalSteps(team);
             wizard.steps = wizard.steps.slice(0, idx).concat(branchSteps);
-            renderStep(idx);
+            // Guard: only recurse if replacement step is not also goal_branch
+            if (wizard.steps[idx] && wizard.steps[idx].type !== 'goal_branch') {
+                renderStep(idx);
+            }
             return;
         }
 
@@ -1220,8 +1223,10 @@
         })
         .then(function (data) {
             var modalEl = document.getElementById('eventWizardModal');
-            var bsModal = bootstrap.Modal.getInstance(modalEl);
-            if (bsModal) bsModal.hide();
+            if (modalEl) {
+                var bsModal = bootstrap.Modal.getInstance(modalEl);
+                if (bsModal) bsModal.hide();
+            }
 
             if (data.stats) window.updateStatCells(data.stats);
             if (data.result) window.updateScore(data.result);
