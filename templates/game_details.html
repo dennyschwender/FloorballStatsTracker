@@ -538,14 +538,41 @@
         </table>
     </div>
 </div>
+
+{% if request.args.get('edit') == '1' %}
+<button id="addEventFab"
+        class="btn btn-primary rounded-pill shadow"
+        style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:1050;font-size:1.1rem;padding:.55rem 1.2rem;"
+        data-bs-toggle="modal" data-bs-target="#eventWizardModal">
+    &#xFE0E;&#xFF0B; {{ g.t.get('event', 'Event') }}
+</button>
+{% endif %}
+
+<div class="modal fade" id="eventWizardModal" tabindex="-1"
+     aria-labelledby="eventWizardTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="eventWizardTitle">Add Event</h5>
+        <button type="button" class="btn-close"
+                data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="eventWizardBody"></div>
+      <div class="modal-footer d-flex" id="eventWizardFooter"></div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script nonce="{{ g.csp_nonce }}">
+    var GAME_ID = {{ game_id }};
+    var GAME_LINES = {{ game.lines | tojson }};
+    var GAME_GOALIES = {{ (game.goalies or []) | tojson }};
+    var GAME_CURRENT_PERIOD = {{ (game.current_period or '1') | tojson }};
+    var OPPONENT_GOALIE_ENABLED = {{ 'true' if game.get('opponent_goalie_enabled') else 'false' }};
 (function () {
     'use strict';
-
-    var GAME_ID = {{ game_id }};
 
     // ── Stat cell update ─────────────────────────────────────────────────────
     function updateStatCells(stats) {
