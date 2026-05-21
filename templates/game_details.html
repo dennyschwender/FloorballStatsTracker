@@ -599,10 +599,13 @@
     };
 
     // ── Undo toast ────────────────────────────────────────────────────────────
+    // Uses a separate element ref so regular showToast calls don't kill the undo toast.
+    var _undoToastEl = null;
     var _undoTimer = null;
     function showUndoToast(actionName) {
-        if (_toastEl) { _toastEl.remove(); _toastEl = null; }
+        if (_undoToastEl) { _undoToastEl.remove(); _undoToastEl = null; }
         if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
+        if (_toastEl) { _toastEl.remove(); _toastEl = null; }
 
         var wrapper = document.createElement('div');
         wrapper.className = 'alert alert-secondary py-2 px-3 mb-0 d-flex align-items-center gap-3';
@@ -625,10 +628,10 @@
         wrapper.appendChild(closeBtn);
 
         document.body.appendChild(wrapper);
-        _toastEl = wrapper;
+        _undoToastEl = wrapper;
 
         undoBtn.addEventListener('click', function () {
-            wrapper.remove(); _toastEl = null;
+            wrapper.remove(); _undoToastEl = null;
             if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
             fetch('/undo/' + GAME_ID, {
                 headers: {'X-Requested-With': 'XMLHttpRequest'},
@@ -646,14 +649,14 @@
         });
 
         closeBtn.addEventListener('click', function () {
-            wrapper.remove(); _toastEl = null;
+            wrapper.remove(); _undoToastEl = null;
             if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
         });
 
         _undoTimer = setTimeout(function () {
-            if (_toastEl === wrapper) { wrapper.remove(); _toastEl = null; }
+            if (_undoToastEl === wrapper) { wrapper.remove(); _undoToastEl = null; }
             _undoTimer = null;
-        }, 5000);
+        }, 8000);
     }
 
     // ── Core action fetch ─────────────────────────────────────────────────────
