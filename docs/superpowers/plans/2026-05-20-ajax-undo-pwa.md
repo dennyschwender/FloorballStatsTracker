@@ -1,6 +1,6 @@
 # AJAX Actions, Undo, and PWA Offline Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Replace full-page reloads on stat actions with in-place AJAX updates, add single-level undo toast, and enable full offline operation with IndexedDB action queueing.
 
@@ -36,7 +36,7 @@
 **Files:**
 - Modify: `routes/game_routes.py` (line 6 imports, after imports block)
 
-- [ ] **Step 1: Add `jsonify` to Flask import**
+- [x] **Step 1: Add `jsonify` to Flask import**
 
 Change line 6 from:
 ```python
@@ -47,7 +47,7 @@ to:
 from flask import Blueprint, request, render_template, redirect, url_for, session, g, abort, jsonify
 ```
 
-- [ ] **Step 2: Add helper constant and function after the imports block**
+- [x] **Step 2: Add helper constant and function after the imports block**
 
 After the last `from ...` import line (around line 14), add:
 ```python
@@ -68,14 +68,14 @@ def _game_stats_response(game):
     }
 ```
 
-- [ ] **Step 3: Verify app still starts**
+- [x] **Step 3: Verify app still starts**
 
 ```bash
 python -c "from routes.game_routes import game_bp; print('ok')"
 ```
 Expected: `ok`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add routes/game_routes.py
@@ -89,14 +89,14 @@ git commit -m "feat(api): add JSON response helper to game_routes"
 **Files:**
 - Modify: `routes/game_routes.py`
 
-- [ ] **Step 1: Add `is_ajax` flag at top of `player_action`**
+- [x] **Step 1: Add `is_ajax` flag at top of `player_action`**
 
 In `player_action` (line ~435), immediately after `action = request.args.get('action')`, add:
 ```python
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 ```
 
-- [ ] **Step 2: Replace the final redirect block with JSON-or-redirect**
+- [x] **Step 2: Replace the final redirect block with JSON-or-redirect**
 
 The current end of `player_action` looks like:
 ```python
@@ -114,14 +114,14 @@ Replace it with:
     return redirect(url_for('game.game_details', game_id=game_id))
 ```
 
-- [ ] **Step 3: Verify existing tests still pass**
+- [x] **Step 3: Verify existing tests still pass**
 
 ```bash
 pytest tests/test_actions.py -v -k "player"
 ```
 Expected: all player action tests PASS (non-AJAX path unchanged).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add routes/game_routes.py
@@ -137,7 +137,7 @@ git commit -m "feat(api): add JSON response branch to player_action"
 
 Apply the same two-change pattern from Task 2 to the remaining three routes:
 
-- [ ] **Step 1: Apply to `line_action` (line ~531)**
+- [x] **Step 1: Apply to `line_action` (line ~531)**
 
 After `action = request.args.get('action')`, add:
 ```python
@@ -152,22 +152,22 @@ Replace the final redirect block with:
     return redirect(url_for('game.game_details', game_id=game_id))
 ```
 
-- [ ] **Step 2: Apply same pattern to `goalie_action` (line ~592)**
+- [x] **Step 2: Apply same pattern to `goalie_action` (line ~592)**
 
 Identical changes.
 
-- [ ] **Step 3: Apply same pattern to `opponent_goalie_action` (line ~652)**
+- [x] **Step 3: Apply same pattern to `opponent_goalie_action` (line ~652)**
 
 Identical changes.
 
-- [ ] **Step 4: Run all action tests**
+- [x] **Step 4: Run all action tests**
 
 ```bash
 pytest tests/test_actions.py -v
 ```
 Expected: all PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add routes/game_routes.py
@@ -181,11 +181,11 @@ git commit -m "feat(api): add JSON response branch to line, goalie, opponent_goa
 **Files:**
 - Create: `tests/test_ajax_actions.py`
 
-- [ ] **Step 1: Check how test_actions.py defines its helpers**
+- [x] **Step 1: Check how test_actions.py defines its helpers**
 
 Read the top of `tests/test_actions.py` to find `_write_games`, `_read_games`, `make_sample_game` — they are module-level helper functions in that file.
 
-- [ ] **Step 2: Write test file**
+- [x] **Step 2: Write test file**
 
 ```python
 """Tests for AJAX (JSON) responses from action routes."""
@@ -251,14 +251,14 @@ def test_line_action_returns_json_on_ajax(client):
     assert data['ok'] is True
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 pytest tests/test_ajax_actions.py -v
 ```
 Expected: all 5 PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/test_ajax_actions.py
@@ -272,7 +272,7 @@ git commit -m "test: add AJAX JSON response tests for action routes"
 **Files:**
 - Modify: `templates/game_details.html`
 
-- [ ] **Step 1: Add `id="score-summary"` to score summary div (line ~85)**
+- [x] **Step 1: Add `id="score-summary"` to score summary div (line ~85)**
 
 ```html
 <!-- BEFORE: -->
@@ -281,7 +281,7 @@ git commit -m "test: add AJAX JSON response tests for action routes"
 <div class="result-summary bg-light border rounded px-3 py-2 ms-md-3" id="score-summary" style="min-width: 320px;">
 ```
 
-- [ ] **Step 2: Add `data-player` and `data-stat` to the 5 primary stat cells in the player row loop**
+- [x] **Step 2: Add `data-player` and `data-stat` to the 5 primary stat cells in the player row loop**
 
 Find these cells (currently around lines 247-264) and add the two data attributes:
 
@@ -302,7 +302,7 @@ Find these cells (currently around lines 247-264) and add the two data attribute
 <td class="text-center" data-player="{{ player }}" data-stat="shots_on_goal"><span class="fw-bold">...
 ```
 
-- [ ] **Step 3: Add data attributes to the 4 `stat-secondary` cells**
+- [x] **Step 3: Add data attributes to the 4 `stat-secondary` cells**
 
 ```html
 <td class="text-center stat-secondary" data-player="{{ player }}" data-stat="penalties_taken">...
@@ -311,14 +311,14 @@ Find these cells (currently around lines 247-264) and add the two data attribute
 <td class="text-center stat-secondary" data-player="{{ player }}" data-stat="stolen_balls">...
 ```
 
-- [ ] **Step 4: Verify template regression tests pass**
+- [x] **Step 4: Verify template regression tests pass**
 
 ```bash
 pytest tests/test_template_regression.py -v
 ```
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/game_details.html
@@ -332,7 +332,7 @@ git commit -m "feat(ui): add data-player/data-stat attributes to game_details st
 **Files:**
 - Modify: `templates/game_details.html`
 
-- [ ] **Step 1: Add `ajax-action` class to all action link buttons**
+- [x] **Step 1: Add `ajax-action` class to all action link buttons**
 
 In the player action button group (lines ~275-340), add class `ajax-action` to every `<a>` that calls an action route. Example pattern — apply to ALL action `<a>` elements in player, goalie, and opponent-goalie sections:
 
@@ -347,7 +347,7 @@ In the player action button group (lines ~275-340), add class `ajax-action` to e
 
 Apply `ajax-action` to every `<a>` in `.action-buttons`, `.goalie-action-buttons`, and `.opponent-goalie-action-dropdown` that links to `/action*` paths. Do NOT add it to period buttons or navigation links.
 
-- [ ] **Step 2: Add AJAX + undo toast JS block in `{% block scripts %}`**
+- [x] **Step 2: Add AJAX + undo toast JS block in `{% block scripts %}`**
 
 Insert a new `<script>` block in `{% block scripts %}` BEFORE the existing script. Build all DOM elements programmatically (no `innerHTML`) to avoid XSS:
 
@@ -516,7 +516,7 @@ Insert a new `<script>` block in `{% block scripts %}` BEFORE the existing scrip
 </script>
 ```
 
-- [ ] **Step 3: Manual browser test**
+- [x] **Step 3: Manual browser test**
 
 Navigate to `/game/1?edit=1`, click Goal on a player. Verify:
 - No page reload
@@ -524,7 +524,7 @@ Navigate to `/game/1?edit=1`, click Goal on a player. Verify:
 - Undo toast appears for 5s
 - Clicking Undo reverts the stat
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add templates/game_details.html
@@ -538,7 +538,7 @@ git commit -m "feat(ui): add AJAX action handling + undo toast to game_details"
 **Files:**
 - Create: `services/undo_store.py`
 
-- [ ] **Step 1: Write the module**
+- [x] **Step 1: Write the module**
 
 ```python
 """In-memory single-level undo stack, one slot per game.
@@ -579,14 +579,14 @@ def clear(game_id: int) -> None:
         _stack.pop(game_id, None)
 ```
 
-- [ ] **Step 2: Verify import**
+- [x] **Step 2: Verify import**
 
 ```bash
 python -c "from services.undo_store import push, pop, clear; print('ok')"
 ```
 Expected: `ok`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add services/undo_store.py
@@ -600,14 +600,14 @@ git commit -m "feat: add in-memory undo store service"
 **Files:**
 - Modify: `routes/game_routes.py`
 
-- [ ] **Step 1: Add undo_store import**
+- [x] **Step 1: Add undo_store import**
 
 After the existing `from services...` imports (around line 13), add:
 ```python
 from services import undo_store
 ```
 
-- [ ] **Step 2: Add `undo_store.push()` before mutation in all 4 action routes**
+- [x] **Step 2: Add `undo_store.push()` before mutation in all 4 action routes**
 
 In each of the 4 action routes (`player_action`, `line_action`, `goalie_action`, `opponent_goalie_action`), add this line immediately after the `is_ajax = ...` line:
 ```python
@@ -616,7 +616,7 @@ In each of the 4 action routes (`player_action`, `line_action`, `goalie_action`,
 
 This must come BEFORE any mutation of `game` so the snapshot captures the pre-action state.
 
-- [ ] **Step 3: Add /undo/<game_id> route**
+- [x] **Step 3: Add /undo/<game_id> route**
 
 After the `opponent_goalie_action` function, add:
 
@@ -643,14 +643,14 @@ def undo_action(game_id):
 
 Note: `require_edit(game)` follows the same pattern as the other action routes — check how it is called in `player_action` and replicate exactly. If it returns a response on failure (not None), add a guard: `guard = require_edit(game); if guard: return guard`.
 
-- [ ] **Step 4: Run all action + AJAX tests**
+- [x] **Step 4: Run all action + AJAX tests**
 
 ```bash
 pytest tests/test_actions.py tests/test_ajax_actions.py -v
 ```
 Expected: all PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add routes/game_routes.py
@@ -664,7 +664,7 @@ git commit -m "feat: wire undo push into action routes and add /undo/<game_id> r
 **Files:**
 - Create: `tests/test_undo.py`
 
-- [ ] **Step 1: Write tests**
+- [x] **Step 1: Write tests**
 
 ```python
 """Tests for /undo/<game_id> endpoint."""
@@ -730,14 +730,14 @@ def test_undo_only_one_level(client):
     assert rv.get_json()['error'] == 'nothing_to_undo'
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 ```bash
 pytest tests/test_undo.py -v
 ```
 Expected: all 4 PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/test_undo.py
@@ -754,7 +754,7 @@ git commit -m "test: add undo endpoint tests"
 - Create: `static/android-chrome-512x512.png`
 - Modify: `static/site.webmanifest`
 
-- [ ] **Step 1: Create icon generation script**
+- [x] **Step 1: Create icon generation script**
 
 ```python
 #!/usr/bin/env python3
@@ -772,7 +772,7 @@ for size in (192, 512):
     print(f'Generated {dest}')
 ```
 
-- [ ] **Step 2: Run it**
+- [x] **Step 2: Run it**
 
 ```bash
 python scripts/generate_icons.py
@@ -783,7 +783,7 @@ Generated .../static/android-chrome-192x192.png
 Generated .../static/android-chrome-512x512.png
 ```
 
-- [ ] **Step 3: Update site.webmanifest**
+- [x] **Step 3: Update site.webmanifest**
 
 Replace the full content of `static/site.webmanifest` with:
 ```json
@@ -809,7 +809,7 @@ Replace the full content of `static/site.webmanifest` with:
 }
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add static/android-chrome-192x192.png static/android-chrome-512x512.png static/site.webmanifest scripts/generate_icons.py
@@ -826,7 +826,7 @@ git commit -m "feat(pwa): generate PWA icons and update manifest"
 
 The SW must be served from `/sw.js` (not `/static/sw.js`) to get root-level scope.
 
-- [ ] **Step 1: Add Flask route for /sw.js in app.py**
+- [x] **Step 1: Add Flask route for /sw.js in app.py**
 
 Inside `create_app()`, after the blueprints are registered, add:
 ```python
@@ -837,7 +837,7 @@ def service_worker():
     return _sfd(app.static_folder, 'sw.js', mimetype='application/javascript')
 ```
 
-- [ ] **Step 2: Create static/sw.js**
+- [x] **Step 2: Create static/sw.js**
 
 ```javascript
 'use strict';
@@ -913,7 +913,7 @@ self.addEventListener('fetch', function (e) {
 });
 ```
 
-- [ ] **Step 3: Verify /sw.js is reachable**
+- [x] **Step 3: Verify /sw.js is reachable**
 
 ```bash
 python -c "
@@ -925,7 +925,7 @@ with app.test_client() as c:
 ```
 Expected: `200 application/javascript`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add static/sw.js app.py
@@ -939,7 +939,7 @@ git commit -m "feat(pwa): add service worker with app-shell and game-page cache 
 **Files:**
 - Create: `static/js/offline-queue.js`
 
-- [ ] **Step 1: Create the module**
+- [x] **Step 1: Create the module**
 
 ```javascript
 'use strict';
@@ -1054,7 +1054,7 @@ git commit -m "feat(pwa): add service worker with app-shell and game-page cache 
 })();
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add static/js/offline-queue.js
@@ -1068,7 +1068,7 @@ git commit -m "feat(pwa): add IndexedDB offline action queue with sync-on-reconn
 **Files:**
 - Modify: `templates/base.html`
 
-- [ ] **Step 1: Add offline-queue.js and SW registration before closing `</body>`**
+- [x] **Step 1: Add offline-queue.js and SW registration before closing `</body>`**
 
 In `templates/base.html`, just before `</body>`, add after the existing `{% block scripts %}{% endblock %}`:
 
@@ -1083,14 +1083,14 @@ In `templates/base.html`, just before `</body>`, add after the existing `{% bloc
 </script>
 ```
 
-- [ ] **Step 2: Run full test suite**
+- [x] **Step 2: Run full test suite**
 
 ```bash
 pytest tests/ -v --ignore=tests/test_web_pages.py --ignore=tests/test_app_info.py
 ```
 Expected: all PASS, no regressions.
 
-- [ ] **Step 3: Manual end-to-end browser test**
+- [x] **Step 3: Manual end-to-end browser test**
 
 1. Open `https://floorballstats.mennylenderr.ch/game/1?edit=1`
 2. DevTools → Application → Service Workers: verify SW is registered and active
@@ -1103,7 +1103,7 @@ Expected: all PASS, no regressions.
 9. DevTools → Network → back Online
 10. Queued action syncs, "1 offline action synced" toast, stat correct
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add templates/base.html

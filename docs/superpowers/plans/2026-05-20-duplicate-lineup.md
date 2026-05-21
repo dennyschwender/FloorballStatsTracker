@@ -1,6 +1,6 @@
 # Duplicate Game Lineup Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add a "Copy lineup from last game" button to the new-game form that pre-fills player selection and line assignments from the most recent game with the same team and season.
 
@@ -26,7 +26,7 @@
 - Modify: `routes/api_routes.py` (line 4 imports + new route at end of file)
 - Test: `tests/test_duplicate_lineup.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `tests/test_duplicate_lineup.py`:
 
@@ -138,7 +138,7 @@ def test_last_game_lineup_requires_auth(app):
         assert rv.status_code == 401
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```
 pytest tests/test_duplicate_lineup.py -v
@@ -146,7 +146,7 @@ pytest tests/test_duplicate_lineup.py -v
 
 Expected: all fail with `404` or `ImportError` (route does not exist yet).
 
-- [ ] **Step 3: Add `session` to Flask import in `api_routes.py`**
+- [x] **Step 3: Add `session` to Flask import in `api_routes.py`**
 
 Line 4, change:
 ```python
@@ -157,7 +157,7 @@ to:
 from flask import Blueprint, request, jsonify, session
 ```
 
-- [ ] **Step 4: Add the endpoint at the end of `api_routes.py`**
+- [x] **Step 4: Add the endpoint at the end of `api_routes.py`**
 
 ```python
 @api_bp.route('/last_game_lineup')
@@ -202,7 +202,7 @@ def last_game_lineup():
     })
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 ```
 pytest tests/test_duplicate_lineup.py -v
@@ -210,7 +210,7 @@ pytest tests/test_duplicate_lineup.py -v
 
 Expected: all 6 tests pass.
 
-- [ ] **Step 6: Run full test suite to verify no regression**
+- [x] **Step 6: Run full test suite to verify no regression**
 
 ```
 pytest tests/ -v
@@ -218,7 +218,7 @@ pytest tests/ -v
 
 Expected: all existing tests still pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add routes/api_routes.py tests/test_duplicate_lineup.py
@@ -232,7 +232,7 @@ git commit -m "feat(api): add GET /api/last_game_lineup endpoint"
 **Files:**
 - Modify: `templates/game_form.html` (after `<h4>{{ g.t['lineup'] }}</h4>`, and in `{% block scripts %}`)
 
-- [ ] **Step 1: Add button HTML**
+- [x] **Step 1: Add button HTML**
 
 In `templates/game_form.html`, find the lineup section heading (line ~587):
 ```html
@@ -252,7 +252,7 @@ Insert the following block **immediately after** that `<h4>` line, inside `{% if
 {% endif %}
 ```
 
-- [ ] **Step 2: Add JS for button visibility + fetch + populate**
+- [x] **Step 2: Add JS for button visibility + fetch + populate**
 
 In `{% block scripts %}`, inside the `document.addEventListener('DOMContentLoaded', ...)` block, **after** the existing `populateExistingGameData()` call (near the very end of the DOMContentLoaded handler), add:
 
@@ -365,7 +365,7 @@ In `{% block scripts %}`, inside the `document.addEventListener('DOMContentLoade
 // ---- end copy lineup ----
 ```
 
-- [ ] **Step 3: Manually verify in browser**
+- [x] **Step 3: Manually verify in browser**
 
 1. Start dev server: `python app.py`
 2. Open new game form at `http://localhost:5000/game/new` (or equivalent)
@@ -375,7 +375,7 @@ In `{% block scripts %}`, inside the `document.addEventListener('DOMContentLoade
 6. Click button when no prior game exists → status shows "No previous game found"
 7. Create a game with a lineup, then open new-game form again → clicking the button pre-fills convocato checkboxes and line positions from that game
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add templates/game_form.html
