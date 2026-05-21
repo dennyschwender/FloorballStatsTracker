@@ -846,3 +846,124 @@ def set_period(game_id, period):
             break
     save_games(games)
     return redirect(url_for('game.game_details', game_id=game_id))
+
+
+@game_bp.route('/event/<int:game_id>', methods=['POST'])
+def record_event(game_id):
+    """Atomic multi-stat event endpoint for the game wizard."""
+    payload = request.get_json(silent=True) or {}
+    event_type = payload.get('type')
+
+    games = load_games()
+    game = find_game_by_id(games, game_id)
+    if not game:
+        abort(404)
+    require_edit(game)
+
+    ensure_game_stats(game)
+
+    period = game.get('current_period', '1')
+    if 'result' not in game:
+        game['result'] = {p: {'home': 0, 'away': 0} for p in PERIODS}
+
+    undo_store.push(game_id, game)
+
+    if event_type == 'goal':
+        team = payload.get('team')
+        plusminus_players = payload.get('plusminus_players', [])
+
+        if team == 'ours':
+            scorer = payload.get('scorer')
+            assist = payload.get('assist')
+            if scorer:
+                ensure_player_stats(game, scorer)
+                game['goals'][scorer] += 1
+            if period not in game['result']:
+                game['result'][period] = {'home': 0, 'away': 0}
+            game['result'][period]['home'] += 1
+            if assist:
+                ensure_player_stats(game, assist)
+                game['assists'][assist] += 1
+            for p in plusminus_players:
+                ensure_player_stats(game, p)
+                game['plusminus'][p] += 1
+            if game.get('opponent_goalie_enabled', False):
+                if 'opponent_goalie_goals_conceded' not in game:
+                    game['opponent_goalie_goals_conceded'] = {}
+                if 'Opponent Goalie' not in game['opponent_goalie_goals_conceded']:
+                    game['opponent_goalie_goals_conceded']['Opponent Goalie'] = 0
+                game['opponent_goalie_goals_conceded']['Opponent Goalie'] += 1
+
+        elif team == 'opponent':
+            goalie = payload.get('goalie')
+            for p in plusminus_players:
+                ensure_player_stats(game, p)
+                game['plusminus'][p] -= 1
+            if goalie:
+                if 'goals_conceded' not in game:
+                    game['goals_conceded'] = {}
+                if goalie not in game['goals_conceded']:
+                    game['goals_conceded'][goalie] = 0
+                game['goals_conceded'][goalie] += 1
+                if period not in game['result']:
+                    game['result'][period] = {'home': 0, 'away': 0}
+                game['result'][period]['away'] += 1
+        else:
+            return jsonify({'ok': False, 'error': 'goal requires team=ours|opponent'}), 400
+
+        recalculate_game_scores(game)
+
+    elif event_type == 'penalty':
+        subtype = payload.get('subtype')
+        player = payload.get('player')
+        if not player:
+            return jsonify({'ok': False, 'error': 'penalty requires player'}), 400
+        ensure_player_stats(game, player)
+        if subtype == 'taken':
+            game['penalties_taken'][player] += 1
+        elif subtype == 'drawn':
+            game['penalties_drawn'][player] += 1
+        else:
+            return jsonify({'ok': False, 'error': 'penalty requires subtype=taken|drawn'}), 400
+
+    elif event_type == 'save':
+        player = payload.get('player')
+        if not player:
+            return jsonify({'ok': False, 'error': 'save requires player'}), 400
+        if player == 'Opponent Goalie':
+            if 'opponent_goalie_saves' not in game:
+                game['opponent_goalie_saves'] = {}
+            if 'Opponent Goalie' not in game['opponent_goalie_saves']:
+                game['opponent_goalie_saves']['Opponent Goalie'] = 0
+            game['opponent_goalie_saves']['Opponent Goalie'] += 1
+        else:
+            if 'saves' not in game:
+                game['saves'] = {}
+            if player not in game['saves']:
+                game['saves'][player] = 0
+            game['saves'][player] += 1
+
+    elif event_type == 'shot_on_goal':
+        player = payload.get('player')
+        if not player:
+            return jsonify({'ok': False, 'error': 'shot_on_goal requires player'}), 400
+        ensure_player_stats(game, player)
+        game['shots_on_goal'][player] += 1
+
+    elif event_type == 'period_change':
+        current = game.get('current_period', '1')
+        idx = PERIODS.index(current) if current in PERIODS else 0
+        game['current_period'] = PERIODS[min(idx + 1, len(PERIODS) - 1)]
+
+    else:
+        return jsonify({'ok': False, 'error': f'unknown event type: {event_type}'}), 400
+
+    for i, g in enumerate(games):
+        if g.get('id') == game_id:
+            games[i] = game
+            break
+    save_games(games)
+
+    resp = _game_stats_response(game)
+    resp['current_period'] = game.get('current_period', '1')
+    return jsonify(resp)
