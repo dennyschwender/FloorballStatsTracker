@@ -866,8 +866,6 @@ def record_event(game_id):
     if 'result' not in game:
         game['result'] = {p: {'home': 0, 'away': 0} for p in PERIODS}
 
-    undo_store.push(game_id, game)
-
     if event_type == 'goal':
         team = payload.get('team')
         plusminus_players = payload.get('plusminus_players', [])
@@ -877,6 +875,7 @@ def record_event(game_id):
             assist = payload.get('assist')
             if not scorer:
                 return jsonify({'ok': False, 'error': 'goal for ours requires scorer'}), 400
+            undo_store.push(game_id, game)
             ensure_player_stats(game, scorer)
             game['goals'][scorer] += 1
             if period not in game['result']:
@@ -897,6 +896,7 @@ def record_event(game_id):
 
         elif team == 'opponent':
             goalie = payload.get('goalie')
+            undo_store.push(game_id, game)
             for p in plusminus_players:
                 ensure_player_stats(game, p)
                 game['plusminus'][p] -= 1
@@ -919,6 +919,7 @@ def record_event(game_id):
         player = payload.get('player')
         if not player:
             return jsonify({'ok': False, 'error': 'penalty requires player'}), 400
+        undo_store.push(game_id, game)
         ensure_player_stats(game, player)
         if subtype == 'taken':
             game['penalties_taken'][player] += 1
@@ -931,6 +932,7 @@ def record_event(game_id):
         player = payload.get('player')
         if not player:
             return jsonify({'ok': False, 'error': 'save requires player'}), 400
+        undo_store.push(game_id, game)
         if player == 'Opponent Goalie':
             if 'opponent_goalie_saves' not in game:
                 game['opponent_goalie_saves'] = {}
@@ -948,10 +950,12 @@ def record_event(game_id):
         player = payload.get('player')
         if not player:
             return jsonify({'ok': False, 'error': 'shot_on_goal requires player'}), 400
+        undo_store.push(game_id, game)
         ensure_player_stats(game, player)
         game['shots_on_goal'][player] += 1
 
     elif event_type == 'period_change':
+        undo_store.push(game_id, game)
         current = game.get('current_period', '1')
         idx = PERIODS.index(current) if current in PERIODS else 0
         game['current_period'] = PERIODS[min(idx + 1, len(PERIODS) - 1)]
