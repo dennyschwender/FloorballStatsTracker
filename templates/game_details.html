@@ -965,7 +965,7 @@
             var btn = document.createElement('button');
             btn.type = 'button';
             var isSelected = wizard.selections[step.key] === opt.value;
-            btn.className = 'btn ' + (isSelected ? 'btn-primary' : 'btn-outline-secondary') + ' wizard-chip';
+            btn.className = 'btn btn-lg ' + (isSelected ? 'btn-primary' : 'btn-outline-secondary') + ' wizard-chip';
             btn.dataset.key = step.key;
             btn.dataset.value = opt.value;
             btn.textContent = opt.label;
@@ -981,7 +981,7 @@
         step.options.forEach(function (opt) {
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'btn btn-sm ' + (selected === opt ? 'btn-primary' : 'btn-outline-secondary') + ' wizard-chip';
+            btn.className = 'btn ' + (selected === opt ? 'btn-primary' : 'btn-outline-secondary') + ' wizard-chip';
             btn.dataset.key = step.key;
             btn.dataset.value = opt;
             btn.textContent = opt;
@@ -1006,7 +1006,7 @@
             card.className = 'mb-2 border rounded';
 
             var hdr = document.createElement('div');
-            hdr.className = 'd-flex align-items-center justify-content-between p-2 bg-light wizard-line-header';
+            hdr.className = 'd-flex align-items-center justify-content-between p-3 bg-light wizard-line-header';
             hdr.style.cursor = 'pointer';
             hdr.dataset.lineIdx = String(lineIdx);
 
@@ -1024,7 +1024,7 @@
                 var on = selected.indexOf(p) >= 0;
                 var btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'btn btn-sm ' + (on ? 'btn-primary' : 'btn-outline-secondary') + ' wizard-pm-chip';
+                btn.className = 'btn ' + (on ? 'btn-primary' : 'btn-outline-secondary') + ' wizard-pm-chip';
                 btn.dataset.player = p;
                 btn.textContent = p;
                 chips.appendChild(btn);
@@ -1130,7 +1130,7 @@
         if (idx > 0) {
             var backBtn = document.createElement('button');
             backBtn.type = 'button';
-            backBtn.className = 'btn btn-outline-secondary';
+            backBtn.className = 'btn btn-lg btn-outline-secondary';
             backBtn.textContent = '\u2190 Back';
             backBtn.addEventListener('click', function () {
                 wizard.idx = Math.max(0, wizard.idx - 1);
@@ -1143,7 +1143,7 @@
         var actionBtn = document.createElement('button');
         actionBtn.type = 'button';
         actionBtn.id = isLast ? 'wizardSave' : 'wizardNext';
-        actionBtn.className = (isLast ? 'btn btn-success' : 'btn btn-primary') + ' ms-auto';
+        actionBtn.className = (isLast ? 'btn btn-lg btn-success' : 'btn btn-lg btn-primary') + ' ms-auto';
         actionBtn.textContent = isLast ? '\u2713 Save' : 'Next \u2192';
         if (isLast) {
             actionBtn.addEventListener('click', submitEvent);
@@ -1248,7 +1248,7 @@
 
     // ── Event type picker (first screen) ─────────────────────────────────────
     var eventTypes = [
-        { value: 'goal_type',     label: '\u26BD Goal' },
+        { value: 'goal_type',     label: '\uD83E\uDD45 Goal' },
         { value: 'penalty',       label: '\uD83D\uDFE5 Penalty' },
         { value: 'save',          label: '\uD83E\uDDE4 Save' },
         { value: 'shot_on_goal',  label: '\uD83C\uDFAF Shot on goal' },
@@ -1275,7 +1275,7 @@
         eventTypes.forEach(function (et) {
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'btn btn-outline-primary wizard-event-type';
+            btn.className = 'btn btn-lg btn-outline-primary wizard-event-type';
             btn.dataset.eventType = et.value;
             btn.textContent = et.label;
             btn.addEventListener('click', function () {
