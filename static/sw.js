@@ -1,7 +1,7 @@
 'use strict';
 
-var SHELL_CACHE = 'app-shell-v1';
-var GAME_CACHE = 'game-page-v1';
+var SHELL_CACHE = 'app-shell-v2';
+var GAME_CACHE = 'game-page-v2';
 
 var SHELL_ASSETS = [
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
