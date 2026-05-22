@@ -87,3 +87,6 @@ rosters/*.json*
 
 # Ignore screenshots and test images
 *.png
+
+# Superpowers brainstorm runtime state
+.superpowers/**/state/

@@ -1,0 +1,76 @@
+<h2>Wizard flow inside the modal</h2>
+<p class="subtitle">After picking event type — one form or step-by-step?</p>
+
+<div class="split">
+
+  <div class="mockup">
+    <div class="mockup-header">A — Single adaptive form</div>
+    <div class="mockup-body" style="background:#f8f9fa;padding:.75rem;border-radius:6px;">
+      <div style="background:#fff;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);padding:1rem;max-width:300px;margin:0 auto;font-size:.85rem">
+        <div style="font-weight:700;margin-bottom:.75rem">Add Event</div>
+        <label style="display:block;margin-bottom:.25rem;font-size:.75rem;color:#555">Event type</label>
+        <select style="width:100%;border:1px solid #ccc;border-radius:4px;padding:.3rem .5rem;margin-bottom:.6rem">
+          <option>⚽ Goal — our team</option>
+        </select>
+        <label style="display:block;margin-bottom:.25rem;font-size:.75rem;color:#555">Scorer</label>
+        <select style="width:100%;border:1px solid #ccc;border-radius:4px;padding:.3rem .5rem;margin-bottom:.6rem">
+          <option>7 - Marco Rossi</option>
+        </select>
+        <label style="display:block;margin-bottom:.25rem;font-size:.75rem;color:#555">Assist (optional)</label>
+        <select style="width:100%;border:1px solid #ccc;border-radius:4px;padding:.3rem .5rem;margin-bottom:.6rem">
+          <option>— none —</option>
+        </select>
+        <label style="display:block;margin-bottom:.25rem;font-size:.75rem;color:#555">Period</label>
+        <select style="width:100%;border:1px solid #ccc;border-radius:4px;padding:.3rem .5rem;margin-bottom:.75rem">
+          <option>2nd period</option>
+        </select>
+        <div style="display:flex;justify-content:space-between">
+          <button style="border:1px solid #ccc;background:#fff;border-radius:4px;padding:.3rem .7rem">Cancel</button>
+          <button style="background:#198754;color:#fff;border:none;border-radius:4px;padding:.3rem .8rem;font-weight:600">✓ Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">B — Step-by-step wizard</div>
+    <div class="mockup-body" style="background:#f8f9fa;padding:.75rem;border-radius:6px;">
+      <div style="background:#fff;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);padding:1rem;max-width:300px;margin:0 auto;font-size:.85rem">
+        <div style="display:flex;gap:4px;margin-bottom:.75rem">
+          <div style="flex:1;height:4px;background:#0d6efd;border-radius:2px"></div>
+          <div style="flex:1;height:4px;background:#0d6efd;border-radius:2px"></div>
+          <div style="flex:1;height:4px;background:#dee2e6;border-radius:2px"></div>
+        </div>
+        <div style="font-weight:700;margin-bottom:.5rem">Step 2 — Who scored?</div>
+        <div style="display:flex;flex-direction:column;gap:.35rem;margin-bottom:.75rem">
+          <div style="background:#0d6efd;color:#fff;border-radius:4px;padding:.4rem .7rem">7 — Marco Rossi</div>
+          <div style="background:#e9ecef;border-radius:4px;padding:.4rem .7rem">11 — Luca Bianchi</div>
+          <div style="background:#e9ecef;border-radius:4px;padding:.4rem .7rem">23 — Sergio Verdi</div>
+          <div style="background:#e9ecef;border-radius:4px;padding:.4rem .7rem">4 — Andrea Neri</div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <button style="border:1px solid #ccc;background:#fff;border-radius:4px;padding:.3rem .7rem">← Back</button>
+          <button style="background:#0d6efd;color:#fff;border:none;border-radius:4px;padding:.3rem .8rem">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="options" style="margin-top:1.5rem">
+  <div class="option" data-choice="single" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Single adaptive form</h3>
+      <p>All fields on one screen, dropdowns change based on event type. Faster for power users.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="steps" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Step-by-step</h3>
+      <p>One decision per screen (tap a player from a list, not type). Easier on mobile/touchscreen during a live game.</p>
+    </div>
+  </div>
+</div>

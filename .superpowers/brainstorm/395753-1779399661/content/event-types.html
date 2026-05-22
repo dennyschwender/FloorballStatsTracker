@@ -1,0 +1,42 @@
+<h2>Which event types should the wizard support?</h2>
+<p class="subtitle">Select all that should trigger the "Add Event" wizard during a live game</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="goal" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Goal</h3>
+      <p>Scorer (required) + assist (optional) + period</p>
+    </div>
+  </div>
+  <div class="option" data-choice="penalty" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Penalty / Misconduct</h3>
+      <p>Player + penalty type + duration (2 min, 5 min, etc.)</p>
+    </div>
+  </div>
+  <div class="option" data-choice="save" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Save</h3>
+      <p>Goalkeeper credited with a save</p>
+    </div>
+  </div>
+  <div class="option" data-choice="shot" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>Shot on goal</h3>
+      <p>Track shots (and saves) separately from goals</p>
+    </div>
+  </div>
+  <div class="option" data-choice="period" onclick="toggleSelect(this)">
+    <div class="letter">E</div>
+    <div class="content">
+      <h3>Period change</h3>
+      <p>Advance the current period (1→2→3→OT) via wizard</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1.5rem">Select as many as apply — or just pick Goal if that's the priority. You can add more later.</p>

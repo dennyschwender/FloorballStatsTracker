@@ -1,0 +1,58 @@
+<h2>How should the wizard appear?</h2>
+<p class="subtitle">After tapping "＋ Event" — how does the step-by-step form show up?</p>
+
+<div class="split">
+
+  <div class="mockup">
+    <div class="mockup-header">A — Modal dialog</div>
+    <div class="mockup-body" style="background:#f8f9fa;padding:.75rem;border-radius:6px;">
+      <div style="background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:1rem;max-width:320px;margin:0 auto;">
+        <div style="font-weight:700;font-size:.95rem;margin-bottom:.5rem">Step 1 of 2 — Event type</div>
+        <div style="display:flex;flex-direction:column;gap:.4rem">
+          <div style="background:#0d6efd;color:#fff;border-radius:4px;padding:.4rem .7rem;font-size:.85rem">⚽ Goal</div>
+          <div style="background:#e9ecef;border-radius:4px;padding:.4rem .7rem;font-size:.85rem">⛔ Penalty</div>
+          <div style="background:#e9ecef;border-radius:4px;padding:.4rem .7rem;font-size:.85rem">🧤 Save</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:.75rem">
+          <button style="border:1px solid #ccc;background:#fff;border-radius:4px;padding:.3rem .7rem;font-size:.8rem">Cancel</button>
+          <button style="background:#0d6efd;color:#fff;border:none;border-radius:4px;padding:.3rem .7rem;font-size:.8rem">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">B — Bottom sheet</div>
+    <div class="mockup-body" style="background:#f8f9fa;padding:.75rem;border-radius:6px;position:relative;min-height:180px;">
+      <div style="color:#aaa;font-size:.8rem;text-align:center;padding-top:.5rem">↑ game content above ↑</div>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:12px 12px 0 0;padding:1rem;box-shadow:0 -4px 16px rgba(0,0,0,.15)">
+        <div style="width:32px;height:3px;background:#ccc;border-radius:2px;margin:0 auto .75rem"></div>
+        <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem">Select event type</div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+          <span style="background:#0d6efd;color:#fff;border-radius:50px;padding:.25rem .6rem;font-size:.8rem">⚽ Goal</span>
+          <span style="background:#e9ecef;border-radius:50px;padding:.25rem .6rem;font-size:.8rem">⛔ Penalty</span>
+          <span style="background:#e9ecef;border-radius:50px;padding:.25rem .6rem;font-size:.8rem">🧤 Save</span>
+          <span style="background:#e9ecef;border-radius:50px;padding:.25rem .6rem;font-size:.8rem">📊 Period</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="options" style="margin-top:1.5rem">
+  <div class="option" data-choice="modal" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Modal dialog</h3>
+      <p>Centered overlay. Familiar pattern, works well on desktop and mobile. Blocks background.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="sheet" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Bottom sheet / drawer</h3>
+      <p>Slides up from bottom. More mobile-native feel. Game stays visible above it.</p>
+    </div>
+  </div>
+</div>
