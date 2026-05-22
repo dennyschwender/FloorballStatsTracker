@@ -904,8 +904,8 @@
             goal_type: [
                 { key: 'team', title: 'Which team scored?', type: 'chips',
                   options: [
-                    { value: 'ours', label: '\u26BD Our team' },
-                    { value: 'opponent', label: '\u26BD Opponent' }
+                    { value: 'ours', label: 'Our team' },
+                    { value: 'opponent', label: 'Opponent' }
                   ] },
                 { key: '__goal_branch', title: '', type: 'goal_branch' }
             ],
@@ -960,7 +960,7 @@
     // ── Renderers ─────────────────────────────────────────────────────────────
     function renderChips(step) {
         var wrap = document.createElement('div');
-        wrap.className = 'd-flex flex-wrap gap-2 py-1';
+        wrap.className = 'd-grid gap-2 py-1';
         step.options.forEach(function (opt) {
             var btn = document.createElement('button');
             btn.type = 'button';
@@ -976,12 +976,12 @@
 
     function renderPlayerList(step) {
         var wrap = document.createElement('div');
-        wrap.className = 'd-flex flex-wrap gap-2 py-1';
+        wrap.className = 'd-grid gap-2 py-1';
         var selected = wizard.selections[step.key];
         step.options.forEach(function (opt) {
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'btn ' + (selected === opt ? 'btn-primary' : 'btn-outline-secondary') + ' wizard-chip';
+            btn.className = 'btn btn-lg ' + (selected === opt ? 'btn-primary' : 'btn-outline-secondary') + ' wizard-chip';
             btn.dataset.key = step.key;
             btn.dataset.value = opt;
             btn.textContent = opt;
@@ -993,7 +993,19 @@
     function renderLinePlusminus(step) {
         var selected = wizard.selections[step.key];
         if (!Array.isArray(selected)) {
-            selected = allPlayers().slice();
+            var scorer = wizard.selections['scorer'];
+            var assist = wizard.selections['assist'];
+            var preSelected = [];
+            (window.GAME_LINES || []).forEach(function (line) {
+                var nonEmpty = line.filter(function (p) { return p; });
+                if (scorer && nonEmpty.indexOf(scorer) >= 0) {
+                    nonEmpty.forEach(function (p) { if (preSelected.indexOf(p) < 0) preSelected.push(p); });
+                }
+            });
+            if (assist && assist !== '\u2014 No assist \u2014' && preSelected.indexOf(assist) < 0) {
+                preSelected.push(assist);
+            }
+            selected = preSelected.length ? preSelected : allPlayers().slice();
             wizard.selections[step.key] = selected;
         }
         var container = document.createElement('div');
@@ -1155,11 +1167,12 @@
         }
         footer.appendChild(actionBtn);
 
-        // Single-select chip listeners
+        // Single-select chip listeners — auto-advance to next step on tap
         body.querySelectorAll('.wizard-chip').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 wizard.selections[btn.dataset.key] = btn.dataset.value;
-                renderStep(idx);
+                wizard.idx = Math.min(wizard.steps.length - 1, wizard.idx + 1);
+                renderStep(wizard.idx);
             });
         });
 
