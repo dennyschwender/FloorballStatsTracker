@@ -90,13 +90,13 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('stats.stats') }}">{{ g.t['stats'] }}</a></li>
+                    <li class="nav-item"><a class="nav-link{% if request.path.startswith('/stats') %} active" aria-current="page{% endif %}" href="{{ url_for('stats.stats') }}">{{ g.t['stats'] }}</a></li>
                     {% if g.is_admin_session or g.current_user %}
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('game.create_game') }}">{{ g.t['create_game'] }}</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('roster.roster_list') }}">{{ g.t['roster'] }}</a></li>
+                    <li class="nav-item"><a class="nav-link{% if request.path.startswith('/create_game') %} active" aria-current="page{% endif %}" href="{{ url_for('game.create_game') }}">{{ g.t['create_game'] }}</a></li>
+                    <li class="nav-item"><a class="nav-link{% if request.path.startswith('/roster') %} active" aria-current="page{% endif %}" href="{{ url_for('roster.roster_list') }}">{{ g.t['roster'] }}</a></li>
                     {% endif %}
                     {% if g.is_admin_session or (g.current_user and g.current_user.is_admin) %}
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.index') }}">{{ g.t.get('admin', 'Admin') }}</a></li>
+                    <li class="nav-item"><a class="nav-link{% if request.path.startswith('/admin') %} active" aria-current="page{% endif %}" href="{{ url_for('admin.index') }}">{{ g.t.get('admin', 'Admin') }}</a></li>
                     {% endif %}
                 </ul>
                 <div class="d-lg-none border-top my-2"></div>

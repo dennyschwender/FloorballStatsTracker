@@ -1,0 +1,25 @@
+- generic [ref=e1]:
+  - navigation "Main navigation" [ref=e2]:
+    - generic [ref=e3]:
+      - link "Floorball Stats" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e5]:
+        - list [ref=e6]:
+          - listitem [ref=e7]:
+            - link "Statistics" [ref=e8] [cursor=pointer]:
+              - /url: /stats
+        - combobox "Change language" [ref=e10]:
+          - option "English" [selected]
+          - option "Italian"
+        - link "Login" [ref=e12] [cursor=pointer]:
+          - /url: /login
+  - main [ref=e13]:
+    - generic [ref=e19]:
+      - heading "Enter Access PIN" [level=4] [ref=e20]
+      - generic [ref=e21]:
+        - textbox "Enter PIN" [active] [ref=e23]
+        - button "Enter" [ref=e24] [cursor=pointer]
+      - separator [ref=e25]
+      - paragraph [ref=e26]:
+        - link "Login" [ref=e27] [cursor=pointer]:
+          - /url: /login

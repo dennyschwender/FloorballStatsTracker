@@ -1,0 +1,260 @@
+- generic [active] [ref=e1]:
+  - navigation "Main navigation" [ref=e2]:
+    - generic [ref=e3]:
+      - link "Floorball Stats" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e5]:
+        - list [ref=e6]:
+          - listitem [ref=e7]:
+            - link "Statistics" [ref=e8] [cursor=pointer]:
+              - /url: /stats
+          - listitem [ref=e9]:
+            - link "Create Game" [ref=e10] [cursor=pointer]:
+              - /url: /create_game
+          - listitem [ref=e11]:
+            - link "Roster" [ref=e12] [cursor=pointer]:
+              - /url: /roster/
+          - listitem [ref=e13]:
+            - link "Admin" [ref=e14] [cursor=pointer]:
+              - /url: /admin/
+        - combobox "Change language" [ref=e16]:
+          - option "English" [selected]
+          - option "Italian"
+        - button "Logout" [ref=e19] [cursor=pointer]
+        - combobox "Switch game" [ref=e21]:
+          - option "All" [selected]
+          - option "04.04 Visper Lions vs Lugano"
+          - option "28.02 Inwil Baar vs TIUH"
+          - option "20.02 Frauenfeld vs TIUH"
+          - option "14.02 TIUH vs Jona"
+          - option "31.01 Eschenbach vs TIUH"
+          - option "24.01 TIUH vs UBN"
+          - option "10.01 TIUH vs Sargans"
+          - option "21.12 Luzern vs TIUH"
+          - option "07.12 WASA vs TIUH"
+          - option "29.11 TIUH vs Ad Astra"
+          - option "22.11 TIUH vs Limmatal"
+          - option "22.11 TIUH vs Inwil Baar"
+          - option "08.11 Jona vs TIUH"
+          - option "01.11 TIUH vs Eschenbach"
+          - option "25.10 UBN vs TIUH"
+          - option "18.10 TIUH vs Frauenfeld"
+          - option "12.10 UHC Sarganserland vs TIUH"
+          - option "28.09 TIUH vs Luzern"
+          - option "21.09 TIUH vs WASA"
+          - option "13.09 Ad Astra Obwalden vs TIUH"
+  - main [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - combobox [ref=e26]:
+            - option "All Seasons"
+            - option "2026-27"
+            - option "2025-26" [selected]
+          - combobox [ref=e27]:
+            - option "All Teams" [selected]
+            - option "Lugano"
+            - option "NLB"
+            - option "U21"
+        - link "Go to Latest Game" [ref=e28] [cursor=pointer]:
+          - /url: /game/19
+      - heading "All Games" [level=2] [ref=e29]
+      - table [ref=e31]:
+        - rowgroup [ref=e32]:
+          - row "Category ⇅ Date ↓ Home Team ⇅ Away Team ⇅ Actions" [ref=e33]:
+            - columnheader "Category ⇅" [ref=e34] [cursor=pointer]:
+              - text: Category
+              - generic: ⇅
+            - columnheader "Date ↓" [ref=e35] [cursor=pointer]:
+              - text: Date
+              - generic: ↓
+            - columnheader "Home Team ⇅" [ref=e36] [cursor=pointer]:
+              - text: Home Team
+              - generic: ⇅
+            - columnheader "Away Team ⇅" [ref=e37] [cursor=pointer]:
+              - text: Away Team
+              - generic: ⇅
+            - columnheader "Actions" [ref=e38]
+        - rowgroup [ref=e39]:
+          - row "Lugano 2026-04-04 Visper Lions Lugano View" [ref=e40]:
+            - cell "Lugano" [ref=e41]:
+              - generic [ref=e42]: Lugano
+            - cell "2026-04-04" [ref=e43]
+            - cell "Visper Lions" [ref=e44]
+            - cell "Lugano" [ref=e45]
+            - cell "View" [ref=e46]:
+              - link "View" [ref=e47] [cursor=pointer]:
+                - /url: /game/19
+          - row "U21 2026-02-28 Inwil Baar TIUH View" [ref=e48]:
+            - cell "U21" [ref=e49]:
+              - generic [ref=e50]: U21
+            - cell "2026-02-28" [ref=e51]
+            - cell "Inwil Baar" [ref=e52]
+            - cell "TIUH" [ref=e53]
+            - cell "View" [ref=e54]:
+              - link "View" [ref=e55] [cursor=pointer]:
+                - /url: /game/18
+          - row "U21 2026-02-20 Frauenfeld TIUH View" [ref=e56]:
+            - cell "U21" [ref=e57]:
+              - generic [ref=e58]: U21
+            - cell "2026-02-20" [ref=e59]
+            - cell "Frauenfeld" [ref=e60]
+            - cell "TIUH" [ref=e61]
+            - cell "View" [ref=e62]:
+              - link "View" [ref=e63] [cursor=pointer]:
+                - /url: /game/14
+          - row "U21 2026-02-14 TIUH Jona View" [ref=e64]:
+            - cell "U21" [ref=e65]:
+              - generic [ref=e66]: U21
+            - cell "2026-02-14" [ref=e67]
+            - cell "TIUH" [ref=e68]
+            - cell "Jona" [ref=e69]
+            - cell "View" [ref=e70]:
+              - link "View" [ref=e71] [cursor=pointer]:
+                - /url: /game/17
+          - row "U21 2026-01-31 Eschenbach TIUH View" [ref=e72]:
+            - cell "U21" [ref=e73]:
+              - generic [ref=e74]: U21
+            - cell "2026-01-31" [ref=e75]
+            - cell "Eschenbach" [ref=e76]
+            - cell "TIUH" [ref=e77]
+            - cell "View" [ref=e78]:
+              - link "View" [ref=e79] [cursor=pointer]:
+                - /url: /game/16
+          - row "U21 2026-01-24 TIUH UBN View" [ref=e80]:
+            - cell "U21" [ref=e81]:
+              - generic [ref=e82]: U21
+            - cell "2026-01-24" [ref=e83]
+            - cell "TIUH" [ref=e84]
+            - cell "UBN" [ref=e85]
+            - cell "View" [ref=e86]:
+              - link "View" [ref=e87] [cursor=pointer]:
+                - /url: /game/15
+          - row "U21 2026-01-10 TIUH Sargans View" [ref=e88]:
+            - cell "U21" [ref=e89]:
+              - generic [ref=e90]: U21
+            - cell "2026-01-10" [ref=e91]
+            - cell "TIUH" [ref=e92]
+            - cell "Sargans" [ref=e93]
+            - cell "View" [ref=e94]:
+              - link "View" [ref=e95] [cursor=pointer]:
+                - /url: /game/13
+          - row "U21 2025-12-21 Luzern TIUH View" [ref=e96]:
+            - cell "U21" [ref=e97]:
+              - generic [ref=e98]: U21
+            - cell "2025-12-21" [ref=e99]
+            - cell "Luzern" [ref=e100]
+            - cell "TIUH" [ref=e101]
+            - cell "View" [ref=e102]:
+              - link "View" [ref=e103] [cursor=pointer]:
+                - /url: /game/12
+          - row "U21 2025-12-07 WASA TIUH View" [ref=e104]:
+            - cell "U21" [ref=e105]:
+              - generic [ref=e106]: U21
+            - cell "2025-12-07" [ref=e107]
+            - cell "WASA" [ref=e108]
+            - cell "TIUH" [ref=e109]
+            - cell "View" [ref=e110]:
+              - link "View" [ref=e111] [cursor=pointer]:
+                - /url: /game/11
+          - row "U21 2025-11-29 TIUH Ad Astra View" [ref=e112]:
+            - cell "U21" [ref=e113]:
+              - generic [ref=e114]: U21
+            - cell "2025-11-29" [ref=e115]
+            - cell "TIUH" [ref=e116]
+            - cell "Ad Astra" [ref=e117]
+            - cell "View" [ref=e118]:
+              - link "View" [ref=e119] [cursor=pointer]:
+                - /url: /game/10
+          - row "NLB 2025-11-22 TIUH Limmatal 🚫 View" [ref=e120]:
+            - cell "NLB" [ref=e121]:
+              - generic [ref=e122]: NLB
+            - cell "2025-11-22" [ref=e123]
+            - cell "TIUH" [ref=e124]
+            - cell "Limmatal 🚫" [ref=e125]:
+              - text: Limmatal
+              - generic "Exclude from Statistics" [ref=e126]: 🚫
+            - cell "View" [ref=e127]:
+              - link "View" [ref=e128] [cursor=pointer]:
+                - /url: /game/9
+          - row "U21 2025-11-22 TIUH Inwil Baar View" [ref=e129]:
+            - cell "U21" [ref=e130]:
+              - generic [ref=e131]: U21
+            - cell "2025-11-22" [ref=e132]
+            - cell "TIUH" [ref=e133]
+            - cell "Inwil Baar" [ref=e134]
+            - cell "View" [ref=e135]:
+              - link "View" [ref=e136] [cursor=pointer]:
+                - /url: /game/8
+          - row "U21 2025-11-08 Jona TIUH View" [ref=e137]:
+            - cell "U21" [ref=e138]:
+              - generic [ref=e139]: U21
+            - cell "2025-11-08" [ref=e140]
+            - cell "Jona" [ref=e141]
+            - cell "TIUH" [ref=e142]
+            - cell "View" [ref=e143]:
+              - link "View" [ref=e144] [cursor=pointer]:
+                - /url: /game/7
+          - row "U21 2025-11-01 TIUH Eschenbach View" [ref=e145]:
+            - cell "U21" [ref=e146]:
+              - generic [ref=e147]: U21
+            - cell "2025-11-01" [ref=e148]
+            - cell "TIUH" [ref=e149]
+            - cell "Eschenbach" [ref=e150]
+            - cell "View" [ref=e151]:
+              - link "View" [ref=e152] [cursor=pointer]:
+                - /url: /game/6
+          - row "U21 2025-10-25 UBN TIUH View" [ref=e153]:
+            - cell "U21" [ref=e154]:
+              - generic [ref=e155]: U21
+            - cell "2025-10-25" [ref=e156]
+            - cell "UBN" [ref=e157]
+            - cell "TIUH" [ref=e158]
+            - cell "View" [ref=e159]:
+              - link "View" [ref=e160] [cursor=pointer]:
+                - /url: /game/5
+          - row "U21 2025-10-18 TIUH Frauenfeld View" [ref=e161]:
+            - cell "U21" [ref=e162]:
+              - generic [ref=e163]: U21
+            - cell "2025-10-18" [ref=e164]
+            - cell "TIUH" [ref=e165]
+            - cell "Frauenfeld" [ref=e166]
+            - cell "View" [ref=e167]:
+              - link "View" [ref=e168] [cursor=pointer]:
+                - /url: /game/4
+          - row "U21 2025-10-12 UHC Sarganserland TIUH View" [ref=e169]:
+            - cell "U21" [ref=e170]:
+              - generic [ref=e171]: U21
+            - cell "2025-10-12" [ref=e172]
+            - cell "UHC Sarganserland" [ref=e173]
+            - cell "TIUH" [ref=e174]
+            - cell "View" [ref=e175]:
+              - link "View" [ref=e176] [cursor=pointer]:
+                - /url: /game/3
+          - row "U21 2025-09-28 TIUH Luzern View" [ref=e177]:
+            - cell "U21" [ref=e178]:
+              - generic [ref=e179]: U21
+            - cell "2025-09-28" [ref=e180]
+            - cell "TIUH" [ref=e181]
+            - cell "Luzern" [ref=e182]
+            - cell "View" [ref=e183]:
+              - link "View" [ref=e184] [cursor=pointer]:
+                - /url: /game/2
+          - row "U21 2025-09-21 TIUH WASA View" [ref=e185]:
+            - cell "U21" [ref=e186]:
+              - generic [ref=e187]: U21
+            - cell "2025-09-21" [ref=e188]
+            - cell "TIUH" [ref=e189]
+            - cell "WASA" [ref=e190]
+            - cell "View" [ref=e191]:
+              - link "View" [ref=e192] [cursor=pointer]:
+                - /url: /game/1
+          - row "U21 2025-09-13 Ad Astra Obwalden TIUH View" [ref=e193]:
+            - cell "U21" [ref=e194]:
+              - generic [ref=e195]: U21
+            - cell "2025-09-13" [ref=e196]
+            - cell "Ad Astra Obwalden" [ref=e197]
+            - cell "TIUH" [ref=e198]
+            - cell "View" [ref=e199]:
+              - link "View" [ref=e200] [cursor=pointer]:
+                - /url: /game/0

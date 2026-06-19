@@ -55,8 +55,19 @@
         text-overflow: ellipsis;
     }
     
-    /* Tablet: sticky actions column + hide secondary stat columns */
+    /* Tablet: sticky first column + actions column */
     @media (max-width: 991px) {
+        .table-responsive thead th:first-child,
+        .table-responsive tbody td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            background-color: var(--bs-table-bg, #212529);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+        }
+        .table-responsive thead th:first-child {
+            background-color: #343a40;
+        }
         .actions-col {
             position: sticky;
             right: 0;
@@ -314,11 +325,11 @@
                         <div class="btn-group btn-group-sm action-buttons d-none" role="group">
                             <!-- Quick action buttons always visible -->
                             <a href="/action/{{ game_id }}/{{ player }}?action=goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-primary quick-action-btn ajax-action" title="{{ g.t['goal'] }}">⚽</a>
+                                class="btn btn-primary quick-action-btn ajax-action" title="{{ g.t['goal'] }}" aria-label="{{ g.t['goal'] }}">⚽</a>
                             <a href="/action/{{ game_id }}/{{ player }}?action=assist{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-info quick-action-btn ajax-action" title="{{ g.t['assists'] }}">👍</a>
+                                class="btn btn-info quick-action-btn ajax-action" title="{{ g.t['assists'] }}" aria-label="{{ g.t['assists'] }}">👍</a>
                             <a href="/action/{{ game_id }}/{{ player }}?action=shot_on_goal{% if request.args.get('edit') == '1' %}&edit=1{% endif %}"
-                                class="btn btn-success quick-action-btn ajax-action" title="{{ g.t['sog'] }}">🎯</a>
+                                class="btn btn-success quick-action-btn ajax-action" title="{{ g.t['sog'] }}" aria-label="{{ g.t['sog'] }}">🎯</a>
                             
                             <!-- Dropdown for additional actions -->
                             <div class="btn-group btn-group-sm" role="group">

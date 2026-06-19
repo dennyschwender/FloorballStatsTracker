@@ -1,0 +1,287 @@
+- generic [active] [ref=e1]:
+  - navigation "Main navigation" [ref=e2]:
+    - generic [ref=e3]:
+      - link "Floorball Stats" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e5]:
+        - list [ref=e6]:
+          - listitem [ref=e7]:
+            - link "Statistics" [ref=e8] [cursor=pointer]:
+              - /url: /stats
+          - listitem [ref=e9]:
+            - link "Create Game" [ref=e10] [cursor=pointer]:
+              - /url: /create_game
+          - listitem [ref=e11]:
+            - link "Roster" [ref=e12] [cursor=pointer]:
+              - /url: /roster/
+          - listitem [ref=e13]:
+            - link "Admin" [ref=e14] [cursor=pointer]:
+              - /url: /admin/
+        - combobox "Change language" [ref=e16]:
+          - option "English" [selected]
+          - option "Italian"
+        - button "Logout" [ref=e19] [cursor=pointer]
+        - combobox "Switch game" [ref=e21]:
+          - option "All"
+          - option "20.06 Reinacher Sportverein vs TIUH"
+          - option "04.04 Visper Lions vs Lugano" [selected]
+          - option "28.02 Inwil Baar vs TIUH"
+          - option "20.02 Frauenfeld vs TIUH"
+          - option "14.02 TIUH vs Jona"
+          - option "31.01 Eschenbach vs TIUH"
+          - option "24.01 TIUH vs UBN"
+          - option "10.01 TIUH vs Sargans"
+          - option "21.12 Luzern vs TIUH"
+          - option "07.12 WASA vs TIUH"
+          - option "29.11 TIUH vs Ad Astra"
+          - option "22.11 TIUH vs Inwil Baar"
+          - option "22.11 TIUH vs Limmatal"
+          - option "08.11 Jona vs TIUH"
+          - option "01.11 TIUH vs Eschenbach"
+          - option "25.10 UBN vs TIUH"
+          - option "18.10 TIUH vs Frauenfeld"
+          - option "12.10 UHC Sarganserland vs TIUH"
+          - option "28.09 TIUH vs Luzern"
+          - option "21.09 TIUH vs WASA"
+          - option "13.09 Ad Astra Obwalden vs TIUH"
+  - main [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e25]: Lugano
+      - generic [ref=e27]:
+        - heading "Visper Lions vs Lugano" [level=1] [ref=e28]
+        - generic [ref=e29]:
+          - generic [ref=e30]: "3 : 11"
+          - generic [ref=e31]: (P1:0-1 | P2:1-4 | P3:2-6 | OT:0-0)
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - link "Edit Mode" [ref=e34] [cursor=pointer]:
+            - /url: /game/19?edit=1
+            - text: Edit Mode
+          - generic [ref=e35]:
+            - link "📋 View Lineup" [ref=e36] [cursor=pointer]:
+              - /url: /game/19/lineup
+            - button "Toggle Dropdown" [ref=e37] [cursor=pointer]:
+              - generic [ref=e38]: Toggle Dropdown
+          - group [ref=e39]:
+            - button "📄 Download PDF" [ref=e40] [cursor=pointer]
+          - button "Show Nicknames" [ref=e41] [cursor=pointer]: Show Nicknames
+        - generic [ref=e42]:
+          - link "Modify Game" [ref=e43] [cursor=pointer]:
+            - /url: /modify_game/19
+            - text: Modify Game
+          - link "Edit JSON" [ref=e44] [cursor=pointer]:
+            - /url: /game/19/edit_json
+            - text: Edit JSON
+          - link "Reset Stats" [ref=e45] [cursor=pointer]:
+            - /url: "#"
+            - text: Reset Stats
+      - table [ref=e47]:
+        - rowgroup [ref=e48]:
+          - row "Line Player +/- Goals Assists Errors SOG P. Taken P. Drawn Blocked Shots Stolen Balls Game Score" [ref=e49]:
+            - columnheader "Line" [ref=e50]
+            - columnheader "Player" [ref=e51]
+            - columnheader "+/-" [ref=e52]
+            - columnheader "Goals" [ref=e53]
+            - columnheader "Assists" [ref=e54]
+            - columnheader "Errors" [ref=e55]
+            - columnheader "SOG" [ref=e56]
+            - columnheader "P. Taken" [ref=e57]
+            - columnheader "P. Drawn" [ref=e58]
+            - columnheader "Blocked Shots" [ref=e59]
+            - columnheader "Stolen Balls" [ref=e60]
+            - columnheader "Game Score" [ref=e61]
+        - rowgroup [ref=e62]:
+          - row "Line 1 80 - Luca Minotti -3 1 0 1 1 0 0 1 0 0.5" [ref=e63]:
+            - cell "Line 1" [ref=e64]:
+              - generic [ref=e66]: Line 1
+            - cell "80 - Luca Minotti" [ref=e67]
+            - cell "-3" [ref=e68]
+            - cell "1" [ref=e69]
+            - cell "0" [ref=e70]
+            - cell "1" [ref=e71]
+            - cell "1" [ref=e72]
+            - cell "0" [ref=e73]
+            - cell "0" [ref=e74]
+            - cell "1" [ref=e75]
+            - cell "0" [ref=e76]
+            - cell "0.5" [ref=e77]
+          - row "99 - Riccardo Casartelli -4 0 1 2 0 0 0 3 2 -0.6" [ref=e78]:
+            - cell "99 - Riccardo Casartelli" [ref=e79]
+            - cell "-4" [ref=e80]
+            - cell "0" [ref=e81]
+            - cell "1" [ref=e82]
+            - cell "2" [ref=e83]
+            - cell "0" [ref=e84]
+            - cell "0" [ref=e85]
+            - cell "0" [ref=e86]
+            - cell "3" [ref=e87]
+            - cell "2" [ref=e88]
+            - cell "-0.6" [ref=e89]
+          - row "42 - Simone Zanetti -4 0 0 0 2 0 0 1 1 -1.0" [ref=e90]:
+            - cell "42 - Simone Zanetti" [ref=e91]
+            - cell "-4" [ref=e92]
+            - cell "0" [ref=e93]
+            - cell "0" [ref=e94]
+            - cell "0" [ref=e95]
+            - cell "2" [ref=e96]
+            - cell "0" [ref=e97]
+            - cell "0" [ref=e98]
+            - cell "1" [ref=e99]
+            - cell "1" [ref=e100]
+            - cell "-1.0" [ref=e101]
+          - row "16 - Patrick Scandella -2 0 1 0 0 1 0 2 2 0.2" [ref=e102]:
+            - cell "16 - Patrick Scandella" [ref=e103]
+            - cell "-2" [ref=e104]
+            - cell "0" [ref=e105]
+            - cell "1" [ref=e106]
+            - cell "0" [ref=e107]
+            - cell "0" [ref=e108]
+            - cell "1" [ref=e109]
+            - cell "0" [ref=e110]
+            - cell "2" [ref=e111]
+            - cell "2" [ref=e112]
+            - cell "0.2" [ref=e113]
+          - row "33 - Loris Tracchia -3 0 0 1 4 2 0 0 1 -1.0" [ref=e114]:
+            - cell "33 - Loris Tracchia" [ref=e115]
+            - cell "-3" [ref=e116]
+            - cell "0" [ref=e117]
+            - cell "0" [ref=e118]
+            - cell "1" [ref=e119]
+            - cell "4" [ref=e120]
+            - cell "2" [ref=e121]
+            - cell "0" [ref=e122]
+            - cell "0" [ref=e123]
+            - cell "1" [ref=e124]
+            - cell "-1.0" [ref=e125]
+          - row "Line 2 97 - Emanuele Mombelli -2 1 0 2 1 0 0 3 3 0.6" [ref=e126]:
+            - cell "Line 2" [ref=e127]:
+              - generic [ref=e129]: Line 2
+            - cell "97 - Emanuele Mombelli" [ref=e130]
+            - cell "-2" [ref=e131]
+            - cell "1" [ref=e132]
+            - cell "0" [ref=e133]
+            - cell "2" [ref=e134]
+            - cell "1" [ref=e135]
+            - cell "0" [ref=e136]
+            - cell "0" [ref=e137]
+            - cell "3" [ref=e138]
+            - cell "3" [ref=e139]
+            - cell "0.6" [ref=e140]
+          - row "28 - Nicolò Bernini -2 0 0 3 1 0 0 0 1 -1.1" [ref=e141]:
+            - cell "28 - Nicolò Bernini" [ref=e142]
+            - cell "-2" [ref=e143]
+            - cell "0" [ref=e144]
+            - cell "0" [ref=e145]
+            - cell "3" [ref=e146]
+            - cell "1" [ref=e147]
+            - cell "0" [ref=e148]
+            - cell "0" [ref=e149]
+            - cell "0" [ref=e150]
+            - cell "1" [ref=e151]
+            - cell "-1.1" [ref=e152]
+          - row "91 - Milo Mattei -3 0 0 1 3 0 1 1 5 -0.6" [ref=e153]:
+            - cell "91 - Milo Mattei" [ref=e154]
+            - cell "-3" [ref=e155]
+            - cell "0" [ref=e156]
+            - cell "0" [ref=e157]
+            - cell "1" [ref=e158]
+            - cell "3" [ref=e159]
+            - cell "0" [ref=e160]
+            - cell "1" [ref=e161]
+            - cell "1" [ref=e162]
+            - cell "5" [ref=e163]
+            - cell "-0.6" [ref=e164]
+          - row "20 - Mattia Luraschi -5 1 0 0 4 0 0 0 0 0.4" [ref=e165]:
+            - cell "20 - Mattia Luraschi" [ref=e166]
+            - cell "-5" [ref=e167]
+            - cell "1" [ref=e168]
+            - cell "0" [ref=e169]
+            - cell "0" [ref=e170]
+            - cell "4" [ref=e171]
+            - cell "0" [ref=e172]
+            - cell "0" [ref=e173]
+            - cell "0" [ref=e174]
+            - cell "0" [ref=e175]
+            - cell "0.4" [ref=e176]
+          - row "12 - Stanga Giacomo -3 0 1 1 1 0 0 0 0 0.0" [ref=e177]:
+            - cell "12 - Stanga Giacomo" [ref=e178]
+            - cell "-3" [ref=e179]
+            - cell "0" [ref=e180]
+            - cell "1" [ref=e181]
+            - cell "1" [ref=e182]
+            - cell "1" [ref=e183]
+            - cell "0" [ref=e184]
+            - cell "0" [ref=e185]
+            - cell "0" [ref=e186]
+            - cell "0" [ref=e187]
+            - cell "0.0" [ref=e188]
+          - row "Line 3 18 - Davide Milano -3 0 0 0 0 0 0 0 0 -0.9" [ref=e189]:
+            - cell "Line 3" [ref=e190]:
+              - generic [ref=e192]: Line 3
+            - cell "18 - Davide Milano" [ref=e193]
+            - cell "-3" [ref=e194]
+            - cell "0" [ref=e195]
+            - cell "0" [ref=e196]
+            - cell "0" [ref=e197]
+            - cell "0" [ref=e198]
+            - cell "0" [ref=e199]
+            - cell "0" [ref=e200]
+            - cell "0" [ref=e201]
+            - cell "0" [ref=e202]
+            - cell "-0.9" [ref=e203]
+          - row "77 - Siro Reina -1 0 0 1 1 0 0 0 0 -0.4" [ref=e204]:
+            - cell "77 - Siro Reina" [ref=e205]
+            - cell "-1" [ref=e206]
+            - cell "0" [ref=e207]
+            - cell "0" [ref=e208]
+            - cell "1" [ref=e209]
+            - cell "1" [ref=e210]
+            - cell "0" [ref=e211]
+            - cell "0" [ref=e212]
+            - cell "0" [ref=e213]
+            - cell "0" [ref=e214]
+            - cell "-0.4" [ref=e215]
+          - row "17 - Michele Stanga -2 0 0 0 0 0 0 0 0 -0.6" [ref=e216]:
+            - cell "17 - Michele Stanga" [ref=e217]
+            - cell "-2" [ref=e218]
+            - cell "0" [ref=e219]
+            - cell "0" [ref=e220]
+            - cell "0" [ref=e221]
+            - cell "0" [ref=e222]
+            - cell "0" [ref=e223]
+            - cell "0" [ref=e224]
+            - cell "0" [ref=e225]
+            - cell "0" [ref=e226]
+            - cell "-0.6" [ref=e227]
+      - heading "Goalies" [level=3] [ref=e228]
+      - table [ref=e230]:
+        - rowgroup [ref=e231]:
+          - row "Goalie Assists Saves Goals Conceded Save % Game Score" [ref=e232]:
+            - columnheader "Goalie" [ref=e233]
+            - columnheader "Assists" [ref=e234]
+            - columnheader "Saves" [ref=e235]
+            - columnheader "Goals Conceded" [ref=e236]
+            - columnheader "Save %" [ref=e237]
+            - columnheader "Game Score" [ref=e238]
+        - rowgroup [ref=e239]:
+          - row "38 - Philippe Dux 0 17 11 60.7% -1.9" [ref=e240]:
+            - cell "38 - Philippe Dux" [ref=e241]
+            - cell "0" [ref=e242]
+            - cell "17" [ref=e243]
+            - cell "11" [ref=e244]
+            - cell "60.7%" [ref=e245]
+            - cell "-1.9" [ref=e246]
+      - heading "Opponent Goalie" [level=3] [ref=e247]
+      - table [ref=e249]:
+        - rowgroup [ref=e250]:
+          - row "Opponent Goalie Saves Goals Conceded Save %" [ref=e251]:
+            - columnheader "Opponent Goalie" [ref=e252]
+            - columnheader "Saves" [ref=e253]
+            - columnheader "Goals Conceded" [ref=e254]
+            - columnheader "Save %" [ref=e255]
+        - rowgroup [ref=e256]:
+          - row "Opponent Goalie 0 3 0.0%" [ref=e257]:
+            - cell "Opponent Goalie" [ref=e258]
+            - cell "0" [ref=e259]
+            - cell "3" [ref=e260]
+            - cell "0.0%" [ref=e261]
