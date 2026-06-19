@@ -90,3 +90,6 @@ rosters/*.json*
 
 # Superpowers brainstorm runtime state
 .superpowers/**/state/
+
+# Playwright browser snapshots
+.playwright-mcp/
