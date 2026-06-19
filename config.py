@@ -56,6 +56,8 @@ FLASK_CONFIG = {
     'SESSION_COOKIE_SAMESITE': 'Lax',
     'PERMANENT_SESSION_LIFETIME': timedelta(hours=2),
     'DEFAULT_LANG': os.environ.get('DEFAULT_LANG', 'en'),
+    # Rate limiting — memory is fine for dev, use Redis for production
+    'RATELIMIT_STORAGE_URL': os.environ.get('RATELIMIT_STORAGE_URL', 'memory://'),
     # SQLAlchemy
     'SQLALCHEMY_DATABASE_URI': os.environ.get('DATABASE_URL', DATABASE_URI),
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,

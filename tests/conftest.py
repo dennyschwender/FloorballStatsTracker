@@ -7,6 +7,7 @@ import tempfile
 os.environ.setdefault('FLOORBALL_PIN', 'testpin123')
 os.environ.setdefault('FLASK_SECRET_KEY', 'test-secret-key-not-for-production')
 os.environ.setdefault('SESSION_COOKIE_SECURE', 'False')
+os.environ.setdefault('RATELIMIT_STORAGE_URL', 'memory://')
 
 # Use a dedicated temp-file SQLite DB for the test session.
 # A file DB is simpler than :memory: when multiple connections are involved.
