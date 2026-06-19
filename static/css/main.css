@@ -359,3 +359,31 @@ form.mb-4 {
 [data-bs-theme="dark"] .table-responsive tbody td:first-child {
     background-color: var(--bs-table-bg, #1e1e1e);
 }
+
+/* ── Table light headers and result boxes ── */
+[data-bs-theme="dark"] .table-light,
+[data-bs-theme="dark"] .table > thead {
+    --bs-table-bg: #2d2d2d;
+    --bs-table-color: #e0e0e0;
+}
+[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-bg: #1e1e1e;
+    --bs-table-color: #e0e0e0;
+}
+[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > * {
+    --bs-table-bg: #252525;
+    --bs-table-color: #e0e0e0;
+}
+[data-bs-theme="dark"] .result-summary.bg-light {
+    background-color: #2d2d2d !important;
+    border-color: #444 !important;
+}
+[data-bs-theme="dark"] .bg-light {
+    background-color: #2d2d2d !important;
+}
+[data-bs-theme="dark"] h3 {
+    color: #ddd;
+}
+[data-bs-theme="dark"] th.rotate .sort-icon::after {
+    color: #aaa;
+}
