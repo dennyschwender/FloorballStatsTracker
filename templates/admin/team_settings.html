@@ -25,12 +25,13 @@
                         <small class="text-muted d-block">Defaults season filter on all pages</small>
                     </div>
                     <div class="col-auto">
-                        <select class="form-select" id="current_season" name="current_season">
-                            <option value="">(none)</option>
+                        <input type="text" class="form-control" id="current_season" name="current_season"
+                            list="seasonList" placeholder="{{ g.t.get('all_seasons', 'All Seasons') }}">
+                        <datalist id="seasonList">
                             {% for s in all_seasons %}
-                            <option value="{{ s }}" {% if s == current_season %}selected{% endif %}>{{ s }}</option>
+                            <option value="{{ s }}">
                             {% endfor %}
-                        </select>
+                        </datalist>
                     </div>
                 </div>
             </div>

@@ -11,12 +11,13 @@
     <div class="mb-4">
         <form method="get" class="d-flex gap-2 align-items-center">
             <label for="seasonSelect" class="fw-bold">{{ g.t['season'] }}:</label>
-            <select class="form-select" style="width: auto; min-width: 200px;" id="seasonSelect" name="season">
-                <option value="">{{ g.t['all_seasons'] }}</option>
+            <input type="text" class="form-control" style="width: auto; min-width: 200px;" id="seasonSelect" name="season"
+                list="seasonList" placeholder="{{ g.t.get('all_seasons', 'All Seasons') }}">
+            <datalist id="seasonList">
                 {% for season in all_seasons %}
-                <option value="{{ season }}" {% if season==selected_season %}selected{% endif %}>{{ season }}</option>
+                <option value="{{ season }}">
                 {% endfor %}
-            </select>
+            </datalist>
         </form>
     </div>
 
@@ -113,7 +114,9 @@
         }
 
         document.getElementById('seasonSelect')?.addEventListener('change', function() {
-            this.form.submit();
+            if (this.value.trim()) {
+                window.location.href = '{{ url_for("roster.roster_list") }}?season=' + encodeURIComponent(this.value.trim());
+            }
         });
         document.getElementById('createRosterBtn')?.addEventListener('click', createNewRoster);
 

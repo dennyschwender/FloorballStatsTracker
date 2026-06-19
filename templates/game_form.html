@@ -523,12 +523,13 @@
                 <input type="text" class="form-control" id="season" name="season" required
                     value="{{ game.season if game.season is defined else '' }}" readonly>
                 {% else %}
-                <select class="form-select" id="season" name="season" required>
-                    <option value="">{{ g.t['select_season'] }}</option>
+                <input type="text" class="form-control" id="season" name="season" required
+                    list="seasonList" placeholder="{{ g.t.get('select_season', 'Select or type season') }}">
+                <datalist id="seasonList">
                     {% for s in seasons %}
-                    <option value="{{ s }}" {% if s == current_season %}selected{% endif %}>{{ s }}</option>
+                    <option value="{{ s }}">
                     {% endfor %}
-                </select>
+                </datalist>
                 {% endif %}
             </div>
             <div class="col-12 col-sm-6">
@@ -537,9 +538,9 @@
                 <input type="text" class="form-control" id="team" name="team" required
                     value="{{ game.team if game.team is defined else '' }}" readonly>
                 {% else %}
-                <select class="form-select" id="team" name="team" required disabled>
-                    <option value="">{{ g.t['select_season'] if g.t is defined else 'Select season first' }}</option>
-                </select>
+                <input type="text" class="form-control" id="team" name="team" required
+                    list="categoryDatalist" placeholder="-- {{ g.t['select_category'] }} --" disabled>
+                <datalist id="categoryDatalist"></datalist>
                 {% endif %}
             </div>
         </div>
@@ -867,21 +868,20 @@
                 .then(categories => {
                     console.log('Categories loaded:', categories);
                     
-                    // Clear and populate category dropdown
-                    teamSelect.innerHTML = '<option value="">{{ g.t["select_category"] if g.t is defined else "Select Category" }}</option>';
+                    // Populate category datalist
+                    var datalist = document.getElementById('categoryDatalist');
+                    datalist.innerHTML = '';
                     categories.forEach(function(category) {
                         var option = document.createElement('option');
                         option.value = category;
-                        option.textContent = category;
-                        teamSelect.appendChild(option);
+                        datalist.appendChild(option);
                     });
                     
-                    // Enable category select
+                    // Enable category input
                     teamSelect.disabled = false;
                 })
                 .catch(error => {
                     console.error('Error loading categories:', error);
-                    teamSelect.innerHTML = '<option value="">{{ g.t["error_loading"] if g.t is defined else "Error loading categories" }}</option>';
                     teamSelect.disabled = true;
                 });
         }
