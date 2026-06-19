@@ -7,8 +7,12 @@
             <div class="col-md-6 col-lg-5">
                 <div class="card shadow">
                     <div class="card-body p-4 p-md-5">
-                        <h4 class="card-title mb-4 text-center" style="font-size:1.8rem;">{{ g.t['enter_access_pin'] }}
-                        </h4>
+                        <div class="text-center mb-4">
+                            <span style="font-size: 3rem;">🏑</span>
+                            <h4 class="card-title mt-2 mb-0" style="font-size:1.8rem;">Floorball Stats Tracker</h4>
+                        </div>
+                        <hr>
+                        <h5 class="text-center mb-4" style="font-size:1.2rem;">{{ g.t['enter_access_pin'] }}</h5>
                         {% if error %}
                         <div class="alert alert-danger">{{ error }}</div>
                         {% endif %}

@@ -131,12 +131,14 @@
                     <select id="navbar-game-switch" class="form-select form-select-sm mt-1" aria-label="Switch game">
                         <option value="">{{ g.t['all'] }}</option>
                         {% set sorted_games = games | sort(attribute='date', reverse=True) %}
-                        {% for gg in sorted_games %}
+                        {% for gg in sorted_games[:5] %}
                         {% set short_date = gg.date.split('-')[2] ~ '.' ~ gg.date.split('-')[1] if gg.date else '' %}
                         <option value="{{ gg.id }}" {% if g.get('current_game_id') is not none and
                             gg.id==g.current_game_id %}selected{% endif %}>{{ short_date ~ ' ' if short_date }}{{ gg.home_team }} vs {{ gg.away_team
                             }}</option>
                         {% endfor %}
+                        <option value="" disabled>──────────</option>
+                        <option value="">{{ g.t.get('all_games', 'All Games') }}</option>
                     </select>
                     {% endif %}
                 </div>
@@ -146,12 +148,14 @@
                     <select id="navbar-game-switch-mobile" class="form-select form-select-sm" aria-label="Switch game">
                         <option value="">{{ g.t['all'] }}</option>
                         {% set sorted_games = games | sort(attribute='date', reverse=True) %}
-                        {% for gg in sorted_games %}
+                        {% for gg in sorted_games[:5] %}
                         {% set short_date = gg.date.split('-')[2] ~ '.' ~ gg.date.split('-')[1] if gg.date else '' %}
                         <option value="{{ gg.id }}" {% if g.get('current_game_id') is not none and
                             gg.id==g.current_game_id %}selected{% endif %}>{{ short_date ~ ' ' if short_date }}{{ gg.home_team }} vs {{ gg.away_team
                             }}</option>
                         {% endfor %}
+                        <option value="" disabled>──────────</option>
+                        <option value="">{{ g.t.get('all_games', 'All Games') }}</option>
                     </select>
                 </div>
                 {% endif %}
