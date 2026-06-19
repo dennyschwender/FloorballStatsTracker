@@ -4,33 +4,6 @@
 
 {% block head %}
 <style>
-    /* Quick action buttons - ensure minimum touch target size for mobile */
-    .quick-action-btn {
-        min-width: 44px;
-        min-height: 44px;
-        font-size: 1.2rem;
-        padding: 0.375rem 0.5rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    /* Ensure button groups don't wrap */
-    .action-buttons,
-    .goalie-action-buttons {
-        white-space: nowrap;
-        flex-wrap: nowrap;
-    }
-    
-    /* Dropdown toggle for more actions */
-    .action-buttons .dropdown-toggle,
-    .goalie-action-buttons .dropdown-toggle {
-        min-width: 44px;
-        min-height: 44px;
-        font-size: 1.2rem;
-        padding: 0.375rem 0.5rem;
-    }
-    
     /* Wizard tile buttons — tall touch targets */
     .wizard-chip,
     .wizard-pm-chip,
@@ -54,65 +27,6 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    
-    /* Tablet: sticky first column + actions column */
-    @media (max-width: 991px) {
-        .table-responsive thead th:first-child,
-        .table-responsive tbody td:first-child {
-            position: sticky;
-            left: 0;
-            z-index: 3;
-            background-color: var(--bs-table-bg, #212529);
-            box-shadow: 2px 0 5px rgba(0,0,0,0.15);
-        }
-        .table-responsive thead th:first-child {
-            background-color: #343a40;
-        }
-        .actions-col {
-            position: sticky;
-            right: 0;
-            background-color: var(--bs-table-bg, #212529);
-            z-index: 2;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.3);
-        }
-        th.actions-col {
-            background-color: #343a40;
-        }
-        .stat-secondary {
-            display: none;
-        }
-        .period-btn {
-            min-height: 44px !important;
-            padding: 0.5rem 1rem !important;
-            font-size: 1rem !important;
-        }
-    }
-
-    /* Mobile optimizations */
-    @media (max-width: 768px) {
-        .quick-action-btn {
-            min-width: 48px;
-            min-height: 48px;
-            font-size: 1.3rem;
-        }
-        
-        .action-buttons .dropdown-toggle,
-        .goalie-action-buttons .dropdown-toggle {
-            min-width: 48px;
-            min-height: 48px;
-        }
-        
-        /* Ensure dropdown menus are readable on smaller screens */
-        .dropdown-menu {
-            font-size: 0.95rem;
-        }
-        
-        .dropdown-menu .flex-fill {
-            min-height: 40px;
-            font-size: 0.9rem;
-        }
-    }
-</style>
 {% endblock %}
 
 {% block content %}

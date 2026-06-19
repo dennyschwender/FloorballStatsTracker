@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ g.get('lang', 'en') if g is defined else 'en' }}">
+<html lang="{{ g.get('lang', 'en') if g is defined else 'en' }}" data-bs-theme="{{ 'dark' if session.get('theme') == 'dark' else 'light' }}">
 
 <head>
     <meta charset="UTF-8">
@@ -11,47 +11,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
     <link rel="manifest" href="/static/site.webmanifest">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-    <style>
-        /* Navbar dropdown and select responsive tweaks */
-        .navbar .dropdown-toggle.btn-sm {
-            padding: .25rem .5rem;
-        }
-
-        .navbar .dropdown-menu {
-            min-width: 180px;
-        }
-
-        @media (max-width: 991px) {
-            .navbar .dropdown-menu {
-                min-width: 140px;
-            }
-
-            #navbar-game-switch-mobile {
-                width: 100%;
-                margin-top: .4rem;
-            }
-
-            .navbar .nav-link.p-0 {
-                display: inline-block;
-                margin-right: .5rem;
-            }
-
-            /* Make actions button large and full-width on mobile */
-            .nav-action-btn {
-                display: block !important;
-                width: 100% !important;
-                padding: .5rem .75rem !important;
-                font-size: 1rem !important;
-                text-align: left;
-            }
-
-            .navbar-nav .nav-link {
-                padding: 10px 16px;
-                font-size: 1.05rem;
-                border-bottom: 1px solid rgba(255,255,255,0.08);
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     {% block head %}{% endblock %}
     <script nonce="{{ g.csp_nonce }}">
         ;(function () {
@@ -111,7 +71,8 @@
                     <noscript><button class="btn btn-outline-primary" type="submit">{{ g.t['change']
                             }}</button></noscript>
                 </form>
-                {% if session.get('authenticated') %}
+                    <button id="themeToggle" class="btn btn-outline-secondary btn-sm ms-2 order-3" title="Toggle dark mode">🌓</button>
+                    {% if session.get('authenticated') %}
                 <div class="ms-2 order-3 d-flex align-items-center gap-2">
                     {% if g.current_user %}<span class="text-muted small d-none d-lg-inline">{{ g.current_user.username }}</span>{% endif %}
                     <form method="post" action="{{ url_for('game.logout') }}" style="display:inline;">
@@ -276,7 +237,25 @@
             });
         });
     </script>
-    {% block scripts %}{% endblock %}
+    <script nonce="{{ g.csp_nonce }}">
+    // Theme toggle
+    document.getElementById('themeToggle')?.addEventListener('click', function() {
+        var html = document.documentElement;
+        var current = html.getAttribute('data-bs-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-bs-theme', next);
+        try { localStorage.setItem('theme', next); } catch(e) {}
+        fetch('/set_theme/' + next, { method: 'POST', headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' } });
+    });
+    // Restore theme from localStorage before page render to avoid flash
+    (function() {
+        try {
+            var saved = localStorage.getItem('theme');
+            if (saved === 'dark') document.documentElement.setAttribute('data-bs-theme', 'dark');
+        } catch(e) {}
+    })();
+</script>
+{% block scripts %}{% endblock %}
 <script src="/static/js/offline-queue.js" nonce="{{ g.csp_nonce }}"></script>
 <script nonce="{{ g.csp_nonce }}">
     if ('serviceWorker' in navigator) {

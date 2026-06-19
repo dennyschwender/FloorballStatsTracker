@@ -1,33 +1,8 @@
 {% extends "base.html" %}
-{% block title %}{{ g.t['title'] if g.t is defined else 'Floorball Stats Tracker' }}{% endblock %}
+{% block title %}{{ g.t['title'] }}{% endblock %}
 
 {% block head %}
 <style>
-    #gamesTable th { white-space: nowrap; }
-    #gamesTable td { padding: 6px 8px; }
-    @media (max-width: 991px) {
-        #gamesTable tbody tr { cursor: pointer; }
-    }
-    .sortable {
-        cursor: pointer;
-        position: relative;
-        padding-right: 20px !important;
-    }
-    .sort-icon::after {
-        content: '\21c5';
-        position: absolute;
-        right: 5px;
-        opacity: 0.3;
-    }
-    .sort-icon.asc::after {
-        content: '\2191';
-        opacity: 1;
-    }
-    .sort-icon.desc::after {
-        content: '\2193';
-        opacity: 1;
-    }
-</style>
 {% endblock %}
 
 {% block content %}

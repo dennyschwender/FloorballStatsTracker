@@ -177,7 +177,16 @@ def create_app():
             return redirect(safe_ref)
         return redirect(url_for('game.index'))
 
-    # ── Custom error handlers ─────────────────────────────────────────────────
+    # ── Theme switching route ────────────────────────────────────────────────
+
+    @app.route('/set_theme/<theme>', methods=['POST'])
+    def set_theme_route(theme):
+        if theme in ('light', 'dark'):
+            session['theme'] = theme
+            session.permanent = True
+        return '', 204
+
+    # ── Custom error handlers ────────────────────────────────────────────────
 
     @app.errorhandler(404)
     def not_found(e):
