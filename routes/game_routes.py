@@ -775,7 +775,7 @@ def reset_game(game_id):
     for line in game.get('lines', []):
         for player in line:
             for stat in ['plusminus', 'goals', 'assists', 'unforced_errors', 'shots_on_goal', 
-                         'penalties_taken', 'penalties_drawn']:
+                         'penalties_taken', 'penalties_drawn', 'block_shots', 'stolen_balls']:
                 game[stat][player] = 0
     
     # Reset goalie stats
