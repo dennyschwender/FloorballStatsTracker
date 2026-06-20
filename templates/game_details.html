@@ -863,6 +863,21 @@
                   type: 'player-list', options: players },
                 { key: '__confirm', title: 'Confirm shot', type: 'confirm' }
             ],
+            unforced_error: [
+                { key: 'player', title: 'Which player made the error?',
+                  type: 'player-list', options: players },
+                { key: '__confirm', title: 'Confirm error', type: 'confirm' }
+            ],
+            block_shot: [
+                { key: 'player', title: 'Which player blocked the shot?',
+                  type: 'player-list', options: players },
+                { key: '__confirm', title: 'Confirm block', type: 'confirm' }
+            ],
+            stolen_ball: [
+                { key: 'player', title: 'Which player stole the ball?',
+                  type: 'player-list', options: players },
+                { key: '__confirm', title: 'Confirm stolen ball', type: 'confirm' }
+            ],
             period_change: [
                 { key: '__confirm', title: 'Advance Period', type: 'period-confirm' }
             ]
@@ -1200,6 +1215,9 @@
         { value: 'penalty',       label: '\uD83D\uDFE5 Penalty' },
         { value: 'save',          label: '\uD83E\uDDE4 Save' },
         { value: 'shot_on_goal',  label: '\uD83C\uDFAF Shot on goal' },
+        { value: 'unforced_error', label: '\u26A0\uFE0F Error' },
+        { value: 'block_shot',    label: '\uD83D\uDEE1\uFE0F Blocked shot' },
+        { value: 'stolen_ball',   label: '\uD83C\uDFD2 Stolen ball' },
         { value: 'period_change', label: '\u23ED Period change' }
     ];
 

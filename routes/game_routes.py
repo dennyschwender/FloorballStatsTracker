@@ -954,6 +954,30 @@ def record_event(game_id):
         ensure_player_stats(game, player)
         game['shots_on_goal'][player] += 1
 
+    elif event_type == 'unforced_error':
+        player = payload.get('player')
+        if not player:
+            return jsonify({'ok': False, 'error': 'unforced_error requires player'}), 400
+        undo_store.push(game_id, game)
+        ensure_player_stats(game, player)
+        game['unforced_errors'][player] += 1
+
+    elif event_type == 'block_shot':
+        player = payload.get('player')
+        if not player:
+            return jsonify({'ok': False, 'error': 'block_shot requires player'}), 400
+        undo_store.push(game_id, game)
+        ensure_player_stats(game, player)
+        game['block_shots'][player] += 1
+
+    elif event_type == 'stolen_ball':
+        player = payload.get('player')
+        if not player:
+            return jsonify({'ok': False, 'error': 'stolen_ball requires player'}), 400
+        undo_store.push(game_id, game)
+        ensure_player_stats(game, player)
+        game['stolen_balls'][player] += 1
+
     elif event_type == 'period_change':
         undo_store.push(game_id, game)
         current = game.get('current_period', '1')
