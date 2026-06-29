@@ -11,6 +11,6 @@ reportlab==4.4.10
 Werkzeug==3.1.8
 Jinja2==3.1.6
 markupsafe==3.0.3
-click==8.3.3
+click==8.4.2
 itsdangerous==2.2.0
 SQLAlchemy==2.0.49
